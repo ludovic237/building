@@ -1,0 +1,31 @@
+<div class="p-2">
+  <mat-card>
+    <div fxLayout="row wrap" fxLayoutAlign="space-between center" class="w-100 p-3">
+      <h2>Service Management</h2>
+      <button mat-raised-button color="primary" (click)="openServiceDialog(null)">Add Service</button>
+    </div>
+    <mat-divider></mat-divider>
+    <div class="mat-mdc-table admin-table">
+      <div class="mat-mdc-header-row">
+        <div class="mat-mdc-header-cell">Name</div>
+        <div class="mat-mdc-header-cell">Description</div>
+        <div class="mat-mdc-header-cell">Monthly Price</div>
+        <div class="mat-mdc-header-cell"></div>
+      </div>
+      <div class="mat-mdc-row"
+           *ngFor="let service of services | paginate: { itemsPerPage: count, currentPage: page }; let i = index">
+        <div class="mat-mdc-cell">{{ service.nom }}</div>
+        <div class="mat-mdc-cell">{{ service.description }}</div>
+        <div class="mat-mdc-cell">{{ service.prixMensuel | currency }}</div>
+        <div class="mat-mdc-cell">
+          <button mat-mini-fab color="primary" matTooltip="Edit" (click)="openServiceDialog(service)">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-mini-fab color="warn" matTooltip="Delete" class="mx-1" (click)="removeService(service)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </mat-card>
+</div>

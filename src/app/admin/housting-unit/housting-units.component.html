@@ -1,0 +1,61 @@
+<div class="p-2">
+          <mat-card>
+            <div fxLayout="row wrap" fxLayoutAlign="space-between center" class="w-100 p-3">
+              <h2>HoustingUnit Management</h2>
+              <button mat-raised-button color="primary" (click)="openHoustingUnitDialog(null)">Add HoustingUnit</button>
+            </div>
+            <mat-divider></mat-divider>
+            <div class="mat-mdc-table admin-table">
+              <div class="mat-mdc-header-row">
+                <div class="mat-mdc-header-cell">Apartment Number</div>
+                <div class="mat-mdc-header-cell">Floor</div>
+                <div class="mat-mdc-header-cell">Area (m²)</div>
+                <div class="mat-mdc-header-cell">Address</div>
+                <div class="mat-mdc-header-cell">Type</div>
+                <div class="mat-mdc-header-cell">Tenants</div>
+                <div class="mat-mdc-header-cell"></div>
+              </div>
+              @for (unit of housingUnits | paginate: { itemsPerPage: count, currentPage: page }; track unit.id) {
+                <div class="mat-mdc-row">
+                  <div class="mat-mdc-cell">{{ unit.numeroAppartement }}</div>
+                  <div class="mat-mdc-cell">{{ unit.etage }}</div>
+                  <div class="mat-mdc-cell">{{ unit.superficie }}</div>
+                  <div class="mat-mdc-cell">{{ unit.adresse }}</div>
+                  <div class="mat-mdc-cell">{{ unit.type }}</div>
+                  <div class="mat-mdc-cell">
+                    @if (unit.tenants.length) {
+                      <ul>
+                        @for ( unit of unit.tenants; track unit.id) {
+                          <li>{{ unit.name }} ({{ unit.paymentStatus }})</li>
+                        }
+                      </ul>
+                    } @else {
+                      <span>No tenants</span>
+                    }
+                  </div>
+                  <div class="mat-mdc-cell">
+                    <div class="p-2 actions">
+                      <button mat-mini-fab color="primary" matTooltip="Edit" (click)="openHoustingUnitDialog(unit)">
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button mat-mini-fab color="warn" matTooltip="Delete" class="mx-1" (click)="removeHoustingUnit(unit)">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </mat-card>
+
+          @if (housingUnits.length) {
+            <div fxLayout="row wrap">
+              <div fxFlex="100">
+                <mat-card class="text-center">
+                  <pagination-controls class="product-pagination" [autoHide]="true" [maxSize]="5"
+                                       (pageChange)="onPageChanged($event)"></pagination-controls>
+                </mat-card>
+              </div>
+            </div>
+          }
+        </div>

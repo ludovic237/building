@@ -1,0 +1,49 @@
+<div class="p-2">
+          <mat-card>
+            <div fxLayout="row wrap" fxLayoutAlign="space-between center" class="w-100 p-3">
+              <h2>Tenant Management</h2>
+              <button mat-raised-button color="primary" (click)="openTenantDialog(null)">Add Tenant</button>
+            </div>
+            <mat-divider></mat-divider>
+            <div class="mat-mdc-table admin-table">
+              <div class="mat-mdc-header-row">
+                <div class="mat-mdc-header-cell">Tenant Name</div>
+                <div class="mat-mdc-header-cell">Apartment</div>
+                <div class="mat-mdc-header-cell">Entry Date</div>
+                <div class="mat-mdc-header-cell">Deposit</div>
+                <div class="mat-mdc-header-cell">Payment Status</div>
+                <div class="mat-mdc-header-cell"></div>
+              </div>
+              @for (tenant of tenants | paginate: { itemsPerPage: count, currentPage: page }; track tenant.id) {
+                <div class="mat-mdc-row">
+                  <div class="mat-mdc-cell">{{ tenant.name }}</div>
+                  <div class="mat-mdc-cell">{{ tenant.apartment }}</div>
+                  <div class="mat-mdc-cell">{{ tenant.entryDate | date:'shortDate' }}</div>
+                  <div class="mat-mdc-cell">{{ tenant.deposit | currency }}</div>
+                  <div class="mat-mdc-cell">{{ tenant.paymentStatus }}</div>
+                  <div class="mat-mdc-cell">
+                    <div class="p-2 actions">
+                      <button mat-mini-fab color="primary" matTooltip="Edit" (click)="openTenantDialog(tenant)">
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                      <button mat-mini-fab color="warn" matTooltip="Delete" class="mx-1" (click)="removeTenant(tenant)">
+                        <mat-icon>delete</mat-icon>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              }
+            </div>
+          </mat-card>
+
+          @if (tenants.length) {
+            <div fxLayout="row wrap">
+              <div fxFlex="100">
+                <mat-card class="text-center">
+                  <pagination-controls class="product-pagination" [autoHide]="true" [maxSize]="5"
+                                       (pageChange)="onPageChanged($event)"></pagination-controls>
+                </mat-card>
+              </div>
+            </div>
+          }
+        </div>
