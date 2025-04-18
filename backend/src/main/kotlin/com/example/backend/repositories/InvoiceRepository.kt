@@ -1,0 +1,32 @@
+package com.example.backend.repositories
+
+import com.example.backend.models.Invoice
+import com.example.backend.models.Tenant
+import org.springframework.data.jpa.repository.JpaRepository
+import java.math.BigDecimal
+import java.time.LocalDate
+import java.util.*
+
+interface InvoiceRepository : JpaRepository<Invoice, Long> {
+
+    // Find invoices by tenant
+    fun findByTenant(tenant: Tenant): List<Invoice>
+
+    // Find invoices by type
+    fun findByType(type: String): List<Invoice>
+
+    // Find invoices by status
+    fun findByStatus(status: String): List<Invoice>
+
+    // Find invoices by month and year
+    fun findByMonthAndYear(month: Int, year: Int): List<Invoice>
+
+    // Find invoices with an amount greater than or equal to a specific value
+    fun findByAmountGreaterThanEqual(amount: BigDecimal): List<Invoice>
+
+    // Find invoices by payment date
+    fun findByPaymentDate(paymentDate: LocalDate): List<Invoice>
+
+    // Check if an invoice exists by tenant and month/year
+    fun existsByTenantAndMonthAndYear(tenant: Tenant, month: Int, year: Int): Boolean
+}

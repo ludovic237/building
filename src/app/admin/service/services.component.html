@@ -13,15 +13,15 @@
         <div class="mat-mdc-header-cell"></div>
       </div>
       <div class="mat-mdc-row"
-           *ngFor="let service of services | paginate: { itemsPerPage: count, currentPage: page }; let i = index">
-        <div class="mat-mdc-cell">{{ service.nom }}</div>
-        <div class="mat-mdc-cell">{{ service.description }}</div>
-        <div class="mat-mdc-cell">{{ service.prixMensuel | currency }}</div>
+           *ngFor="let services of services | paginate: { itemsPerPage: count, currentPage: page }; let i = index">
+        <div class="mat-mdc-cell">{{ services.nom }}</div>
+        <div class="mat-mdc-cell">{{ services.description }}</div>
+        <div class="mat-mdc-cell">{{ services.prixMensuel | currency }}</div>
         <div class="mat-mdc-cell">
-          <button mat-mini-fab color="primary" matTooltip="Edit" (click)="openServiceDialog(service)">
+          <button mat-mini-fab color="primary" matTooltip="Edit" (click)="openServiceDialog(services)">
             <mat-icon>edit</mat-icon>
           </button>
-          <button mat-mini-fab color="warn" matTooltip="Delete" class="mx-1" (click)="removeService(service)">
+          <button mat-mini-fab color="warn" matTooltip="Delete" class="mx-1" (click)="removeService(services)">
             <mat-icon>delete</mat-icon>
           </button>
         </div>

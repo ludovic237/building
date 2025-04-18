@@ -27,9 +27,9 @@
           <mat-label>Service</mat-label>
           <mat-select formControlName="serviceId" required>
             <mat-option [value]="">-</mat-option>
-            @for (service of services; track $index) {
-              <mat-option [value]="service.id">
-                {{ service.nom }}
+            @for (services of services; track $index) {
+              <mat-option [value]="services.id">
+                {{ services.nom }}
               </mat-option>
             }
           </mat-select>
