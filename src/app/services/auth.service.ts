@@ -1,4 +1,4 @@
-import {HttpClient} from '@angular/common/http';
+import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {Observable} from 'rxjs';
 
@@ -9,6 +9,13 @@ export class AuthService {
   private baseUrl = 'http://localhost:8080/api/auth';
 
   constructor(private http: HttpClient) {
+  }
+
+  private getHeaders(): HttpHeaders {
+    const token = localStorage.getItem('token');
+    return new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+    });
   }
 
   login(username: string, password: string): Observable<any> {

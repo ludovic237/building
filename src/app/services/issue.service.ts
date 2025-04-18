@@ -9,6 +9,8 @@ import { Injectable } from '@angular/core';
     export class IssueService {
       private apiUrl = '/api/issues';
 
+      private token = localStorage.getItem('token');
+
       constructor(private http: HttpClient) {}
 
       getIssues(): Observable<Issue[]> {

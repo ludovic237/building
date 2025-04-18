@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-          import { HttpClient } from '@angular/common/http';
+          import {HttpClient, HttpHeaders} from '@angular/common/http';
           import { Observable, of } from 'rxjs';
           import { User } from '../model/data';
 
@@ -11,59 +11,30 @@ import { Injectable } from '@angular/core';
 
             constructor(private http: HttpClient) {}
 
+            private getHeaders(): HttpHeaders {
+              const token = localStorage.getItem('token');
+              return new HttpHeaders({
+                'Authorization': `Bearer ${token}`
+              });
+            }
+
             getUsers(): Observable<User[]> {
-              // return this.http.get<User[]>(this.apiUrl);
-              const mockData: User[] = [
-                {
-                  id: 1,
-                  nom: 'Doe',
-                  prenom: 'John',
-                  email: 'john.doe@example.com',
-                  telephone: '1234567890',
-                  role: 'locataire',
-                  motDePasse: 'password123'
-                },
-                {
-                  id: 2,
-                  nom: 'Smith',
-                  prenom: 'Jane',
-                  email: 'jane.smith@example.com',
-                  telephone: '0987654321',
-                  role: 'visiteur',
-                  motDePasse: 'password456'
-                }
-              ];
-              return of(mockData);
+              return this.http.get<User[]>(this.apiUrl, {headers: this.getHeaders()});
             }
 
             getUserById(id: number): Observable<User> {
-              // return this.http.get<User>(`${this.apiUrl}/${id}`);
-              const mockData: User = {
-                id,
-                nom: 'Doe',
-                prenom: 'John',
-                email: 'john.doe@example.com',
-                telephone: '1234567890',
-                role: 'locataire',
-                motDePasse: 'password123'
-              };
-              return of(mockData);
+              return this.http.get<User>(`${this.apiUrl}/${id}`, {headers: this.getHeaders()});
             }
 
             createUser(user: User): Observable<User> {
-              // return this.http.post<User>(this.apiUrl, user);
-              const mockData: User = { ...user, id: Math.floor(Math.random() * 1000) };
-              return of(mockData);
+              return this.http.post<User>(this.apiUrl, user, {headers: this.getHeaders()});
             }
 
             updateUser(id: number, user: User): Observable<User> {
-              // return this.http.put<User>(`${this.apiUrl}/${id}`, user);
-              const mockData: User = { ...user, id };
-              return of(mockData);
+              return this.http.put<User>(`${this.apiUrl}/${id}`, user, {headers: this.getHeaders()});
             }
 
             deleteUser(id: number): Observable<void> {
-              // return this.http.delete<void>(`${this.apiUrl}/${id}`);
-              return of(undefined);
+              return this.http.delete<void>(`${this.apiUrl}/${id}`, {headers: this.getHeaders()});
             }
           }

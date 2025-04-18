@@ -11,9 +11,6 @@ package com.example.backend.repositories
               // Find subscriptions by user
               fun findByUser(user: User): List<Subscription>
 
-              // Find subscriptions by services
-              fun findByService(services: Services): List<Subscription>
-
               // Find subscriptions by status
               fun findByStatus(status: String): List<Subscription>
 
@@ -26,6 +23,4 @@ package com.example.backend.repositories
               // Find active subscriptions (end date is null or in the future)
               fun findByEndDateIsNullOrEndDateAfter(date: LocalDate): List<Subscription>
 
-              // Check if a subscription exists for a user and services
-              fun existsByUserAndService(user: User, services: Services): Boolean
           }

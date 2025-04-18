@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import {HttpClient, HttpHeaders} from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { Subscription } from '../model/data';
 
@@ -11,59 +11,30 @@ export class SubscriptionService {
 
   constructor(private http: HttpClient) {}
 
+  private getHeaders(): HttpHeaders {
+    const token = localStorage.getItem('token');
+    return new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+    });
+  }
+
   getSubscriptions(): Observable<Subscription[]> {
-    // return this.http.get<Subscription[]>(this.apiUrl);
-    const mockData: Subscription[] = [
-      {
-        id: 1,
-        locataireId: 101,
-        utilisateurId: undefined,
-        serviceId: 1,
-        dateDebut: new Date('2023-01-01'),
-        dateFin: new Date('2023-12-31'),
-        statut: 'active'
-      },
-      {
-        id: 2,
-        locataireId: undefined,
-        utilisateurId: 201,
-        serviceId: 2,
-        dateDebut: new Date('2023-02-01'),
-        dateFin: null,
-        statut: 'inactive'
-      }
-    ];
-    return of(mockData);
+    return this.http.get<Subscription[]>(this.apiUrl,{headers: this.getHeaders()});
   }
 
   getSubscriptionById(id: number): Observable<Subscription> {
-    // return this.http.get<Subscription>(`${this.apiUrl}/${id}`);
-    const mockData: Subscription = {
-      id,
-      locataireId: 101,
-      utilisateurId: undefined,
-      serviceId: 1,
-      dateDebut: new Date('2023-01-01'),
-      dateFin: new Date('2023-12-31'),
-      statut: 'active'
-    };
-    return of(mockData);
+    return this.http.get<Subscription>(`${this.apiUrl}/${id}`,{headers: this.getHeaders()});
   }
 
   createSubscription(subscription: Subscription): Observable<Subscription> {
-    // return this.http.post<Subscription>(this.apiUrl, subscription);
-    const mockData: Subscription = { ...subscription, id: Math.floor(Math.random() * 1000) };
-    return of(mockData);
+    return this.http.post<Subscription>(this.apiUrl, subscription,{headers: this.getHeaders()});
   }
 
   updateSubscription(id: number, subscription: Subscription): Observable<Subscription> {
-    // return this.http.put<Subscription>(`${this.apiUrl}/${id}`, subscription);
-    const mockData: Subscription = { ...subscription, id };
-    return of(mockData);
+    return this.http.put<Subscription>(`${this.apiUrl}/${id}`, subscription,{headers: this.getHeaders()});
   }
 
   deleteSubscription(id: number): Observable<void> {
-    // return this.http.delete<void>(`${this.apiUrl}/${id}`);
-    return of(undefined);
+    return this.http.delete<void>(`${this.apiUrl}/${id}`,{headers: this.getHeaders()});
   }
 }

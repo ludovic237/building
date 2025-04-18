@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-    import { HttpClient } from '@angular/common/http';
+    import {HttpClient, HttpHeaders} from '@angular/common/http';
     import { Observable, of } from 'rxjs';
     import { Service } from '../model/data';
 
@@ -11,50 +11,30 @@ import { Injectable } from '@angular/core';
 
       constructor(private http: HttpClient) {}
 
+      private getHeaders(): HttpHeaders {
+        const token = localStorage.getItem('token');
+        return new HttpHeaders({
+          'Authorization': `Bearer ${token}`
+        });
+      }
+
       getServices(): Observable<Service[]> {
-        // return this.http.get<Service[]>(this.apiUrl);
-        const mockData: Service[] = [
-          {
-            id: 1,
-            nom: 'Cleaning',
-            description: 'Weekly cleaning service',
-            prixMensuel: 100
-          },
-          {
-            id: 2,
-            nom: 'Maintenance',
-            description: 'Monthly maintenance service',
-            prixMensuel: 200
-          }
-        ];
-        return of(mockData);
+        return this.http.get<Service[]>(this.apiUrl,{headers: this.getHeaders()});
       }
 
       getServiceById(id: number): Observable<Service> {
-        // return this.http.get<Service>(`${this.apiUrl}/${id}`);
-        const mockData: Service = {
-          id:1,
-          nom: 'Cleaning',
-          description: 'Weekly cleaning service',
-          prixMensuel: 100
-        };
-        return of(mockData);
+        return this.http.get<Service>(`${this.apiUrl}/${id}`,{headers: this.getHeaders()});
       }
 
       createService(service: Service): Observable<Service> {
-        // return this.http.post<Service>(this.apiUrl, service);
-        const mockData: Service = { ...service, id: Math.floor(Math.random() * 1000) };
-        return of(mockData);
+        return this.http.post<Service>(this.apiUrl, service,{headers: this.getHeaders()});
       }
 
       updateService(id: number, service: Service): Observable<Service> {
-        // return this.http.put<Service>(`${this.apiUrl}/${id}`, service);
-        const mockData: Service = { ...service, id };
-        return of(mockData);
+        return this.http.put<Service>(`${this.apiUrl}/${id}`, service,{headers: this.getHeaders()});
       }
 
       deleteService(id: number): Observable<void> {
-        // return this.http.delete<void>(`${this.apiUrl}/${id}`);
-        return of(undefined);
+        return this.http.delete<void>(`${this.apiUrl}/${id}`,{headers: this.getHeaders()});
       }
     }

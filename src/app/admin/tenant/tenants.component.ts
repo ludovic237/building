@@ -16,6 +16,7 @@ import { PipesModule } from '../../theme/pipes/pipes.module';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import {RentDialogComponent} from "../rent/rent-dialog/rent-dialog.component";
 import {CommonModule} from "@angular/common";
+import {TenantService} from "@services/tenant.service";
 
 @Component({
     selector: 'app-tenants',
@@ -38,10 +39,7 @@ export class TenantsComponent implements OnInit {
     { id: 1, name: 'Store 1' },
     { id: 2, name: 'Store 2' }
   ]
-  public tenants: any[] = [
-    { id: 1, name: 'John Doe', apartment: 'A101', entryDate: '2023-01-15', deposit: 500, paymentStatus: 'Paid' },
-    { id: 2, name: 'Jane Smith', apartment: 'B202', entryDate: '2023-02-01', deposit: 700, paymentStatus: 'Unpaid' }
-  ];
+  public tenants: any[] = [];
   // public page: number = 1;
   // public count: number = 5;
   public countries: any[] = [];
@@ -50,13 +48,32 @@ export class TenantsComponent implements OnInit {
   domHandlerService = inject(DomHandlerService);
   public settings: Settings;
 
-  constructor(public appService: AppService, public dialog: MatDialog, public settingsService: SettingsService) {
+  constructor(
+    public appService: AppService,
+    public tenantService: TenantService,
+              public dialog: MatDialog,
+              public settingsService: SettingsService) {
     this.settings = this.settingsService.settings;
   }
 
   ngOnInit(): void {
     this.countries = this.appService.getCountries();
     this.customers = customers;
+    this.getTenantData();
+
+  }
+
+  private getTenantData() {
+    console.log("getTenantData");
+    console.log(localStorage.getItem('token'))
+    this.tenantService.getTenants().subscribe({
+      next: (tenants) => {
+        this.tenants = tenants;
+      },
+      error: (err) => {
+        console.error('Failed to load tenants:', err);
+      }
+    })
   }
 
   public onPageChanged(event: any) {

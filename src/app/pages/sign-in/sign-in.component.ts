@@ -67,6 +67,14 @@ export class SignInComponent implements OnInit {
       this.authService.login(this.username, this.password).subscribe({
         next: (response) => {
           console.log('Login successful:', response);
+
+          localStorage.setItem('token', response.token);
+
+          this.snackBar.open(response.message, '×', {
+            panelClass: 'success',
+            verticalPosition: 'top',
+            duration: 3000
+          });
         },
         error: (err) => {
           console.error('Login failed:', err);
@@ -76,8 +84,6 @@ export class SignInComponent implements OnInit {
   }
 
   public onRegisterFormSubmit(values: Object): void {
-    console.log("register")
-    console.log(values)
     const a = this.registerForm.get('firstName')?.value + ""
     const b = this.registerForm.get('lastName')?.value + ""
     const c = this.registerForm.get('role')?.value + ""

@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api/auth")
 class AuthController(
   private var authenticationManager: AuthenticationManager? = null,
-  private val jwtUtil: JwtUtil,
+  private var jwtUtil: JwtUtil,
   var userRepository: UserRepository,
   private val passwordEncoder: PasswordEncoder // Injected here
 ) {
@@ -34,7 +34,15 @@ class AuthController(
       UsernamePasswordAuthenticationToken(loginRequest.username, loginRequest.password)
     )
     SecurityContextHolder.getContext().authentication = authentication
-    return ResponseEntity.ok("Login successful")
+
+    // Générer le token JWT
+    val token = jwtUtil.generateToken(authentication)
+
+//    return ResponseEntity.ok(mapOf("message" to "Login successful"))
+    return ResponseEntity.ok(mapOf(
+      "message" to "Login successful",
+      "token" to token
+    ))
   }
 
   @CrossOrigin(origins = ["http://localhost:4200"])
@@ -66,7 +74,7 @@ class AuthController(
     // Save the user
     userRepository.save(user)
 
-    return ResponseEntity.ok("User registered successfully")
+    return ResponseEntity.ok(mapOf("message" to "User registered successfully"))
   }
 }
 data class LoginRequest(
