@@ -19,10 +19,10 @@ export class Tenant {
 
 export class HousingUnit {
   id: number;
-  numeroAppartement: string;
-  etage: number;
-  superficie: number;
-  adresse: string;
+  number: string;
+  floor: number;
+  area: number;
+  address: string;
   type: 'studio' | 'T2' | 'T3' | 'T4';
 }
 

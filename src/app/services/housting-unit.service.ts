@@ -7,7 +7,7 @@ import {HousingUnit} from '../model/data';
   providedIn: 'root'
 })
 export class HousingUnitService {
-  private apiUrl = '/api/housing-units';
+  private apiUrl = 'http://localhost:8080/api/housing-units';
 
   constructor(private http: HttpClient) {
   }

@@ -11,26 +11,31 @@ class RentController(
   private val rentService: RentService
 ) {
 
+  @CrossOrigin(origins = ["http://localhost:4200"])
   @GetMapping
   fun getAllRents(): ResponseEntity<List<Rent>> {
     return ResponseEntity.ok(rentService.getAllRents())
   }
 
+  @CrossOrigin(origins = ["http://localhost:4200"])
   @GetMapping("/{id}")
   fun getRentById(@PathVariable id: Long): ResponseEntity<Rent> {
     return ResponseEntity.ok(rentService.getRentById(id).orElseThrow { IllegalArgumentException("Rent not found") })
   }
 
+  @CrossOrigin(origins = ["http://localhost:4200"])
   @PostMapping
   fun createRent(@RequestBody rent: Rent): ResponseEntity<Rent> {
     return ResponseEntity.ok(rentService.createRent(rent))
   }
 
+  @CrossOrigin(origins = ["http://localhost:4200"])
   @PutMapping("/{id}")
   fun updateRent(@PathVariable id: Long, @RequestBody updatedRent: Rent): ResponseEntity<Rent> {
     return ResponseEntity.ok(rentService.updateRent(id, updatedRent))
   }
 
+  @CrossOrigin(origins = ["http://localhost:4200"])
   @DeleteMapping("/{id}")
   fun deleteRent(@PathVariable id: Long): ResponseEntity<Void> {
     rentService.deleteRent(id)

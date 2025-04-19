@@ -17,10 +17,10 @@
               </div>
               @for (unit of housingUnits | paginate: { itemsPerPage: count, currentPage: page }; track unit.id) {
                 <div class="mat-mdc-row">
-                  <div class="mat-mdc-cell">{{ unit.numeroAppartement }}</div>
-                  <div class="mat-mdc-cell">{{ unit.etage }}</div>
-                  <div class="mat-mdc-cell">{{ unit.superficie }}</div>
-                  <div class="mat-mdc-cell">{{ unit.adresse }}</div>
+                  <div class="mat-mdc-cell">{{ unit.number }}</div>
+                  <div class="mat-mdc-cell">{{ unit.floor }}</div>
+                  <div class="mat-mdc-cell">{{ unit.area }}</div>
+                  <div class="mat-mdc-cell">{{ unit.address }}</div>
                   <div class="mat-mdc-cell">{{ unit.type }}</div>
                   <div class="mat-mdc-cell">
                     @if (unit.tenants.length) {

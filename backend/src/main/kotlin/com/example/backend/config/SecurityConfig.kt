@@ -13,28 +13,30 @@ import org.springframework.security.web.SecurityFilterChain
 
 @Configuration
 class SecurityConfig(
-    private val customUserDetailsService: CustomUserDetailsService
+  private val customUserDetailsService: CustomUserDetailsService
 ) {
 
-    @Bean
-    fun passwordEncoder(): PasswordEncoder {
-        return BCryptPasswordEncoder()
-    }
+  @Bean
+  fun passwordEncoder(): PasswordEncoder {
+    return BCryptPasswordEncoder()
+  }
 
-    @Bean
-    fun authenticationManager(authConfig: AuthenticationConfiguration): AuthenticationManager {
-        return authConfig.authenticationManager
-    }
+  @Bean
+  fun authenticationManager(authConfig: AuthenticationConfiguration): AuthenticationManager {
+    return authConfig.authenticationManager
+  }
 
-    @Bean
-    fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
-        return http
-            .csrf { it.disable() }
-            .authorizeHttpRequests {
-                it.requestMatchers("/api/auth/**").permitAll()
-                    .anyRequest().authenticated()
-            }
-            .userDetailsService(customUserDetailsService)
-            .build()
-    }
+  @Bean
+  fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
+    return http
+      .cors { }
+      .csrf { it.disable() }
+      .authorizeHttpRequests {
+        it.requestMatchers("/api/auth/**").permitAll()
+          .requestMatchers("/api/**").permitAll() // Allow access to /api/tenants
+          .anyRequest().authenticated()
+      }
+      .userDetailsService(customUserDetailsService)
+      .build()
+  }
 }

@@ -7,7 +7,7 @@ import { Injectable } from '@angular/core';
       providedIn: 'root'
     })
     export class TenantService {
-      private apiUrl = '/api/tenants';
+      private apiUrl = 'http://localhost:8080/api/tenants';
 
       constructor(private http: HttpClient) {}
 

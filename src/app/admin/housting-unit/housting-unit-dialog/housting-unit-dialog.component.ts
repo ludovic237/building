@@ -34,10 +34,10 @@ export class HoustingUnitDialogComponent implements OnInit {
               @Inject(MAT_DIALOG_DATA) public data: any,
               public fb: FormBuilder) {
     this.form = this.fb.group({
-      numeroAppartement: [data?.numeroAppartement || '', Validators.required],
-      etage: [data?.etage || '', [Validators.required, Validators.min(0)]],
-      superficie: [data?.superficie || '', [Validators.required, Validators.min(1)]],
-      adresse: [data?.adresse || '', Validators.required],
+      number: [data?.number || '', Validators.required],
+      floor: [data?.floor || '', [Validators.required, Validators.min(0)]],
+      area: [data?.area || '', [Validators.required, Validators.min(1)]],
+      address: [data?.address || '', Validators.required],
       type: [data?.type || '', Validators.required]
     });
   }
