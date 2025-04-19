@@ -7,7 +7,8 @@ import java.time.LocalDate
 @Entity
 @Table(name = "issues")
 class Issue {
-  @Id
+@Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id", nullable = false)
   var id: Long? = null
 

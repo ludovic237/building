@@ -47,6 +47,17 @@
         </mat-form-field>
       </div>
 
+      <!-- Address -->
+      <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
+        <mat-form-field appearance="outline" class="w-100">
+          <mat-label>Price</mat-label>
+          <input matInput type="number" formControlName="price" required>
+          @if (form.controls.price.errors?.required) {
+            <mat-error>Price is required</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
       <!-- Type -->
       <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
         <mat-form-field appearance="outline" class="w-100">

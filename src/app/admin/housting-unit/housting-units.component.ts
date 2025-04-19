@@ -16,8 +16,9 @@ import {PipesModule} from '../../theme/pipes/pipes.module';
 import {MatTooltipModule} from '@angular/material/tooltip';
 import {RentDialogComponent} from "../rent/rent-dialog/rent-dialog.component";
 import {CommonModule} from "@angular/common";
-import {HousingUnit} from "../../model/data";
-import {HousingUnitService} from "@services/housting-unit.service";
+import {HoustingUnit} from "../../model/data";
+import {HoustingUnitService} from "@services/housting-unit.service";
+import {MatSnackBar} from "@angular/material/snack-bar";
 
 @Component({
   selector: 'app-housting-units',
@@ -36,7 +37,7 @@ import {HousingUnitService} from "@services/housting-unit.service";
 })
 export class HoustingUnitsComponent implements OnInit {
   public housingUnits: any[] = [];
-  public selectedHousingUnit: HousingUnit | null = null;
+  public selectedHousingUnit: HoustingUnit | null = null;
 
   // public page: number = 1;
   // public count: number = 5;
@@ -47,7 +48,8 @@ export class HoustingUnitsComponent implements OnInit {
   public settings: Settings;
 
   constructor(
-    public housingUnitService: HousingUnitService,
+    public houstingUnitService: HoustingUnitService,
+    public snackBar: MatSnackBar,
     public appService: AppService,
     public dialog: MatDialog,
     public settingsService: SettingsService) {
@@ -56,6 +58,7 @@ export class HoustingUnitsComponent implements OnInit {
 
   ngOnInit(): void {
     this.housingUnits = [];
+    this.getHousingUnits()
   }
 
   public onPageChanged(event: any) {
@@ -94,22 +97,24 @@ export class HoustingUnitsComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(houstingUnit => {
       if (houstingUnit) {
-        if (data) {
-          // Modification du locataire
-          const index: number = this.housingUnits.indexOf(data);
-          if (index !== -1) {
-            this.housingUnits[index] = houstingUnit;
+        this.houstingUnitService.createHousingUnit(houstingUnit).subscribe({
+          next: (response) => {
+            console.log('Housing unit created successfully:', response);
+            this.snackBar.open('Housing unit created successfully!', '×', {
+              panelClass: 'success',
+              verticalPosition: 'top',
+              duration: 3000
+            });
+          },
+          error: (err) => {
+            console.error('Error creating housing unit:', err);
+            this.snackBar.open('Failed to create housing unit.', '×', {
+              panelClass: 'error',
+              verticalPosition: 'top',
+              duration: 3000
+            });
           }
-        } else {
-          this.housingUnitService.createHousingUnit(houstingUnit).subscribe({
-            next: (createdUnit) => {
-              this.housingUnits.push(createdUnit);
-            },
-            error: (err) => {
-              console.error('Error creating housing unit:', err);
-            }
-          });
-        }
+        });
       }
     });
   }
@@ -132,5 +137,30 @@ export class HoustingUnitsComponent implements OnInit {
       }
     });
   }
+
+  public getHousingUnits() {
+    this.houstingUnitService.getHousingUnits().subscribe(data => {
+      this.housingUnits = data.map(unit => ({
+        ...unit,
+        tenants: unit.tenants ?? [] // Ensure tenants is an empty array if null
+      }));
+    });
+  }
+
+  public openHoustingUnitDialogUpdate(id: number): void {
+    this.houstingUnitService.getHousingUnitById(id).subscribe(data => {
+      const dialogRef = this.dialog.open(HoustingUnitDialogComponent, {
+        data: data,
+        panelClass: ['theme-dialog'],
+        autoFocus: false,
+        direction: (this.settings.rtl) ? 'rtl' : 'ltr'
+      });
+
+      dialogRef.afterClosed().subscribe(houstingUnit => {
+        this.getHousingUnits()
+      });
+    });
+  }
+
 
 }

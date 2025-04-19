@@ -8,12 +8,13 @@ create table if not exists users
   password          varchar(255)            not null,
   phone             varchar(20)             null,
   role              tinytext                not null,
-  birthday          DATE                    NOT NULL,
+  birthday          DATE                     NULL,
   gender            ENUM ('male', 'female') NOT NULL,
   image             VARCHAR(255)            NULL,
   is_active         BOOLEAN                 NOT NULL DEFAULT TRUE,
   is_deleted        BOOLEAN                 NOT NULL DEFAULT FALSE,
   registration_date DATETIME                NOT NULL,
+  joined_date DATETIME                 NULL,
   username          varchar(255)            not null,
   unique (username),
   unique (email)
@@ -62,6 +63,7 @@ create table if not exists housting_units
   address   tinytext      null,
   type      varchar(50)   null,
   tenant_id bigint        null,
+  price DOUBLE default 0 null,
   unique (number)
 );
 

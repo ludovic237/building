@@ -6,7 +6,8 @@ import java.math.BigDecimal
 @Entity
 @Table(name = "services")
 class Services {
-  @Id
+@Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id", nullable = false)
   var id: Long? = null
 

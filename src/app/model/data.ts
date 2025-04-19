@@ -8,6 +8,24 @@ export class User {
   motDePasse: string;
 }
 
+export class UserNew {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  phone: string;
+  role: string;
+  birthday: Object;
+  gender: string;
+  image: string;
+  isActive: boolean;
+  isDeleted: boolean;
+  registrationDate: Date;
+  joinedDate: Date;
+  username: string;
+}
+
 export class Tenant {
   id: number;
   userId: number;
@@ -17,7 +35,7 @@ export class Tenant {
   depotGarantie: number;
 }
 
-export class HousingUnit {
+export class HoustingUnit {
   id: number;
   number: string;
   floor: number;

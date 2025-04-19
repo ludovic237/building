@@ -1,6 +1,7 @@
 export class User {
     id: number;
     username: string;
+    role: string;
     password: string;
     profile: UserProfile;
     work: UserWork;
@@ -8,7 +9,7 @@ export class User {
     social: UserSocial;
     settings: UserSettings;
   }
-  
+
   export class UserProfile {
     name: string;
     surname: string;
@@ -16,25 +17,25 @@ export class User {
     gender: string;
     image: string;
   }
-  
+
   export class UserWork {
     company: string;
     position: string;
     salary: number;
   }
-  
+
   export class UserContacts {
     email: string;
     phone: string;
     address: string;
   }
-  
+
   export class UserSocial {
     facebook: string;
     twitter: string;
     google: string;
   }
-  
+
   export class UserSettings {
     isActive: boolean;
     isDeleted: boolean;

@@ -8,7 +8,8 @@ import java.time.LocalDate
 @Entity
 @Table(name = "users")
 class User {
-  @Id
+@Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id", nullable = false)
   var id: Long? = null
 
@@ -51,6 +52,9 @@ class User {
 
   @Column(name = "registration_date", nullable = false)
   var registrationDate: Instant? = null
+
+  @Column(name = "joined_date", nullable = false)
+  var joinedDate: Instant? = null
 
   @Column(name = "username", nullable = false)
   var username: String? = null

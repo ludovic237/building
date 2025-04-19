@@ -31,6 +31,7 @@ package com.example.backend.services
             existingHoustingUnit.area = updatedHoustingUnit.area
             existingHoustingUnit.address = updatedHoustingUnit.address
             existingHoustingUnit.type = updatedHoustingUnit.type
+            existingHoustingUnit.price = updatedHoustingUnit.price
             // Update other fields as necessary
 
             return houstingUnitRepository.save(existingHoustingUnit)

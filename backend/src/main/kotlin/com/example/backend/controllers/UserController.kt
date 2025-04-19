@@ -6,7 +6,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/admin/users")
 class UserController(
   private val userService: UserService
 ) {
@@ -26,6 +26,7 @@ class UserController(
   @CrossOrigin(origins = ["http://localhost:4200"])
   @PostMapping
   fun createUser(@RequestBody user: User): ResponseEntity<User> {
+    println("Creating user: $user")
     return ResponseEntity.ok(userService.createUser(user))
   }
 
