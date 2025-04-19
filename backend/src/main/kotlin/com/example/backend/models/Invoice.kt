@@ -8,13 +8,12 @@ import java.time.LocalDate
 @Table(name = "invoices")
 class Invoice {
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id", nullable = false)
   var id: Long? = null
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "tenant_id")
-  var tenant: Tenant? = null
+  var tenant: com.example.backend.models.Tenant? = null
 
   @Lob
   @Column(name = "type", nullable = false)

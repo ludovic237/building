@@ -3,7 +3,6 @@ import { UsersService } from '@services/users.service';
 import { User } from '../../common/models/user.model';
 import { Settings, SettingsService } from '@services/settings.service';
 import { MatDialog } from '@angular/material/dialog';
-import { UserDialogComponent } from './user-dialog/user-dialog.component';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
@@ -20,9 +19,10 @@ import { MatCardModule } from '@angular/material/card';
 import { DatePipe } from '@angular/common';
 import { DomHandlerService } from '@services/dom-handler.service';
 import { NgxSpinnerService } from 'ngx-spinner';
+import {UserNewDialogComponent} from "./user-new-dialog/user-new-dialog.component";
 
 @Component({
-    selector: 'app-users',
+    selector: 'app-users-new',
     imports: [
         FormsModule,
         FlexLayoutModule,
@@ -39,12 +39,12 @@ import { NgxSpinnerService } from 'ngx-spinner';
         PipesModule,
         DatePipe
     ],
-    templateUrl: './users.component.html',
-    styleUrl: './users.component.scss',
+    templateUrl: './users-new.component.html',
+    styleUrl: './users-new.component.scss',
     encapsulation: ViewEncapsulation.None,
     providers: [UsersService]
 })
-export class UsersComponent implements OnInit {
+export class UsersNewComponent implements OnInit {
   public users: User[];
   public searchText: string;
   public page:any;
@@ -64,6 +64,7 @@ export class UsersComponent implements OnInit {
 
   public getUsers(): void {
       this.users = null; //for show spinner each time
+    console.log("user")
       this.usersService.getUsers().subscribe({
           next: (users) => {
               this.users = users
@@ -74,6 +75,7 @@ export class UsersComponent implements OnInit {
           }
       });
   }
+
   public addUser(user:User){
       this.usersService.addUser(user).subscribe(user => this.getUsers());
   }
@@ -92,7 +94,7 @@ export class UsersComponent implements OnInit {
   }
 
   public openUserDialog(user: User){
-      let dialogRef = this.dialog.open(UserDialogComponent, {
+      let dialogRef = this.dialog.open(UserNewDialogComponent, {
           data: user
       });
       dialogRef.afterClosed().subscribe((user: User) => {

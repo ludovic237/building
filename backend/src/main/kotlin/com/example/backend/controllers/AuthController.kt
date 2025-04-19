@@ -25,25 +25,28 @@ class AuthController(
     this.authenticationManager = authenticationManager
   }
 
-  @CrossOrigin(origins = ["http://localhost:4200"])
-  @PostMapping("/login")
-  fun login(@RequestBody loginRequest: LoginRequest): ResponseEntity<*> {
-    println("loginRequest")
-    println(loginRequest)
-    val authentication: Authentication = authenticationManager!!.authenticate(
-      UsernamePasswordAuthenticationToken(loginRequest.username, loginRequest.password)
-    )
-    SecurityContextHolder.getContext().authentication = authentication
+@CrossOrigin(origins = ["http://localhost:4200"])
+@PostMapping("/login")
+fun login(@RequestBody loginRequest: LoginRequest): ResponseEntity<*> {
+    return try {
+        val authentication: Authentication = authenticationManager!!.authenticate(
+            UsernamePasswordAuthenticationToken(loginRequest.username, loginRequest.password)
+        )
+        SecurityContextHolder.getContext().authentication = authentication
 
-    // Générer le token JWT
-    val token = jwtUtil.generateToken(authentication)
+        // Générer le token JWT
+        val token = jwtUtil.generateToken(authentication)
 
-//    return ResponseEntity.ok(mapOf("message" to "Login successful"))
-    return ResponseEntity.ok(mapOf(
-      "message" to "Login successful",
-      "token" to token
-    ))
-  }
+        ResponseEntity.ok(mapOf(
+            "message" to "Login successful",
+            "token" to token
+        ))
+    } catch (ex: Exception) {
+        ResponseEntity.badRequest().body(mapOf(
+            "message" to "Login failed: Invalid username or password"
+        ))
+    }
+}
 
   @CrossOrigin(origins = ["http://localhost:4200"])
   @PostMapping("/logout")

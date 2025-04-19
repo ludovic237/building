@@ -75,8 +75,18 @@ export class SignInComponent implements OnInit {
             verticalPosition: 'top',
             duration: 3000
           });
+          // Redirect after 3000 ms
+          setTimeout(() => {
+            this.router.navigate(['/admin']);
+          }, 3000);
         },
         error: (err) => {
+          console.log('Login failed:', err);
+          this.snackBar.open(err.error.message, '×', {
+            panelClass: 'error',
+            verticalPosition: 'top',
+            duration: 3000
+          });
           console.error('Login failed:', err);
         },
       });

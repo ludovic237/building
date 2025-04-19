@@ -1,10 +1,8 @@
 package com.example.backend.models
 
 import jakarta.persistence.*
-import lombok.Data
 import java.time.LocalDate
 
-@Data
 @Entity
 @Table(name = "subscriptions")
 class Subscription {
@@ -18,7 +16,7 @@ class Subscription {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "service_id")
-  var services: Services? = null
+  var service: Services? = null
 
   @Column(name = "start_date", nullable = false)
   var startDate: LocalDate? = null

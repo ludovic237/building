@@ -1,12 +1,14 @@
 package com.example.backend.models
 
 import jakarta.persistence.*
+import org.hibernate.annotations.ColumnDefault
+import java.time.Instant
+import java.time.LocalDate
 
 @Entity
 @Table(name = "users")
 class User {
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id", nullable = false)
   var id: Long? = null
 
@@ -28,6 +30,27 @@ class User {
   @Lob
   @Column(name = "role", nullable = false)
   var role: String? = null
+
+  @Column(name = "birthday", nullable = false)
+  var birthday: LocalDate? = null
+
+  @Lob
+  @Column(name = "gender", nullable = false)
+  var gender: String? = null
+
+  @Column(name = "image")
+  var image: String? = null
+
+  @ColumnDefault("1")
+  @Column(name = "is_active", nullable = false)
+  var isActive: Boolean? = false
+
+  @ColumnDefault("0")
+  @Column(name = "is_deleted", nullable = false)
+  var isDeleted: Boolean? = false
+
+  @Column(name = "registration_date", nullable = false)
+  var registrationDate: Instant? = null
 
   @Column(name = "username", nullable = false)
   var username: String? = null

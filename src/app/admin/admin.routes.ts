@@ -88,6 +88,10 @@ export const routes: Routes = [
             path: 'users',
             loadComponent: () => import('./users/users.component').then(c => c.UsersComponent),
             data: { breadcrumb: 'Users' }
+          },   {
+            path: 'users-new',
+            loadComponent: () => import('./users-new/users-new.component').then(c => c.UsersNewComponent),
+            data: { breadcrumb: 'Users new' }
           },  {
             path: 'invoice',
             loadComponent: () => import('./invoice/invoices.component').then(c => c.InvoicesComponent),

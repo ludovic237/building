@@ -1,15 +1,12 @@
 package com.example.backend.models
 
 import jakarta.persistence.*
-import lombok.Data
 import java.math.BigDecimal
 
-@Data
 @Entity
 @Table(name = "housting_units")
 class HoustingUnit {
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id", nullable = false)
   var id: Long? = null
 
@@ -28,4 +25,8 @@ class HoustingUnit {
 
   @Column(name = "type", length = 50)
   var type: String? = null
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "tenant_id")
+  var tenant: com.example.backend.models.Tenant? = null
 }
