@@ -8,26 +8,26 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/api/housing-units")
 class HoustingUnitController(
-  private val houstingUnitService: HoustingUnitService
+  private val housingUnitService: HoustingUnitService
 ) {
 
   @CrossOrigin(origins = ["http://localhost:4200"])
   @GetMapping
   fun getAllHoustingUnits(): ResponseEntity<List<HoustingUnit>> {
-    return ResponseEntity.ok(houstingUnitService.getAllHoustingUnits())
+    return ResponseEntity.ok(housingUnitService.getAllHoustingUnits())
   }
 
   @CrossOrigin(origins = ["http://localhost:4200"])
   @GetMapping("/{id}")
   fun getHoustingUnitById(@PathVariable id: Long): ResponseEntity<HoustingUnit> {
     return ResponseEntity.ok(
-      houstingUnitService.getHoustingUnitById(id).orElseThrow { IllegalArgumentException("Housting Unit not found") })
+      housingUnitService.getHoustingUnitById(id).orElseThrow { IllegalArgumentException("Housting Unit not found") })
   }
 
   @CrossOrigin(origins = ["http://localhost:4200"])
   @PostMapping
   fun createHoustingUnit(@RequestBody housingUnit: HoustingUnit): ResponseEntity<HoustingUnit> {
-    return ResponseEntity.ok(houstingUnitService.createHoustingUnit(housingUnit))
+    return ResponseEntity.ok(housingUnitService.createHoustingUnit(housingUnit))
   }
 
   @CrossOrigin(origins = ["http://localhost:4200"])
@@ -36,13 +36,13 @@ class HoustingUnitController(
     @PathVariable id: Long,
     @RequestBody updatedHoustingUnit: HoustingUnit
   ): ResponseEntity<HoustingUnit> {
-    return ResponseEntity.ok(houstingUnitService.updateHoustingUnit(id, updatedHoustingUnit))
+    return ResponseEntity.ok(housingUnitService.updateHoustingUnit(id, updatedHoustingUnit))
   }
 
   @CrossOrigin(origins = ["http://localhost:4200"])
   @DeleteMapping("/{id}")
   fun deleteHoustingUnit(@PathVariable id: Long): ResponseEntity<Void> {
-    houstingUnitService.deleteHoustingUnit(id)
+    housingUnitService.deleteHoustingUnit(id)
     return ResponseEntity.noContent().build()
   }
 }

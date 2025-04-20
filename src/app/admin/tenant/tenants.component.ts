@@ -57,8 +57,6 @@ export class TenantsComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.countries = this.appService.getCountries();
-    this.customers = customers;
     this.getTenantData();
 
   }
@@ -81,32 +79,6 @@ export class TenantsComponent implements OnInit {
     this.domHandlerService.winScroll(0, 0);
   }
 
-  // public openTenantDialog(data: any) {
-  //   const dialogRef = this.dialog.open(TenantDialogComponent, {
-  //     data: {
-  //       customer: data,
-  //       stores: this.stores,
-  //       countries: this.countries
-  //     },
-  //     panelClass: ['theme-dialog'],
-  //     autoFocus: false,
-  //     direction: (this.settings.rtl) ? 'rtl' : 'ltr'
-  //   });
-  //   dialogRef.afterClosed().subscribe(customer => {
-  //     if (customer) {
-  //       const index: number = this.customers.findIndex(x => x.id == customer.id);
-  //       if (index !== -1) {
-  //         this.customers[index] = customer;
-  //       }
-  //       else {
-  //         let last_customer = this.customers[this.customers.length - 1];
-  //         customer.id = last_customer.id + 1;
-  //         this.customers.push(customer);
-  //       }
-  //     }
-  //   });
-  // }
-
   public remove(customer: any) {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       maxWidth: "400px",
@@ -128,33 +100,21 @@ export class TenantsComponent implements OnInit {
 
   public openTenantDialog(data: any): void {
     const dialogRef = this.dialog.open(TenantDialogComponent, {
-      data: {
-        customer: data,
-        stores: this.stores,
-        countries: this.countries
-      },
+      data: data,
       panelClass: ['theme-dialog'],
       autoFocus: false,
       direction: (this.settings.rtl) ? 'rtl' : 'ltr'
     });
 
     dialogRef.afterClosed().subscribe(tenant => {
-      const usersDial=  [
-        { id: 1, name: 'John Doe' },
-        { id: 2, name: 'Jane Smith' }
-      ];
-      const logementsDial = [
-        { id: 101, name: 'Apartment A', basePrice: 500 },
-        { id: 102, name: 'Apartment B', basePrice: 700 }
-      ];
       if (tenant) {
         const formattedTenant = {
           id: this.tenants.length + 1, // Generate a new ID
-          name: usersDial.find(user => user.id === tenant.userId)?.name || 'Unknown',
-          apartment: logementsDial.find(logement => logement.id === tenant.logementId)?.name || 'Unknown',
-          entryDate: tenant.dateEntree,
-          deposit: tenant.depotGarantie,
-          paymentStatus: tenant.statut
+          // name: usersDial.find(user => user.id === tenant.userId)?.name || 'Unknown',
+          // apartment: logementsDial.find(logement => logement.id === tenant.housingUnitId)?.name || 'Unknown',
+          entryDate: tenant.moveInDate,
+          deposit: tenant.securityDeposit,
+          paymentStatus: tenant.status
         };
         console.log('New Tenant Data:', formattedTenant);
         // this.tenants.push(tenant); // Add the new tenant to the list

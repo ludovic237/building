@@ -39,7 +39,7 @@ export class InvoiceDialogComponent implements OnInit {
       type: [data?.type || '', Validators.required],
       mois: [data?.mois || '', Validators.required],
       montant: [data?.montant || '', [Validators.required, Validators.min(0)]],
-      statut: [data?.statut || 'impayée', Validators.required],
+      status: [data?.status || 'impayée', Validators.required],
       datePaiement: [data?.datePaiement || '']
     });
   }

@@ -55,7 +55,7 @@ export class SubscriptionsComponent implements OnInit {
         serviceId: 1,
         dateDebut: '2023-01-01',
         dateFin: '2023-12-31',
-        statut: 'actif'
+        status: 'actif'
       },
       {
         id: 2,
@@ -63,7 +63,7 @@ export class SubscriptionsComponent implements OnInit {
         serviceId: 2,
         dateDebut: '2023-02-01',
         dateFin: '2023-11-30',
-        statut: 'inactif'
+        status: 'inactif'
       }
     ];
   }
@@ -87,7 +87,7 @@ export class SubscriptionsComponent implements OnInit {
         serviceId: result.serviceId,
         dateDebut: new Date(result.dateDebut).toISOString().split('T')[0], // Convert to YYYY-MM-DD
         dateFin: new Date(result.dateFin).toISOString().split('T')[0],     // Convert to YYYY-MM-DD
-        statut: result.statut
+        status: result.status
       };
       console.log(subscription);
 

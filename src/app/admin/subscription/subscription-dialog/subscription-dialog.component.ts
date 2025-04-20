@@ -30,7 +30,7 @@ export class SubscriptionDialogComponent implements OnInit {
   public form: FormGroup;
   public locataires: any[] = [];
   public services: any[] = [];
-  public statuts: string[] = ['actif', 'inactif'];
+  public statuss: string[] = ['actif', 'inactif'];
 
   constructor(public dialogRef: MatDialogRef<SubscriptionDialogComponent>,
               @Inject(MAT_DIALOG_DATA) public data: any,
@@ -40,7 +40,7 @@ export class SubscriptionDialogComponent implements OnInit {
       serviceId: [data?.serviceId || '', Validators.required],
       dateDebut: [data?.dateDebut || '', Validators.required],
       dateFin: [data?.dateFin || '', Validators.required],
-      statut: [data?.statut || 'actif', Validators.required]
+      status: [data?.status || 'actif', Validators.required]
     });
   }
 

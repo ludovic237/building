@@ -7,23 +7,23 @@ package com.example.backend.services
 
     @Service
     class HoustingUnitService(
-        private val houstingUnitRepository: HoustingUnitRepository
+        private val housingUnitRepository: HoustingUnitRepository
     ) {
 
         fun getAllHoustingUnits(): List<HoustingUnit> {
-            return houstingUnitRepository.findAll()
+            return housingUnitRepository.findAll()
         }
 
         fun getHoustingUnitById(id: Long): Optional<HoustingUnit> {
-            return houstingUnitRepository.findById(id)
+            return housingUnitRepository.findById(id)
         }
 
-        fun createHoustingUnit(houstingUnit: HoustingUnit): HoustingUnit {
-            return houstingUnitRepository.save(houstingUnit)
+        fun createHoustingUnit(housingUnit: HoustingUnit): HoustingUnit {
+            return housingUnitRepository.save(housingUnit)
         }
 
         fun updateHoustingUnit(id: Long, updatedHoustingUnit: HoustingUnit): HoustingUnit {
-            val existingHoustingUnit = houstingUnitRepository.findById(id)
+            val existingHoustingUnit = housingUnitRepository.findById(id)
                 .orElseThrow { IllegalArgumentException("HoustingUnit with ID $id not found") }
 
             existingHoustingUnit.number = updatedHoustingUnit.number
@@ -34,13 +34,13 @@ package com.example.backend.services
             existingHoustingUnit.price = updatedHoustingUnit.price
             // Update other fields as necessary
 
-            return houstingUnitRepository.save(existingHoustingUnit)
+            return housingUnitRepository.save(existingHoustingUnit)
         }
 
         fun deleteHoustingUnit(id: Long) {
-            if (!houstingUnitRepository.existsById(id)) {
+            if (!housingUnitRepository.existsById(id)) {
                 throw IllegalArgumentException("HoustingUnit with ID $id not found")
             }
-            houstingUnitRepository.deleteById(id)
+            housingUnitRepository.deleteById(id)
         }
     }

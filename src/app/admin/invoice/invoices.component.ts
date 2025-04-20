@@ -55,7 +55,7 @@ export class InvoicesComponent implements OnInit {
         type: 'eau',
         mois: 'January',
         montant: 100,
-        statut: 'payée',
+        status: 'payée',
         datePaiement: '2023-01-15'
       },
       {
@@ -64,7 +64,7 @@ export class InvoicesComponent implements OnInit {
         type: 'électricité',
         mois: 'February',
         montant: 200,
-        statut: 'impayée',
+        status: 'impayée',
         datePaiement: null
       }
     ];

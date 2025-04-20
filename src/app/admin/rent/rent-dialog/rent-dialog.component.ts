@@ -8,6 +8,7 @@ import {MatTabsModule} from '@angular/material/tabs';
 import {FlexLayoutModule} from '@ngbracket/ngx-layout';
 import {MatDatepickerModule} from "@angular/material/datepicker";
 import {MatNativeDateModule} from "@angular/material/core";
+import {TenantService} from "@services/tenant.service";
 
 @Component({
   selector: 'app-rent-dialog',
@@ -27,44 +28,67 @@ import {MatNativeDateModule} from "@angular/material/core";
 })
 export class RentDialogComponent implements OnInit {
 
+  public tenants: any[] = [];
   public locataires: any[] = [];
   public logements: any[] = [];
   public form: FormGroup;
   protected logementBasePrice: number = 0;
   public minDate: Date = new Date();
 
-  constructor(public dialogRef: MatDialogRef<RentDialogComponent>,
+  constructor(
+    private tenantService: TenantService,
+    public dialogRef: MatDialogRef<RentDialogComponent>,
               @Inject(MAT_DIALOG_DATA) public data: any,
               public fb: FormBuilder) {
     this.form = this.fb.group({
       locataireId: [data?.locataireId || '', Validators.required],
-      logementId: [data?.logementId || '', Validators.required],
+      housingUnitId: [data?.housingUnitId || '', Validators.required],
       mois: [data?.mois || '', Validators.required],
       annee: [data?.annee || '', [Validators.required, Validators.min(1900)]],
       montant: [data?.montant || '', [Validators.required, Validators.min(0)]],
-      statut: [data?.statut || 'non payé', Validators.required],
+      status: [data?.status || 'non payé', Validators.required],
       datePaiement: [data?.datePaiement || '']
     });
   }
 
   ngOnInit(): void {
-    this.locataires = this.data.users || [
-      { id: 1, name: 'John Doe' },
-      { id: 2, name: 'Jane Smith' },
-      { id: 3, name: 'Alice Johnson' },
-      { id: 4, name: 'Bob Brown' }
-    ];
-    this.logements = this.data.logements || [
-      { id: 101, name: 'Apartment A', basePrice: 500 },
-      { id: 102, name: 'Apartment B', basePrice: 700 }
-    ];
+    // this.locataires = this.data.users || [
+    //   { id: 1, name: 'John Doe' },
+    //   { id: 2, name: 'Jane Smith' },
+    //   { id: 3, name: 'Alice Johnson' },
+    //   { id: 4, name: 'Bob Brown' }
+    // ];
+    this.fetchTenantsDetails();
+    // Subscribe to tenant selection changes
+    this.form.get('locataireId')?.valueChanges.subscribe((tenantId) => {
+      const selectedTenant = this.tenants.find((tenant) => tenant.tenantId === tenantId);
+      if (selectedTenant) {
+        this.form.patchValue({
+          housingUnitId: selectedTenant.housingUnitName,
+          // montant: selectedTenant.housingUnitPrice,
+          // status: selectedTenant.status,
+          // datePaiement: selectedTenant.paymentDate
+        });
+      }
+    });
+  }
+
+  private fetchTenantsDetails(): void {
+    this.tenantService.getTenantsDetails().subscribe({
+      next: (data) => {
+        this.tenants = data;
+      },
+      error: (err) => {
+        console.error('Error fetching users:', err);
+      }
+    });
   }
 
 
-  updateStatut(): void {
-    const depotGarantie = this.form.get('depotGarantie')?.value || 0;
-    const statut = depotGarantie >= this.logementBasePrice ? 'Paid' : 'Unpaid';
-    this.form.get('statut')?.setValue(statut);
+  updatestatus(): void {
+    const securityDeposit = this.form.get('securityDeposit')?.value || 0;
+    const status = securityDeposit >= this.logementBasePrice ? 'Paid' : 'Unpaid';
+    this.form.get('status')?.setValue(status);
   }
 
   public onSubmit(): void {

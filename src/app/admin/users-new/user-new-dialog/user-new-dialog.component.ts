@@ -133,8 +133,8 @@ export class UserNewDialogComponent implements OnInit {
     this.dialogRef.close();
   }
 
-  public getHousingUnits() {
-    this.housingUnitService.getHousingUnits().subscribe(data => {
+  public gethousingUnits() {
+    this.housingUnitService.gethousingUnits().subscribe(data => {
     });
   }
 

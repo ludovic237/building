@@ -1,13 +1,15 @@
 package com.example.backend.models
 
 import jakarta.persistence.*
+import lombok.Data
 import org.hibernate.annotations.ColumnDefault
 import java.time.LocalDate
 
+@Data
 @Entity
 @Table(name = "issues")
 class Issue {
-@Id
+  @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id", nullable = false)
   var id: Long? = null

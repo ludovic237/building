@@ -20,7 +20,7 @@
                 <div class="mat-mdc-cell">{{ invoice.type }}</div>
                 <div class="mat-mdc-cell">{{ invoice.mois }}</div>
                 <div class="mat-mdc-cell">{{ invoice.montant | currency }}</div>
-                <div class="mat-mdc-cell">{{ invoice.statut }}</div>
+                <div class="mat-mdc-cell">{{ invoice.status }}</div>
                 <div class="mat-mdc-cell">{{ invoice.datePaiement || 'N/A' }}</div>
                 <div class="mat-mdc-cell">
                   <button mat-mini-fab color="primary" matTooltip="Edit" (click)="openInvoiceDialog(invoice)">

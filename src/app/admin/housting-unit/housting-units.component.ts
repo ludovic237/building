@@ -37,7 +37,7 @@ import {MatSnackBar} from "@angular/material/snack-bar";
 })
 export class HoustingUnitsComponent implements OnInit {
   public housingUnits: any[] = [];
-  public selectedHousingUnit: HoustingUnit | null = null;
+  public selectedhousingUnit: HoustingUnit | null = null;
 
   // public page: number = 1;
   // public count: number = 5;
@@ -48,7 +48,7 @@ export class HoustingUnitsComponent implements OnInit {
   public settings: Settings;
 
   constructor(
-    public houstingUnitService: HoustingUnitService,
+    public housingUnitService: HoustingUnitService,
     public snackBar: MatSnackBar,
     public appService: AppService,
     public dialog: MatDialog,
@@ -58,7 +58,7 @@ export class HoustingUnitsComponent implements OnInit {
 
   ngOnInit(): void {
     this.housingUnits = [];
-    this.getHousingUnits()
+    this.gethousingUnits()
   }
 
   public onPageChanged(event: any) {
@@ -95,9 +95,9 @@ export class HoustingUnitsComponent implements OnInit {
       direction: (this.settings.rtl) ? 'rtl' : 'ltr'
     });
 
-    dialogRef.afterClosed().subscribe(houstingUnit => {
-      if (houstingUnit) {
-        this.houstingUnitService.createHousingUnit(houstingUnit).subscribe({
+    dialogRef.afterClosed().subscribe(housingUnit => {
+      if (housingUnit) {
+        this.housingUnitService.createhousingUnit(housingUnit).subscribe({
           next: (response) => {
             console.log('Housing unit created successfully:', response);
             this.snackBar.open('Housing unit created successfully!', '×', {
@@ -138,8 +138,8 @@ export class HoustingUnitsComponent implements OnInit {
     });
   }
 
-  public getHousingUnits() {
-    this.houstingUnitService.getHousingUnits().subscribe(data => {
+  public gethousingUnits() {
+    this.housingUnitService.gethousingUnits().subscribe(data => {
       this.housingUnits = data.map(unit => ({
         ...unit,
         tenants: unit.tenants ?? [] // Ensure tenants is an empty array if null
@@ -148,7 +148,7 @@ export class HoustingUnitsComponent implements OnInit {
   }
 
   public openHoustingUnitDialogUpdate(id: number): void {
-    this.houstingUnitService.getHousingUnitById(id).subscribe(data => {
+    this.housingUnitService.gethousingUnitById(id).subscribe(data => {
       const dialogRef = this.dialog.open(HoustingUnitDialogComponent, {
         data: data,
         panelClass: ['theme-dialog'],
@@ -156,8 +156,8 @@ export class HoustingUnitsComponent implements OnInit {
         direction: (this.settings.rtl) ? 'rtl' : 'ltr'
       });
 
-      dialogRef.afterClosed().subscribe(houstingUnit => {
-        this.getHousingUnits()
+      dialogRef.afterClosed().subscribe(housingUnit => {
+        this.gethousingUnits()
       });
     });
   }

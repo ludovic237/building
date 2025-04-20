@@ -53,7 +53,7 @@ export class IssuesComponent implements OnInit {
         titre: 'Water Leak',
         description: 'There is a water leak in the kitchen.',
         dateDeclaration: '2023-10-01',
-        statut: 'ouvert'
+        status: 'ouvert'
       },
       {
         id: 2,
@@ -61,7 +61,7 @@ export class IssuesComponent implements OnInit {
         titre: 'Broken Heater',
         description: 'The heater is not working.',
         dateDeclaration: '2023-10-05',
-        statut: 'en cours'
+        status: 'en cours'
       }
     ];
   }

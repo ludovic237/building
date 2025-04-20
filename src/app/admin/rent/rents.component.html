@@ -19,11 +19,11 @@
       @for (rent of rents; track $index) {
         <div class="mat-mdc-row">
           <div class="mat-mdc-cell">{{ getTenantName(rent.locataireId) }}</div>
-          <div class="mat-mdc-cell">{{ getHousingUnitName(rent.logementId) }}</div>
+          <div class="mat-mdc-cell">{{ gethousingUnitName(rent.housingUnitId) }}</div>
           <div class="mat-mdc-cell">{{ rent.mois }}</div>
           <div class="mat-mdc-cell">{{ rent.annee }}</div>
           <div class="mat-mdc-cell">{{ rent.montant | currency }}</div>
-          <div class="mat-mdc-cell">{{ rent.statut }}</div>
+          <div class="mat-mdc-cell">{{ rent.status }}</div>
           <div class="mat-mdc-cell">{{ rent.datePaiement || 'N/A' }}</div>
           <div class="mat-mdc-cell">
             <button mat-mini-fab color="primary" matTooltip="Edit" (click)="openRentDialog(rent)">
@@ -37,4 +37,14 @@
       }
     </div>
   </mat-card>
+  @if (rents.length) {
+    <div fxLayout="row wrap">
+      <div fxFlex="100">
+        <mat-card class="text-center">
+          <pagination-controls class="product-pagination" [autoHide]="true" [maxSize]="5"
+                               (pageChange)="onPageChanged($event)"></pagination-controls>
+        </mat-card>
+      </div>
+    </div>
+  }
 </div>

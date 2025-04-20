@@ -19,23 +19,23 @@ export class HoustingUnitService {
     });
   }
 
-  getHousingUnits(): Observable<any[]> {
+  gethousingUnits(): Observable<any[]> {
     return this.http.get<any[]>(this.apiUrl, {headers: this.getHeaders()});
   }
 
-  getHousingUnitById(id: number): Observable<HoustingUnit> {
+  gethousingUnitById(id: number): Observable<HoustingUnit> {
     return this.http.get<HoustingUnit>(`${this.apiUrl}/${id}`, {headers: this.getHeaders()});
   }
 
-  createHousingUnit(housingUnit: HoustingUnit): Observable<HoustingUnit> {
+  createhousingUnit(housingUnit: HoustingUnit): Observable<HoustingUnit> {
     return this.http.post<HoustingUnit>(this.apiUrl, housingUnit, {headers: this.getHeaders()});
   }
 
-  updateHousingUnit(id: number, housingUnit: HoustingUnit): Observable<HoustingUnit> {
+  updatehousingUnit(id: number, housingUnit: HoustingUnit): Observable<HoustingUnit> {
     return this.http.put<HoustingUnit>(`${this.apiUrl}/${id}`, housingUnit, {headers: this.getHeaders()});
   }
 
-  deleteHousingUnit(id: number): Observable<void> {
+  deletehousingUnit(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`, {headers: this.getHeaders()});
   }
 }

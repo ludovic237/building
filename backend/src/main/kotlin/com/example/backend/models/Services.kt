@@ -1,8 +1,10 @@
 package com.example.backend.models
 
 import jakarta.persistence.*
-import java.math.BigDecimal
+import lombok.Data
+import org.hibernate.annotations.ColumnDefault
 
+@Data
 @Entity
 @Table(name = "services")
 class Services {
@@ -11,6 +13,9 @@ class Services {
   @Column(name = "id", nullable = false)
   var id: Long? = null
 
+  @Column(name = "code", nullable = false, length = 50)
+  var code: String? = null
+
   @Column(name = "name", nullable = false, length = 100)
   var name: String? = null
 
@@ -18,6 +23,11 @@ class Services {
   @Column(name = "description")
   var description: String? = null
 
-  @Column(name = "monthly_price", precision = 10, scale = 2)
-  var monthlyPrice: BigDecimal? = null
+  @Lob
+  @Column(name = "billing_mode", nullable = false)
+  var billingMode: String? = null
+
+  @ColumnDefault("1")
+  @Column(name = "is_active")
+  var isActive: Boolean? = null
 }

@@ -16,6 +16,8 @@ import { PipesModule } from '../../theme/pipes/pipes.module';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import {CommonModule} from "@angular/common";
 import {Rent} from "../../model/data";
+import {TenantService} from "@services/tenant.service";
+import {RentService} from "@services/rent.service";
 
 @Component({
     selector: 'app-rents',
@@ -35,6 +37,7 @@ import {Rent} from "../../model/data";
 export class RentsComponent implements OnInit {
 
   public rents: any[] = [];
+  domHandlerService = inject(DomHandlerService);
   public locataires: any[] = [
     { id: 1, name: 'John Doe' }, // Matches locataireId: 1 in rents
     { id: 2, name: 'Jane Smith' }, // Matches locataireId: 2 in rents
@@ -42,8 +45,8 @@ export class RentsComponent implements OnInit {
     { id: 4, name: 'Bob Brown' }
   ];
   public logements = [
-    { id: 101, name: 'Apartment A' }, // Matches logementId: 101 in rents
-    { id: 102, name: 'Apartment B' }, // Matches logementId: 102 in rents
+    { id: 101, name: 'Apartment A' }, // Matches housingUnitId: 101 in rents
+    { id: 102, name: 'Apartment B' }, // Matches housingUnitId: 102 in rents
     { id: 103, name: 'Apartment C' },
     { id: 104, name: 'Apartment D' }
   ];
@@ -51,39 +54,36 @@ export class RentsComponent implements OnInit {
   public count: number = 5;
 
 
-  constructor(public appService: AppService, public dialog: MatDialog, public settingsService: SettingsService) {
+  constructor(
+    public tenantService: TenantService,
+    public rentService: RentService,
+    public appService: AppService,
+              public dialog: MatDialog,
+              public settingsService: SettingsService) {
 
   }
 
   ngOnInit(): void {
     // Mock data for rents
-    this.rents = [
-      {
-        id: 1,
-        logementId: 101,
-        locataireId: 1,
-        mois: 'January',
-        annee: 2023,
-        montant: 500,
-        statut: 'payé',
-        datePaiement: '2023-01-15'
+    this.getTenantData();
+  }
+
+  private getTenantData() {
+    console.log("getTenantData");
+    console.log(localStorage.getItem('token'))
+    this.rentService.getRents().subscribe({
+      next: (data) => {
+        this.rents = data;
       },
-      {
-        id: 2,
-        logementId: 102,
-        locataireId: 2,
-        mois: 'February',
-        annee: 2023,
-        montant: 700,
-        statut: 'non payé',
-        datePaiement: null
+      error: (err) => {
+        console.error('Failed to load tenants:', err);
       }
-    ];
+    })
   }
 
   public onPageChanged(event: any) {
     this.page = event;
-
+    this.domHandlerService.winScroll(0, 0);
   }
 
   public openRentDialog(data: Rent | null): void {
@@ -131,8 +131,8 @@ export class RentsComponent implements OnInit {
     return tenant ? tenant.name : 'Unknown';
   }
 
-  getHousingUnitName(logementId: number): string {
-    const logement = this.logements.find(l => l.id === logementId);
+  gethousingUnitName(housingUnitId: number): string {
+    const logement = this.logements.find(l => l.id === housingUnitId);
     return logement ? logement.name : 'Unknown';
   }
 }

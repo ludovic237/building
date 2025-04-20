@@ -1,23 +1,29 @@
 package com.example.backend.models
 
 import jakarta.persistence.*
+import lombok.Data
+import java.math.BigDecimal
 import java.time.LocalDate
 
+@Data
 @Entity
 @Table(name = "subscriptions")
 class Subscription {
-@Id
+  @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id", nullable = false)
   var id: Long? = null
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "user_id")
-  var user: com.example.backend.models.User? = null
+  @JoinColumn(name = "tenant_id")
+  var tenant: com.example.backend.models.Tenant? = null
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "service_id")
   var service: Services? = null
+
+  @Column(name = "price", precision = 10, scale = 2)
+  var price: BigDecimal? = null
 
   @Column(name = "start_date", nullable = false)
   var startDate: LocalDate? = null

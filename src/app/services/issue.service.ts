@@ -22,7 +22,7 @@ import { Injectable } from '@angular/core';
             titre: 'Plumbing Issue',
             description: 'Leaking pipe in the kitchen',
             dateDeclaration: new Date('2023-01-10'),
-            statut: 'ouvert'
+            status: 'ouvert'
           },
           {
             id: 2,
@@ -30,7 +30,7 @@ import { Injectable } from '@angular/core';
             titre: 'Electrical Issue',
             description: 'Power outage in the living room',
             dateDeclaration: new Date('2023-02-05'),
-            statut: 'en cours'
+            status: 'en cours'
           }
         ];
         return of(mockData);
@@ -44,7 +44,7 @@ import { Injectable } from '@angular/core';
           titre: 'Plumbing Issue',
           description: 'Leaking pipe in the kitchen',
           dateDeclaration: new Date('2023-01-10'),
-          statut: 'ouvert'
+          status: 'ouvert'
         };
         return of(mockData);
       }

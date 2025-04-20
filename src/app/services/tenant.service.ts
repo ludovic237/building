@@ -22,6 +22,10 @@ import { Injectable } from '@angular/core';
         return this.http.get<any[]>(this.apiUrl,{headers: this.getHeaders()});
       }
 
+      getTenantsDetails(): Observable<any[]> {
+        return this.http.get<any[]>(this.apiUrl+"/details",{headers: this.getHeaders()});
+      }
+
       getTenantById(id: number): Observable<Tenant> {
         return this.http.get<Tenant>(`${this.apiUrl}/${id}`,{headers: this.getHeaders()});
       }

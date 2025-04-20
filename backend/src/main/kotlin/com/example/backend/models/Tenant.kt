@@ -1,10 +1,12 @@
 package com.example.backend.models
 
 import jakarta.persistence.*
+import lombok.Data
 import org.hibernate.annotations.ColumnDefault
 import java.math.BigDecimal
 import java.time.LocalDate
 
+@Data
 @Entity
 @Table(name = "tenants")
 class Tenant {
@@ -27,7 +29,15 @@ class Tenant {
   @Column(name = "move_out_date")
   var moveOutDate: LocalDate? = null
 
+  @Lob
+  @Column(name = "status", nullable = false)
+  var status: String? = null
+
   @ColumnDefault("0.00")
   @Column(name = "security_deposit", precision = 10, scale = 2)
   var securityDeposit: BigDecimal? = null
+
+  @ColumnDefault("0.00")
+  @Column(name = "housting_price", precision = 10, scale = 2)
+  var houstingPrice: BigDecimal? = null
 }

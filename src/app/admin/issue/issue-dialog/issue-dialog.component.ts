@@ -29,7 +29,7 @@ export class IssueDialogComponent implements OnInit {
 
   public locataires: any[] = [];
   public form: FormGroup;
-  public statuts: string[] = ['ouvert', 'en cours', 'résolu'];
+  public statuss: string[] = ['ouvert', 'en cours', 'résolu'];
 
   constructor(public dialogRef: MatDialogRef<IssueDialogComponent>,
               @Inject(MAT_DIALOG_DATA) public data: any,
@@ -39,7 +39,7 @@ export class IssueDialogComponent implements OnInit {
       titre: [data?.titre || '', Validators.required],
       description: [data?.description || '', Validators.required],
       dateDeclaration: [data?.dateDeclaration || '', Validators.required],
-      statut: [data?.statut || 'ouvert', Validators.required]
+      status: [data?.status || 'ouvert', Validators.required]
     });
   }
 

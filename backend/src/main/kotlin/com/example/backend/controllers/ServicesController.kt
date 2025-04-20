@@ -21,7 +21,7 @@ class ServicesController(
   @GetMapping("/{id}")
   fun getServiceById(@PathVariable id: Long): ResponseEntity<Services> {
     return ResponseEntity.ok(
-      serviceService.getServiceById(id).orElseThrow { IllegalArgumentException("Service not found") })
+      serviceService.getServiceById(id).orElseThrow { IllegalArgumentException("Services not found") })
   }
 
   @CrossOrigin(origins = ["http://localhost:4200"])

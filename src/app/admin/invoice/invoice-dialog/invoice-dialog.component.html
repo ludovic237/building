@@ -63,12 +63,12 @@
       <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
         <mat-form-field appearance="outline" class="w-100">
           <mat-label>Status</mat-label>
-          <mat-select formControlName="statut" required>
+          <mat-select formControlName="status" required>
             <mat-option [value]="">-</mat-option>
             <mat-option [value]="'payée'">Payée</mat-option>
             <mat-option [value]="'impayée'">Impayée</mat-option>
           </mat-select>
-          @if(form.controls.statut.errors?.required) {
+          @if(form.controls.status.errors?.required) {
             <mat-error>Status is required</mat-error>
           }
         </mat-form-field>

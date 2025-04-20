@@ -28,7 +28,7 @@ class ServiceService(
 
     existingServices.name = updatedServices.name
     existingServices.description = updatedServices.description
-    existingServices.monthlyPrice = updatedServices.monthlyPrice
+//    existingServices.monthlyPrice = updatedServices.monthlyPrice
     // Update other fields as necessary
 
     return serviceRepository.save(existingServices)

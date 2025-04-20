@@ -35,7 +35,7 @@ export class HoustingUnitDialogComponent implements OnInit {
 
   constructor(public dialogRef: MatDialogRef<HoustingUnitDialogComponent>,
               private snackBar: MatSnackBar,
-              private houstingUnitService: HoustingUnitService,
+              private housingUnitService: HoustingUnitService,
               @Inject(MAT_DIALOG_DATA) public data: any,
               public fb: FormBuilder) {
     this.form = this.fb.group({
@@ -65,10 +65,10 @@ export class HoustingUnitDialogComponent implements OnInit {
   public onSubmit(): void {
     if (this.form.valid) {
       const houtsingUnit = this.form.value;
-      if (this.data) {
-        console.log("houstingUnit");
+      if (this.data.id) {
+        console.log("housingUnit");
         console.log(houtsingUnit);
-        this.houstingUnitService.updateHousingUnit(this.data.id,houtsingUnit).subscribe({
+        this.housingUnitService.updatehousingUnit(this.data.id,houtsingUnit).subscribe({
           next: (createdUnit) => {
             this.dialogRef.close(createdUnit);
           },
@@ -78,7 +78,7 @@ export class HoustingUnitDialogComponent implements OnInit {
         });
       }
       else {
-        this.houstingUnitService.createHousingUnit(houtsingUnit).subscribe({
+        this.housingUnitService.createhousingUnit(houtsingUnit).subscribe({
           next: (response) => {
             console.log('Housing unit created successfully:', response);
             this.snackBar.open('Housing unit created successfully!', '×', {

@@ -9,8 +9,8 @@
                 <mat-label>Tenant</mat-label>
                 <mat-select formControlName="locataireId" required>
                   <mat-option [value]="">-</mat-option>
-                  @for (locataire of locataires; track locataire) {
-                    <mat-option [value]="locataire.id">{{ locataire.name }}</mat-option>
+                  @for (tenant of tenants; track tenant) {
+                    <mat-option [value]="tenant.tenantId">{{ tenant.tenantName }}</mat-option>
                   }
                 </mat-select>
                 @if (form.controls.locataireId.errors?.required) {
@@ -23,15 +23,7 @@
             <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
               <mat-form-field appearance="outline" class="w-100">
                 <mat-label>Housing Unit</mat-label>
-                <mat-select formControlName="logementId" required>
-                  <mat-option [value]="">-</mat-option>
-                  @for (logement of logements; track logement) {
-                    <mat-option [value]="logement.id">{{ logement.name }}</mat-option>
-                  }
-                </mat-select>
-                @if (form.controls.logementId.errors?.required) {
-                  <mat-error>Housing Unit is required</mat-error>
-                }
+                <input matInput formControlName="housingUnitId" readonly>
               </mat-form-field>
             </div>
 
@@ -72,13 +64,13 @@
             <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
               <mat-form-field appearance="outline" class="w-100">
                 <mat-label>Status</mat-label>
-                <mat-select formControlName="statut" required>
+                <mat-select formControlName="status" required>
                   <mat-option [value]="">-</mat-option>
                   @for (status of ['payé', 'non payé', 'en retard'];track status) {
                     <mat-option [value]="status">{{ status }}</mat-option>
                   }
                 </mat-select>
-                @if (form.controls.statut.errors?.required) {
+                @if (form.controls.status.errors?.required) {
                   <mat-error>Status is required</mat-error>
                 }
               </mat-form-field>

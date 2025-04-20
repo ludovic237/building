@@ -1,5 +1,8 @@
 package com.example.backend.controllers
 
+import com.example.backend.dtos.TenantDTO
+import com.example.backend.dtos.TenantDetailsDTO
+import com.example.backend.dtos.tenantCreateDTO
 import com.example.backend.models.Tenant
 import com.example.backend.services.TenantService
 import org.springframework.http.ResponseEntity
@@ -13,8 +16,14 @@ class TenantController(
 
   @CrossOrigin(origins = ["http://localhost:4200"])
   @GetMapping
-  fun getAllTenants(): ResponseEntity<List<Tenant>> {
+  fun getAllTenants(): ResponseEntity<List<TenantDTO>> {
     return ResponseEntity.ok(tenantService.getAllTenants())
+  }
+
+  @CrossOrigin(origins = ["http://localhost:4200"])
+  @GetMapping("/details")
+  fun getListTenantDetail(): ResponseEntity<List<TenantDetailsDTO>> {
+    return ResponseEntity.ok(tenantService.getListTenantDetails())
   }
 
   @CrossOrigin(origins = ["http://localhost:4200"])
@@ -26,7 +35,7 @@ class TenantController(
 
   @CrossOrigin(origins = ["http://localhost:4200"])
   @PostMapping
-  fun createTenant(@RequestBody tenant: Tenant): ResponseEntity<Tenant> {
+  fun createTenant(@RequestBody tenant: tenantCreateDTO): ResponseEntity<Tenant> {
     return ResponseEntity.ok(tenantService.createTenant(tenant))
   }
 

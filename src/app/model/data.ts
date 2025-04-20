@@ -29,10 +29,10 @@ export class UserNew {
 export class Tenant {
   id: number;
   userId: number;
-  dateEntree: Date;
-  dateSortie: Date;
-  logementId: number;
-  depotGarantie: number;
+  moveInDate: Date;
+  moveOutDate: Date;
+  housingUnitId: number;
+  securityDeposit: number;
 }
 
 export class HoustingUnit {
@@ -46,12 +46,12 @@ export class HoustingUnit {
 
 export class Rent {
   id: number;
-  logementId: number;
+  housingUnitId: number;
   locataireId: number;
   mois: number;
   annee: number;
   montant: number;
-  statut: 'payé' | 'non payé' | 'en retard';
+  status: 'payé' | 'non payé' | 'en retard';
   datePaiement?: Date;
 }
 
@@ -61,7 +61,7 @@ export class Invoice {
   type: 'eau' | 'électricité' | 'gaz' | 'autre';
   mois: number;
   montant: number;
-  statut: 'payée' | 'impayée';
+  status: 'payée' | 'impayée';
   datePaiement?: Date;
 }
 
@@ -71,7 +71,7 @@ export class Issue {
   titre: string;
   description: string;
   dateDeclaration: Date;
-  statut: 'ouvert' | 'en cours' | 'résolu';
+  status: 'ouvert' | 'en cours' | 'résolu';
 }
 
 export class Service {
@@ -88,5 +88,5 @@ export class Subscription {
   serviceId: number;
   dateDebut: Date;
   dateFin?: Date;
-  statut: string;
+  status: string;
 }
