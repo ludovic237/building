@@ -3,13 +3,35 @@
   <div mat-dialog-content>
     <div fxLayout="row wrap" class="mt-3">
 
+      <!-- Code -->
+      <div fxFlex="100" class="px-2">
+        <mat-form-field appearance="outline" class="w-100">
+          <mat-label>Code</mat-label>
+          <input matInput formControlName="code" required maxlength="50">
+          @if (form.controls.code.errors?.minlength) {
+            <mat-error>Code must be at least {{ form.controls.code.errors?.minlength.requiredLength }}characters
+            </mat-error>
+          }
+          @if (form.controls.code.errors?.pattern) {
+            <mat-error>Code must contain only letters and numbers</mat-error>
+          }
+          @if (form.controls.code.errors?.maxlength) {
+            <mat-error>Code must be at most 50 characters</mat-error>
+          }
+          @if (form.controls.code.errors?.required) {
+            <mat-error>Code is required</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
       <!-- Name -->
       <div fxFlex="100" class="px-2">
         <mat-form-field appearance="outline" class="w-100">
           <mat-label>Name</mat-label>
-          <input matInput formControlName="nom" required>
-          @if (form.controls.nom.errors?.minlength) {
-            <mat-error>Name must be at least {{ form.controls.nom.errors?.minlength.requiredLength }} characters</mat-error>
+          <input matInput formControlName="name" required>
+          @if (form.controls.name.errors?.minlength) {
+            <mat-error>Name must be at least {{ form.controls.name.errors?.minlength.requiredLength }}characters
+            </mat-error>
           }
         </mat-form-field>
       </div>
@@ -20,23 +42,34 @@
           <mat-label>Description</mat-label>
           <textarea matInput formControlName="description" rows="4" required></textarea>
           @if (form.controls.description.errors?.minlength) {
-            <mat-error >Description must be at least {{ form.controls.description.errors?.minlength.requiredLength }} characters</mat-error>
+            <mat-error>Description must be at least {{ form.controls.description.errors?.minlength.requiredLength }}
+              characters
+            </mat-error>
           }
         </mat-form-field>
       </div>
 
-      <!-- Monthly Price -->
+      <!-- Billing Mode -->
       <div fxFlex="100" class="px-2">
         <mat-form-field appearance="outline" class="w-100">
-          <mat-label>Monthly Price</mat-label>
-          <input matInput type="number" formControlName="prixMensuel" required>
-          @if (form.controls.prixMensuel.errors?.min) {
-            <mat-error >Price must be positive</mat-error>
-          }
-          @if (form.controls.prixMensuel.errors?.required) {
-            <mat-error >Price is required</mat-error>
+          <mat-label>Billing Mode</mat-label>
+          <mat-select formControlName="billingMode" required>
+            @for ( mode of billingModes;track mode) {
+              <mat-option [value]="mode">
+                {{ mode }}
+              </mat-option>
+            }
+          </mat-select>
+          @if (form.controls.billingMode.errors?.required) {
+            <mat-error>Billing Mode is required</mat-error>
           }
         </mat-form-field>
+      </div>
+
+
+      <!-- Is Active -->
+      <div fxFlex="100" class="px-2">
+        <mat-checkbox formControlName="isActive">Is Active</mat-checkbox>
       </div>
 
     </div>

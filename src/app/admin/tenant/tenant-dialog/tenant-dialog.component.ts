@@ -1,5 +1,13 @@
 import {Component, Inject, OnInit} from '@angular/core';
-import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  ValidationErrors,
+  ValidatorFn,
+  Validators
+} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
 import {MAT_DIALOG_DATA, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
 import {MatInputModule} from '@angular/material/input';
@@ -12,6 +20,9 @@ import {UserService} from "@services/user.service";
 import {HoustingUnitService} from "@services/housting-unit.service";
 import {TenantService} from "@services/tenant.service";
 import {MatSnackBar} from "@angular/material/snack-bar";
+import {MatStepperModule} from "@angular/material/stepper";
+import {ServiceService} from "@services/service.service";
+import {CommonModule} from "@angular/common";
 
 @Component({
   selector: 'app-tenant-dialog',
@@ -24,6 +35,8 @@ import {MatSnackBar} from "@angular/material/snack-bar";
     MatButtonModule,
     MatDatepickerModule,
     MatNativeDateModule,
+    MatStepperModule,
+    CommonModule,
     MatDialogModule
   ],
   templateUrl: './tenant-dialog.component.html',
@@ -31,15 +44,25 @@ import {MatSnackBar} from "@angular/material/snack-bar";
 })
 export class TenantDialogComponent implements OnInit {
 
+  isLinear = true;
+  tenantForm: FormGroup;
+  subscriptionForm: FormGroup;
+  billingCycleForm: FormGroup;
+  paymentForm: FormGroup;
+  paymentLineForm: FormGroup;
+
+  services: any[] = []; // List to store services
   public users: any[] = [];
   public logements: any[] = [];
   public form: FormGroup;
   protected logementBasePrice: number = 0;
+  protected remainingAmount: number = 0;
   public minDate: Date = new Date();
 
   constructor(public dialogRef: MatDialogRef<TenantDialogComponent>,
               private housingUnitService: HoustingUnitService,
               private tenantService: TenantService,
+              private serviceService: ServiceService,
               private snackBar: MatSnackBar,
               private usersService: UserService,
               @Inject(MAT_DIALOG_DATA) public data: any,
@@ -52,23 +75,158 @@ export class TenantDialogComponent implements OnInit {
       securityDeposit: [data?.securityDeposit || '', [Validators.required, Validators.min(0)]],
       status: ['Unpaid'] // Default value
     });
+
+    this.tenantForm = this.fb.group({
+      userId: ['', Validators.required],
+      housingUnitId: ['', Validators.required],
+    });
+
+    this.subscriptionForm = this.fb.group({
+      serviceId: ['', Validators.required],
+      billingSubscription: ['', Validators.required],
+      numberOfSubscription: ['', Validators.required],
+      startDate: ['', Validators.required],
+      endDate: ['', Validators.required]
+    });
+
+    this.billingCycleForm = this.fb.group({
+      depositAmount: ['', Validators.required],
+      paymentMode: ['', Validators.required],
+    });
+
+    this.paymentForm = this.fb.group({
+      // amount: ['', [Validators.required, Validators.min(0)]],
+      // paymentDate: ['', Validators.required],
+      // paymentMethod: ['', Validators.required]
+    });
+
+    this.paymentLineForm = this.fb.group({
+      description: ['', Validators.required],
+      amount: ['', [Validators.required, Validators.min(0)]]
+    });
+
+
+
   }
 
+
   ngOnInit(): void {
+    const logementBasePrice = this.logementBasePrice || 0;
+    const maxDeposit = logementBasePrice * this.subscriptionForm.get('numberOfSubscription')?.value || 0;
+
     console.log("this.data");
     console.log(this.data);
+
     this.fetchhousingUnits();
     this.fetchUsers();
-    if (this.data) {
-      this.form.patchValue({
-        userId: this.data.userId,
-        housingUnitId: this.data.housingUnitId,
-        moveInDate: this.data.moveInDate,
-        moveOutDate: this.data.moveOutDate,
-        securityDeposit: this.data.securityDeposit
-      });
-      this.logementBasePrice = this.data.houstinUnitPrice;
-      this.form.updateValueAndValidity();;
+    this.loadServices();
+    // Enable fields and set billingMode when a service is selected
+    this.subscriptionForm.get('serviceId')?.valueChanges.subscribe((serviceId) => {
+      const selectedService = this.services.find(service => service.id === serviceId);
+      if (selectedService) {
+        console.log("selectedService.billingMode");
+        console.log(selectedService);
+        const billingMode = selectedService.billingMode + "";
+        console.log(billingMode);
+        this.subscriptionForm.patchValue({
+          billingSubscription: billingMode,
+          // status: selectedService.status
+        })
+        console.log("this.subscriptionForm.get('billingSubscription')?.value");
+        console.log(this.subscriptionForm.get('billingSubscription')?.value);
+        // this.subscriptionForm.get('billingMode')?.setValue(billingMode);
+        this.subscriptionForm.get('billingMode')?.disable();
+        this.subscriptionForm.get('numberOfSubscription')?.enable();
+        this.subscriptionForm.get('startDate')?.enable();
+      } else {
+        console.log("selectedService else");
+        this.subscriptionForm.reset();
+        this.subscriptionForm.get('billingSubscription')?.disable();
+        this.subscriptionForm.get('numberOfSubscription')?.disable();
+        this.subscriptionForm.get('startDate')?.disable();
+        this.subscriptionForm.get('endDate')?.disable();
+      }
+    });
+
+    // Calculate endDate when startDate or numberOfSubscription changes
+    this.subscriptionForm.get('startDate')?.valueChanges.subscribe((startDate) => {
+      this.calculateEndDate();
+    });
+
+    this.subscriptionForm.get('numberOfSubscription')?.valueChanges.subscribe((numberOfSubscription) => {
+      this.calculateEndDate();
+    });
+
+    // Recalculate summary and payment details when relevant fields change
+    this.tenantForm.valueChanges.subscribe(() => {
+      this.updateSummaryAndPayment();
+    });
+
+    this.subscriptionForm.valueChanges.subscribe(() => {
+      this.updateSummaryAndPayment();
+    });
+
+    this.billingCycleForm.valueChanges.subscribe(() => {
+      this.updateSummaryAndPayment();
+    });
+
+    this.paymentForm.valueChanges.subscribe(() => {
+      this.updateSummaryAndPayment();
+    });
+
+    this.billingCycleForm.get('depositAmount')?.setValidators([
+      Validators.required,
+      Validators.min(logementBasePrice),
+      this.depositAmountValidator(logementBasePrice, maxDeposit)
+    ]);
+
+    this.billingCycleForm.get('depositAmount')?.updateValueAndValidity();
+
+  }
+
+  depositAmountValidator(logementBasePrice: number, maxDeposit: number): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const value = control.value;
+
+      if (!value || logementBasePrice <= 0) {
+        return null; // Skip validation if no value or invalid base price
+      }
+
+      const errors: ValidationErrors = {};
+
+      if (value % logementBasePrice !== 0) {
+        errors['notMultiple'] = { basePrice: logementBasePrice };
+      }
+
+      if (value > maxDeposit) {
+        errors['exceedsMax'] = { maxDeposit };
+      }
+
+      return Object.keys(errors).length ? errors : null;
+    };
+  }
+
+  private calculateEndDate(): void {
+    const startDate = this.subscriptionForm.get('startDate')?.value;
+    const numberOfSubscription = this.subscriptionForm.get('numberOfSubscription')?.value;
+    const billingSubscription = this.subscriptionForm.get('billingSubscription')?.value;
+
+    if (billingSubscription === 'Monthly' && startDate && numberOfSubscription) {
+      const start = new Date(startDate);
+      const end = new Date(start);
+      end.setMonth(end.getMonth() + numberOfSubscription);
+      end.setDate(end.getDate()+numberOfSubscription);
+      this.subscriptionForm.get('endDate')?.setValue(end.toISOString().split('T')[0]);
+    }
+    else if (billingSubscription === 'Yearly' && startDate && numberOfSubscription) {
+      const start = new Date(startDate);
+      const end = new Date(start);
+      end.setFullYear(end.getFullYear() + numberOfSubscription);
+      end.setDate(end.getDate()+numberOfSubscription);
+      this.subscriptionForm.get('endDate')?.setValue(end.toISOString().split('T')[0]);
+    }
+    else{
+
     }
   }
 
@@ -83,7 +241,7 @@ export class TenantDialogComponent implements OnInit {
     });
   }
 
-  private fetchhousingUnits(): void {
+  fetchhousingUnits(): void {
     this.housingUnitService.gethousingUnits().subscribe({
       next: (data) => {
         this.logements = data;
@@ -122,47 +280,60 @@ export class TenantDialogComponent implements OnInit {
     this.form.get('status')?.setValue(status);
   }
 
-  public onSubmit(): void {
-    console.log('Form Values simple:', this.form.value); // Log des valeurs saisies
-    if (this.form.valid) {
-      console.log('Form Values:', this.form.value); // Log des valeurs saisies
+  onSubmit(): void {
+    const tenantData = this.tenantForm.value;
+    const subscriptionData = this.subscriptionForm.value;
+    const billingCycleData = this.billingCycleForm.value;
+    const paymentData = this.paymentForm.value;
+    const paymentLineData = this.paymentLineForm.value;
 
-      const tenant = this.form.value;
-      if (this.data) {
-        console.log("tenant");
-        console.log(tenant);
-        this.tenantService.updateTenant(this.data.id,tenant).subscribe({
-          next: (createdUnit) => {
-            this.dialogRef.close(createdUnit);
-          },
-          error: (err) => {
-            console.error('Error creating housing unit:', err);
-          }
-        });
-      }
-      else {
-        this.tenantService.createTenant(tenant).subscribe({
-          next: (response) => {
-            console.log('Housing unit created successfully:', response);
-            this.snackBar.open('Housing unit created successfully!', '×', {
-              panelClass: 'success',
-              verticalPosition: 'top',
-              duration: 3000
-            });
-            this.dialogRef.close(response);
-          },
-          error: (err) => {
-            console.error('Error creating housing unit:', err);
-            this.snackBar.open('Failed to create housing unit.', '×', {
-              panelClass: 'error',
-              verticalPosition: 'top',
-              duration: 3000
-            });
-          }
-        });
-      }
-
+    console.log('Tenant Data:', tenantData);
+    console.log('Subscription Data:', subscriptionData);
+    console.log('Billing Cycle Data:', billingCycleData);
+    console.log('Payment Data:', paymentData);
+    console.log('Payment Line Data:', paymentLineData);
+    const data = {
+      housingUnitId:tenantData.housingUnitId,
+      userId : tenantData.userId,
+      serviceId : subscriptionData.serviceId,
+      logementBasePrice : this.logementBasePrice,
+      startDate : subscriptionData.startDate,
+      endDate : subscriptionData.endDate,
+      securityDeposit : billingCycleData.depositAmount,
+      paymentMode : billingCycleData.paymentMode,
+      numberOfSubscription : subscriptionData.numberOfSubscription,
     }
+    this.tenantService.createTenant(data).subscribe(
+      (response) => {
+        console.log('Tenant created successfully:', response);
+        this.snackBar.open('Tenant created successfully', 'Close', { duration: 3000 });
+        this.dialogRef.close(response);
+      },
+      (error) => {
+        console.error('Error creating tenant:', error);
+        this.snackBar.open('Error creating tenant', 'Close', { duration: 3000 });
+      }
+    );
+  }
+
+  loadServices(): void {
+    this.serviceService.getServices().subscribe((data: any) => {
+      this.services = data;
+    });
+  }
+
+  private updateSummaryAndPayment(): void {
+    const logementBasePrice = this.logementBasePrice || 0;
+    const depositAmount = this.billingCycleForm.get('depositAmount')?.value || 0;
+
+    // Calculate remaining amount
+    this.remainingAmount = logementBasePrice - depositAmount;
+
+    // Log or update any additional summary details if needed
+    console.log('Updated Summary and Payment Details:');
+    console.log('Logement Base Price:', logementBasePrice);
+    console.log('Deposit Amount:', depositAmount);
+    console.log('Remaining Amount:', this.remainingAmount);
   }
 
 }

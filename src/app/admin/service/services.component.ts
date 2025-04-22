@@ -16,6 +16,7 @@ import { PipesModule } from '../../theme/pipes/pipes.module';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import {CommonModule} from "@angular/common";
 import {Service} from "../../model/data";
+import {ServiceService} from "@services/service.service";
 
 @Component({
     selector: 'app-services',
@@ -42,31 +43,29 @@ export class ServicesComponent implements OnInit {
   public page: number = 1;
   public count: number = 5;
 
-  constructor(public dialog: MatDialog) {}
+  constructor(
+    private serviceService:ServiceService,
+    public dialog: MatDialog
+  ) {}
 
   ngOnInit(): void {
-    // Mock data for services
-    this.services = [
-      {
-        id: 1,
-        nom: 'Internet',
-        description: 'High-speed internet connection',
-        prixMensuel: 50
+    this.loadServices();
+  }
+
+  private loadServices(): void {
+    this.serviceService.getServices().subscribe({
+      next: (data: Service[]) => {
+        this.services = data;
       },
-      {
-        id: 2,
-        nom: 'Cleaning',
-        description: 'Weekly cleaning service',
-        prixMensuel: 100
+      error: (err) => {
+        console.error('Error fetching services:', err);
       }
-    ];
+    });
   }
 
   public openServiceDialog(data: any): void {
     const dialogRef = this.dialog.open(ServiceDialogComponent, {
-      data: {
-        service: data
-      },
+      data: data,
       panelClass: ['theme-dialog'],
       autoFocus: false
     });

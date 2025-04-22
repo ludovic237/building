@@ -11,6 +11,5 @@ data class TenantDetailsDTO(
   val housingUnitName: String?,
   val moveInDate: String?,
   val moveOutDate: String?,
-  val securityDeposit: BigDecimal?,
-  val status: String
+  val securityDeposit: BigDecimal?
 )

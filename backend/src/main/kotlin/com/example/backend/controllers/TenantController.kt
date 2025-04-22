@@ -2,7 +2,8 @@ package com.example.backend.controllers
 
 import com.example.backend.dtos.TenantDTO
 import com.example.backend.dtos.TenantDetailsDTO
-import com.example.backend.dtos.tenantCreateDTO
+import com.example.backend.dtos.TenantCreateDTO
+import com.example.backend.dtos.TenantCreateDataDTO
 import com.example.backend.models.Tenant
 import com.example.backend.services.TenantService
 import org.springframework.http.ResponseEntity
@@ -35,9 +36,15 @@ class TenantController(
 
   @CrossOrigin(origins = ["http://localhost:4200"])
   @PostMapping
-  fun createTenant(@RequestBody tenant: tenantCreateDTO): ResponseEntity<Tenant> {
-    return ResponseEntity.ok(tenantService.createTenant(tenant))
+  fun createTenant(@RequestBody tenant: TenantCreateDataDTO): ResponseEntity<Tenant> {
+    return ResponseEntity.ok(tenantService.createTenantNew(tenant))
   }
+
+ /* @CrossOrigin(origins = ["http://localhost:4200"])
+  @PostMapping
+  fun createTenant(@RequestBody tenant: TenantCreateDTO): ResponseEntity<Tenant> {
+    return ResponseEntity.ok(tenantService.createTenant(tenant))
+  }*/
 
   @CrossOrigin(origins = ["http://localhost:4200"])
   @PutMapping("/{id}")

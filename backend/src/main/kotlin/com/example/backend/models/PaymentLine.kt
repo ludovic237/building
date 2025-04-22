@@ -13,10 +13,10 @@ class PaymentLine {
   @Column(name = "id", nullable = false)
   var id: Long? = null
 
-  @Column(name = "payment_id", nullable = false)
+  @Column(name = "payment_id", nullable = true)
   var paymentId: Long? = null
 
-  @Column(name = "billing_cycle_id", nullable = false)
+  @Column(name = "billing_cycle_id", nullable = true)
   var billingCycleId: Long? = null
 
   @Column(name = "amount_paid", nullable = false, precision = 10, scale = 2)

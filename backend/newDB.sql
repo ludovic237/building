@@ -29,7 +29,6 @@ create table if not exists tenants
   housing_unit_id  bigint                      null,
   move_in_date     date                        not null,
   move_out_date    date                        null,
-  status           tinytext                    not null,
   security_deposit decimal(10, 2) default 0.00 null,
   housting_price   decimal(10, 2) default 0.00 null
 );
@@ -99,27 +98,17 @@ create table if not exists billing_cycles
   status          tinytext       not null
 );
 
--- payments
-create table payments
-(
-  id             bigint auto_increment primary key,
-  tenant_id      bigint         not null,
-  payment_date   date default current_date,
-  total_amount   decimal(10, 2) not null,
-  payment_method varchar(50)
-);
-
 -- payment lines
-create table payment_lines
+create table if not exists payment_lines
 (
   id               bigint auto_increment primary key,
-  payment_id       bigint         not null,
-  billing_cycle_id bigint         not null,
+  payment_id       bigint         null,
+  billing_cycle_id bigint         null,
   amount_paid      decimal(10, 2) not null
 );
 
 -- ISSUES (COMPLAINTS / INCIDENTS)
-create table if not exists issues
+create table if  not exists issues
 (
   id               bigint auto_increment
     primary key,
@@ -128,6 +117,16 @@ create table if not exists issues
   description      tinytext                 null,
   declaration_date date default (curdate()) null,
   status           tinytext                 not null
+);
+
+-- payments
+create table if not exists payments
+(
+  id             bigint auto_increment primary key,
+  tenant_id      bigint         not null,
+  payment_date   date default (curdate()) null,
+  total_amount   decimal(10, 2) not null,
+  payment_method varchar(50)
 );
 
 -- foreign key constraints

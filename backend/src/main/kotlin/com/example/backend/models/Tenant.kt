@@ -29,10 +29,6 @@ class Tenant {
   @Column(name = "move_out_date")
   var moveOutDate: LocalDate? = null
 
-  @Lob
-  @Column(name = "status", nullable = false)
-  var status: String? = null
-
   @ColumnDefault("0.00")
   @Column(name = "security_deposit", precision = 10, scale = 2)
   var securityDeposit: BigDecimal? = null

@@ -30,8 +30,8 @@ import { Injectable } from '@angular/core';
         return this.http.get<Tenant>(`${this.apiUrl}/${id}`,{headers: this.getHeaders()});
       }
 
-      createTenant(tenant: Tenant): Observable<Tenant> {
-        return this.http.post<Tenant>(this.apiUrl, tenant,{headers: this.getHeaders()});
+      createTenant(tenant: any): Observable<any> {
+        return this.http.post<any>(this.apiUrl, tenant,{headers: this.getHeaders()});
       }
 
       updateTenant(id: number, tenant: Tenant): Observable<Tenant> {

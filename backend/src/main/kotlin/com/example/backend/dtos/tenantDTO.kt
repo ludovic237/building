@@ -13,6 +13,5 @@ data class TenantDTO(
     val moveInDate: LocalDate?,
     val moveOutDate: LocalDate?,
     val securityDeposit: BigDecimal?,
-    val houstinUnitPrice: BigDecimal?,
-    val status: String?
+    val houstinUnitPrice: BigDecimal?
 )

@@ -9,14 +9,20 @@
       <div class="mat-mdc-header-row">
         <div class="mat-mdc-header-cell">Name</div>
         <div class="mat-mdc-header-cell">Description</div>
-        <div class="mat-mdc-header-cell">Monthly Price</div>
+        <div class="mat-mdc-header-cell">Billing mode</div>
+        <div class="mat-mdc-header-cell">Status</div>
         <div class="mat-mdc-header-cell"></div>
       </div>
       <div class="mat-mdc-row"
            *ngFor="let services of services | paginate: { itemsPerPage: count, currentPage: page }; let i = index">
-        <div class="mat-mdc-cell">{{ services.nom }}</div>
+        <div class="mat-mdc-cell">{{ services.name }}</div>
         <div class="mat-mdc-cell">{{ services.description }}</div>
-        <div class="mat-mdc-cell">{{ services.prixMensuel | currency }}</div>
+        <div class="mat-mdc-cell">{{ services.billingMode }}</div>
+        <div class="mat-mdc-cell">
+          <span [ngClass]="services.isActive ? 'text-success' : 'text-danger'">
+            {{ services.isActive ? 'Active' : 'Disabled' }}
+          </span>
+        </div>
         <div class="mat-mdc-cell">
           <button mat-mini-fab color="primary" matTooltip="Edit" (click)="openServiceDialog(services)">
             <mat-icon>edit</mat-icon>

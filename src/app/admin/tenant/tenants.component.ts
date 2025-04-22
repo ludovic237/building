@@ -62,8 +62,6 @@ export class TenantsComponent implements OnInit {
   }
 
   private getTenantData() {
-    console.log("getTenantData");
-    console.log(localStorage.getItem('token'))
     this.tenantService.getTenants().subscribe({
       next: (tenants) => {
         this.tenants = tenants;
