@@ -14,6 +14,5 @@ data class BillingCycleDetailsDTO(
   var subscriptionName: String?,
   var tenantName: String?,
   var userName: String?,
-  var payments: List<PaymentDTO>?,
   var payment: Payment?,
 )

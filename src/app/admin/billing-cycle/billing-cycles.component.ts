@@ -28,6 +28,7 @@ import {BillingCycleService} from "@services/billing-cycle.service";
         NgxPaginationModule,
         PipesModule
     ],
+  styleUrl: './billing-cycles.component.scss',
     templateUrl: './billing-cycles.component.html'
 })
 export class BillingCyclesComponent implements OnInit {
@@ -48,7 +49,7 @@ export class BillingCyclesComponent implements OnInit {
   }
 
   private getAllBillingCycle() {
-    this.billinCycleService.getBillingCyclesDetails().subscribe({
+    this.billinCycleService.getBillingCyclesDetailsFilter().subscribe({
       next: (data) => {
         this.billingCycles = data;
         this.count = this.billingCycles.length;

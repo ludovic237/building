@@ -10,7 +10,7 @@ interface PaymentLineRepository : JpaRepository<PaymentLine, Long> {
   fun findByPaymentId(paymentId: Long): PaymentLine
 
   // Find payment lines by billing cycle ID
-  fun findByBillingCycleId(billingCycleId: Long): List<PaymentLine>
+  fun findByBillingCycleId(billingCycleId: Long): PaymentLine
 
  /* // Find payment lines by amount paid greater than or equal to a specific value
   fun findByAmountPaidGreaterThanEqual(amountPaid: Double): List<PaymentLine>

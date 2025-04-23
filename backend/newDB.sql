@@ -158,5 +158,38 @@ alter table issues
   add foreign key (tenant_id) references tenants (id);
 
 
+CREATE VIEW billing_cycle_details_view AS
+SELECT
+  bc.id AS billing_cycle_id,
+  bc.period_start AS start_date,
+  bc.period_end AS end_date,
+  bc.amount_due AS amount_due,
+  bc.status AS billing_cycle_status,
+  s.tenant_id AS subscription_name,
+  sv.billing_mode AS billing_mode,
+  sv.code AS code,
+  t.id AS tenant_id,
+  u.first_name AS user_first_name,
+  u.last_name AS user_last_name,
+  u.username AS user_username,
+  p.id AS payment_id,
+  p.total_amount AS payment_total_amount,
+  p.payment_date AS payment_date,
+  pl.amount_paid AS payment_line_amount_paid
+FROM
+  billing_cycles bc
+    LEFT JOIN
+  subscriptions s ON bc.subscription_id = s.id
+    LEFT JOIN
+  services sv ON s.service_id = sv.id
+    LEFT JOIN
+  tenants t ON s.tenant_id = t.id
+    LEFT JOIN
+  users u ON t.user_id = u.id
+    LEFT JOIN
+  payment_lines pl ON bc.id = pl.billing_cycle_id
+    LEFT JOIN
+  payments p ON pl.payment_id = p.id;
+
 
 

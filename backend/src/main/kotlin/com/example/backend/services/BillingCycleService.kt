@@ -2,11 +2,14 @@ package com.example.backend.services
 
 import com.example.backend.dtos.BillingCycleDetailsDTO
 import com.example.backend.dtos.PaymentDTO
+import com.example.backend.models.BillingCycleDetailsView
 import com.example.backend.models.Payment
+import com.example.backend.repositories.BillingCycleDetailsViewRepository
 import com.example.backend.repositories.BillingCycleRepository
 import com.example.backend.repositories.PaymentLineRepository
 import com.example.backend.repositories.PaymentRepository
 import org.springframework.stereotype.Service
+import java.time.LocalDate
 import java.util.*
 
 @Service
@@ -14,6 +17,7 @@ class BillingCycleService(
   private val paymentRepository: PaymentRepository,
   private val paymentLineRepository: PaymentLineRepository,
   private val billingCycleRepository: BillingCycleRepository,
+  private val billingCycleDetailsViewRepository: BillingCycleDetailsViewRepository,
 ) {
 
   fun getAllBillingCycles(): List<PaymentDTO> {
@@ -24,7 +28,7 @@ class BillingCycleService(
         date = payment.paymentDate,
         description = "payment,.description",
         paymentMethod = payment.paymentMethod,
-        status =" payment.p",
+        status = " payment.p",
       )
     }
   }
@@ -33,39 +37,30 @@ class BillingCycleService(
     // Fetch billing cycles and join with related entities
     val billingCycles = billingCycleRepository.findAll()
     return billingCycles.map { cycle ->
-      println("Cycle: $cycle")
-      val paymentLine = paymentLineRepository.findByPaymentId(cycle.id!!)
+      println("Cycle: ${cycle.id}, ${cycle.periodStart}, ${cycle.periodEnd}, ${cycle.amountDue}, ${cycle.status}")
+      val paymentLine = paymentLineRepository.findByBillingCycleId(cycle.id!!)
 
-      if (paymentLine.paymentId == null) {
-          throw IllegalArgumentException("Payment ID is null for billing cycle ID ${cycle.id}")
+      val payment = paymentLine.paymentId?.let {
+        paymentRepository.findById(it).orElse(null)
       }
 
-      val payment = paymentRepository.findById(paymentLine.paymentId!!)
-          .orElseThrow { IllegalArgumentException("Payment not found for payment ID ${paymentLine.paymentId}") }
-
       BillingCycleDetailsDTO(
-          billingCycleId = cycle.id!!,
-          startDate = cycle.periodStart!!,
-          endDate = cycle.periodEnd!!,
-          amountDue = cycle.amountDue!!,
-          amountPaid = paymentLine.amountPaid,
-          status = cycle.status!!,
-          subscriptionName = cycle.subscription!!.service!!.name!!,
-          tenantName = cycle.subscription!!.tenant!!.user!!.firstName!! + " " + cycle.subscription!!.tenant!!.user!!.lastName!!,
-          userName = cycle.subscription!!.tenant!!.user!!.username!!,
-          payment = payment,
-          payments = paymentRepository.findByTenant(cycle.subscription!!.tenant!!).map { payment ->
-              PaymentDTO(
-                  id = payment.id,
-                  amount = payment.totalAmount,
-                  paymentMethod = payment.paymentMethod,
-                  status = "payment.status",
-                  date = payment.paymentDate,
-                  description = "payment.description"
-              )
-          }
+        billingCycleId = cycle.id!!,
+        startDate = cycle.periodStart!!,
+        endDate = cycle.periodEnd!!,
+        amountDue = cycle.amountDue!!,
+        amountPaid = paymentLine.amountPaid,
+        status = cycle.status!!,
+        subscriptionName = cycle.subscription!!.service!!.name!!,
+        tenantName = cycle.subscription!!.tenant!!.user!!.firstName!! + " " + cycle.subscription!!.tenant!!.user!!.lastName!!,
+        userName = cycle.subscription!!.tenant!!.user!!.username!!,
+        payment = payment
       )
     }
+  }
+
+  fun getBillingCycleDetailsView(): List<BillingCycleDetailsView> {
+   return billingCycleDetailsViewRepository.findAll()
   }
 
   fun getPaymentById(id: Long): Optional<Payment> {
@@ -88,5 +83,19 @@ class BillingCycleService(
       throw IllegalArgumentException("Payment with ID $id not found")
     }
     paymentRepository.deleteById(id)
+  }
+
+  fun filterBillingCycles(
+    status: String?,
+    tenantId: Long?,
+    username: String?,
+    startDate: LocalDate?,
+    endDate: LocalDate?,
+    userFirstName: String?,
+    userLastName: String?
+  ): List<BillingCycleDetailsView> {
+      return billingCycleDetailsViewRepository.filterBillingCycles(
+          status, tenantId, username, startDate, endDate, userFirstName, userLastName
+      )
   }
 }
