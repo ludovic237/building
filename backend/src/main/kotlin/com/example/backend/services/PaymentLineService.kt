@@ -1,48 +1,53 @@
 package com.example.backend.services
 
 import com.example.backend.dtos.PaymentDTO
-import com.example.backend.models.Payment
-import com.example.backend.repositories.PaymentRepository
+import com.example.backend.dtos.PaymentLineDetailDTO
+import com.example.backend.models.PaymentLine
+import com.example.backend.repositories.PaymentLineRepository
+import com.example.backend.repositories.PaymentLinesViewRepository
 import org.springframework.stereotype.Service
 import java.util.*
 
 @Service
 class PaymentLineService(
-  private val paymentRepository: PaymentRepository
+  private val paymentLineRepository: PaymentLineRepository,
+  private val paymentLinesViewRepository: PaymentLinesViewRepository
 ) {
 
-  fun getAllPaymentLines(): List<PaymentDTO> {
-    return paymentRepository.findAll().map { payment ->
-      PaymentDTO(
-        id = payment.id,
-        amount = payment.totalAmount,
-        date = payment.paymentDate,
-        description = "payment,.description",
+  fun getAllPaymentLines(): List<PaymentLineDetailDTO> {
+    return paymentLinesViewRepository.findAll().map { payment ->
+      PaymentLineDetailDTO(
+        id = payment.paymentLineId,
+        amountPaid = payment.amountPaid,
+        paymentDate = payment.paymentDate,
+        serviceDescription = payment.serviceDescription,
         paymentMethod = payment.paymentMethod,
-        status =" payment.p",
+        subscriptionStatus =payment.subscriptionStatus,
+        billingCycleStatus =payment.billingCycleStatus,
+        serviceBillingMode =payment.serviceBillingMode,
       )
     }
   }
 
-  fun getPaymentById(id: Long): Optional<Payment> {
-    return paymentRepository.findById(id)
+  fun getPaymentById(id: Long): Optional<PaymentLine> {
+    return paymentLineRepository.findById(id)
   }
 
-  fun createPayment(payment: Payment): Payment {
-    return paymentRepository.save(payment)
+  fun createPayment(payment: PaymentLine): PaymentLine {
+    return paymentLineRepository.save(payment)
   }
 
-  fun updatePayment(id: Long, updatedPayment: Payment): Payment {
-    val existingPayment = paymentRepository.findById(id)
+  fun updatePayment(id: Long, updatedPayment: PaymentLine): PaymentLine {
+    val existingPayment = paymentLineRepository.findById(id)
       .orElseThrow { IllegalArgumentException("Payment with ID $id not found") }
 
-    return paymentRepository.save(updatedPayment)
+    return paymentLineRepository.save(updatedPayment)
   }
 
   fun deletePayment(id: Long) {
-    if (!paymentRepository.existsById(id)) {
+    if (!paymentLineRepository.existsById(id)) {
       throw IllegalArgumentException("Payment with ID $id not found")
     }
-    paymentRepository.deleteById(id)
+    paymentLineRepository.deleteById(id)
   }
 }

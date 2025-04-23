@@ -23,6 +23,10 @@ export class HoustingUnitService {
     return this.http.get<any[]>(this.apiUrl, {headers: this.getHeaders()});
   }
 
+  gethousingUnitsOccupationDetails(): Observable<any[]> {
+    return this.http.get<any[]>(this.apiUrl+'/occupancy-details', {headers: this.getHeaders()});
+  }
+
   gethousingUnitById(id: number): Observable<HoustingUnit> {
     return this.http.get<HoustingUnit>(`${this.apiUrl}/${id}`, {headers: this.getHeaders()});
   }
@@ -38,4 +42,9 @@ export class HoustingUnitService {
   deletehousingUnit(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`, {headers: this.getHeaders()});
   }
+
+  getTenantDetailsByHousingUnit(housingUnitId: number,tenantId: number): Observable<HoustingUnit> {
+    return this.http.get<HoustingUnit>(`${this.apiUrl}/${housingUnitId}/details?tenantId=`+tenantId, {headers: this.getHeaders()});
+  }
+
 }

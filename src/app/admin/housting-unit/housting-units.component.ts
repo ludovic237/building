@@ -19,6 +19,7 @@ import {CommonModule} from "@angular/common";
 import {HoustingUnit} from "../../model/data";
 import {HoustingUnitService} from "@services/housting-unit.service";
 import {MatSnackBar} from "@angular/material/snack-bar";
+import {HoustingDetailDialogComponent} from "./housting-detail-dialog/housting-detail-dialog.component";
 
 @Component({
   selector: 'app-housting-units',
@@ -86,7 +87,7 @@ export class HoustingUnitsComponent implements OnInit {
 
 
   public openHoustingUnitDialog(data: any): void {
-    const dialogRef = this.dialog.open(HoustingUnitDialogComponent, {
+    const dialogRef = this.dialog.open(HoustingDetailDialogComponent, {
       data: {
         customer: data,
       },
@@ -139,17 +140,27 @@ export class HoustingUnitsComponent implements OnInit {
   }
 
   public gethousingUnits() {
-    this.housingUnitService.gethousingUnits().subscribe(data => {
-      this.housingUnits = data.map(unit => ({
-        ...unit,
-        tenants: unit.tenants ?? [] // Ensure tenants is an empty array if null
-      }));
+
+    this.housingUnitService.gethousingUnitsOccupationDetails().subscribe(data => {
+      console.log('Occupation details:', data);
+    });
+    this.housingUnitService.gethousingUnitsOccupationDetails().subscribe({
+      next: (data) => {
+        this.housingUnits = data;
+        this.count = this.housingUnits.length;
+        console.log('Get payment:', data);
+      },
+      error: (err) => {
+        console.error('Error  payment:', err);
+      }
     });
   }
 
-  public openHoustingUnitDialogUpdate(id: number): void {
-    this.housingUnitService.gethousingUnitById(id).subscribe(data => {
-      const dialogRef = this.dialog.open(HoustingUnitDialogComponent, {
+  public openHoustingUnitDialogUpdate(housingUnitId: number,tenantId: number): void {
+    this.housingUnitService
+      .getTenantDetailsByHousingUnit(housingUnitId,tenantId)
+      .subscribe(data => {
+      const dialogRef = this.dialog.open(HoustingDetailDialogComponent, {
         data: data,
         panelClass: ['theme-dialog'],
         autoFocus: false,

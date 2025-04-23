@@ -8,34 +8,30 @@
             <div class="mat-mdc-table admin-table">
               <div class="mat-mdc-header-row">
                 <div class="mat-mdc-header-cell">Apartment Number</div>
-                <div class="mat-mdc-header-cell">Floor</div>
-                <div class="mat-mdc-header-cell">Area (m²)</div>
-                <div class="mat-mdc-header-cell">Address</div>
+                <div class="mat-mdc-header-cell">remaining Amount</div>
+                <div class="mat-mdc-header-cell">amount Paid</div>
+                <div class="mat-mdc-header-cell">Date</div>
                 <div class="mat-mdc-header-cell">Type</div>
                 <div class="mat-mdc-header-cell">Tenants</div>
                 <div class="mat-mdc-header-cell"></div>
               </div>
               @for (unit of housingUnits | paginate: { itemsPerPage: count, currentPage: page }; track unit.id) {
                 <div class="mat-mdc-row">
-                  <div class="mat-mdc-cell">{{ unit.number }}</div>
-                  <div class="mat-mdc-cell">{{ unit.floor }}</div>
-                  <div class="mat-mdc-cell">{{ unit.area }}</div>
-                  <div class="mat-mdc-cell">{{ unit.address }}</div>
-                  <div class="mat-mdc-cell">{{ unit.type }}</div>
+                  <div class="mat-mdc-cell">{{ unit.housingUnitNumber }}</div>
+                  <div class="mat-mdc-cell">{{ unit.remainingAmount }}</div>
+                  <div class="mat-mdc-cell">{{ unit.amountPaid }}</div>
+                  <div class="mat-mdc-cell">{{ unit.leaseStartDate }}-{{ unit.leaseEndDate }}</div>
+                  <div class="mat-mdc-cell">{{ unit.housingUnitType }}</div>
                   <div class="mat-mdc-cell">
-                    @if (unit.tenants.length) {
-                      <ul>
-                        @for ( unit of unit.tenants; track unit.id) {
-                          <li>{{ unit.name }} ({{ unit.paymentStatus }})</li>
-                        }
-                      </ul>
+                    @if (unit.tenantId) {
+                      <span>{{ unit.tenantName }}</span>
                     } @else {
                       <span>No tenants</span>
                     }
                   </div>
                   <div class="mat-mdc-cell">
                     <div class="p-2 actions">
-                      <button mat-mini-fab color="primary" matTooltip="Edit" (click)="openHoustingUnitDialogUpdate(unit.id)">
+                      <button mat-mini-fab color="primary" matTooltip="Edit" (click)="openHoustingUnitDialogUpdate(unit.housingUnitId,unit.tenantId)">
                         <mat-icon>edit</mat-icon>
                       </button>
                       <button mat-mini-fab color="warn" matTooltip="Delete" class="mx-1" (click)="removeHoustingUnit(unit)">

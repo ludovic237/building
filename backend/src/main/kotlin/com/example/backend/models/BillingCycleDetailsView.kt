@@ -5,7 +5,6 @@ import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Lob
 import jakarta.persistence.Table
-import lombok.Data
 import org.hibernate.annotations.Immutable
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -16,7 +15,6 @@ import java.time.LocalDate
 @Immutable
 @Table(name = "billing_cycle_details_view")
 @Entity
-@Data
 class BillingCycleDetailsView protected constructor() {
   @Id
   @Column(name = "billing_cycle_id", nullable = false)
@@ -35,18 +33,40 @@ class BillingCycleDetailsView protected constructor() {
   @Column(name = "billing_cycle_status", nullable = false)
   var billingCycleStatus: String? = null
 
-  @Column(name = "subscription_name")
-  var subscriptionName: Long? = null
+  @Column(name = "subscription_id")
+  var subscriptionId: Long? = null
+
+  @Column(name = "subscription_tenant_id")
+  var subscriptionTenantId: Long? = null
+
+  @Column(name = "subscription_start_date")
+  var subscriptionStartDate: LocalDate? = null
+
+  @Column(name = "subscription_end_date")
+  var subscriptionEndDate: LocalDate? = null
+
+  @Column(name = "service_id")
+  var serviceId: Long? = null
 
   @Lob
-  @Column(name = "billing_mode")
-  var billingMode: String? = null
+  @Column(name = "service_billing_mode")
+  var serviceBillingMode: String? = null
 
-  @Column(name = "code", length = 50)
-  var code: String? = null
+  @Column(name = "service_code", length = 50)
+  var serviceCode: String? = null
+
+  @Column(name = "service_name", length = 100)
+  var serviceName: String? = null
+
+  @Lob
+  @Column(name = "service_description")
+  var serviceDescription: String? = null
 
   @Column(name = "tenant_id")
   var tenantId: Long? = null
+
+  @Column(name = "user_id")
+  var userId: Long? = null
 
   @Column(name = "user_first_name", length = 100)
   var userFirstName: String? = null

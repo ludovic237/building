@@ -1,43 +1,54 @@
-import { Component, OnInit, inject } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
-import { AppService } from '@services/app.service';
-import { DomHandlerService } from '@services/dom-handler.service';
-import { Settings, SettingsService } from '@services/settings.service';
-import { customers } from '../../common/data/customers';
-import { TenantDialogComponent } from './tenant-dialog/tenant-dialog.component';
-import { ConfirmDialogComponent } from '@shared-components/confirm-dialog/confirm-dialog.component';
-import { MatCardModule } from '@angular/material/card';
-import { FlexLayoutModule } from '@ngbracket/ngx-layout';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { NgxPaginationModule } from 'ngx-pagination';
-import { MatDividerModule } from '@angular/material/divider';
-import { PipesModule } from '../../theme/pipes/pipes.module';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import {Component, OnInit, inject} from '@angular/core';
+import {MatDialog} from '@angular/material/dialog';
+import {AppService} from '@services/app.service';
+import {DomHandlerService} from '@services/dom-handler.service';
+import {Settings, SettingsService} from '@services/settings.service';
+import {customers} from '../../common/data/customers';
+import {TenantDialogComponent} from './tenant-dialog/tenant-dialog.component';
+import {ConfirmDialogComponent} from '@shared-components/confirm-dialog/confirm-dialog.component';
+import {MatCardModule} from '@angular/material/card';
+import {FlexLayoutModule} from '@ngbracket/ngx-layout';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule} from '@angular/material/icon';
+import {NgxPaginationModule} from 'ngx-pagination';
+import {MatDividerModule} from '@angular/material/divider';
+import {PipesModule} from '../../theme/pipes/pipes.module';
+import {MatTooltipModule} from '@angular/material/tooltip';
 import {RentDialogComponent} from "../rent/rent-dialog/rent-dialog.component";
 import {CommonModule} from "@angular/common";
 import {TenantService} from "@services/tenant.service";
+import {MatFormFieldModule} from "@angular/material/form-field";
+import {FormsModule, ReactiveFormsModule} from "@angular/forms";
+import {MatInputModule} from "@angular/material/input";
 
 @Component({
-    selector: 'app-tenants',
-    imports: [
-      CommonModule,
-        FlexLayoutModule,
-        MatCardModule,
-        MatButtonModule,
-        MatDividerModule,
-        MatIconModule,
-        MatTooltipModule,
-        NgxPaginationModule,
-        PipesModule
-    ],
-    templateUrl: './tenants.component.html'
+  selector: 'app-tenants',
+  imports: [
+    CommonModule,
+    FlexLayoutModule,
+    MatCardModule,
+    MatButtonModule,
+    MatDividerModule,
+    MatIconModule,
+    MatTooltipModule,
+    NgxPaginationModule,
+    MatFormFieldModule,
+    ReactiveFormsModule,
+    CommonModule,
+    FormsModule,
+    MatInputModule,
+    PipesModule
+  ],
+  templateUrl: './tenants.component.html'
 })
 export class TenantsComponent implements OnInit {
+
+  filteredTenants: any[] = []; // Filtered list for display
+  searchQuery: string = ''; // Search query
   public customers: any[] = [];
   public stores = [
-    { id: 1, name: 'Store 1' },
-    { id: 2, name: 'Store 2' }
+    {id: 1, name: 'Store 1'},
+    {id: 2, name: 'Store 2'}
   ]
   public tenants: any[] = [];
   // public page: number = 1;
@@ -51,8 +62,8 @@ export class TenantsComponent implements OnInit {
   constructor(
     public appService: AppService,
     public tenantService: TenantService,
-              public dialog: MatDialog,
-              public settingsService: SettingsService) {
+    public dialog: MatDialog,
+    public settingsService: SettingsService) {
     this.settings = this.settingsService.settings;
   }
 
@@ -61,10 +72,29 @@ export class TenantsComponent implements OnInit {
 
   }
 
+  ngOnChanges(): void {
+    this.filterTenants();
+  }
+
+filterTenants(): void {
+  if (!this.searchQuery.trim()) {
+    // Reset to the full list if the search query is empty
+    this.filteredTenants = [...this.tenants];
+    return;
+  }
+
+  // Filter tenants based on the search query
+  this.filteredTenants = this.tenants.filter(tenant =>
+    tenant.userName?.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+    tenant.housingUnitName?.toLowerCase().includes(this.searchQuery.toLowerCase())
+  );
+}
+
   private getTenantData() {
     this.tenantService.getTenants().subscribe({
       next: (tenants) => {
         this.tenants = tenants;
+        this.filteredTenants = this.tenants;
       },
       error: (err) => {
         console.error('Failed to load tenants:', err);

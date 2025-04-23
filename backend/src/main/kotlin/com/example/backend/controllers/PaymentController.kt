@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api/admin/payments")
 class PaymentController(
   private val userService: UserService,
-  private val paymentService: PaymentService? = null
+  private val paymentService: PaymentService? = null,
 ) {
 
 

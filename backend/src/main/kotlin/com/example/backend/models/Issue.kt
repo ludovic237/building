@@ -1,12 +1,10 @@
 package com.example.backend.models
 
 import jakarta.persistence.*
-import lombok.Data
 import org.hibernate.annotations.ColumnDefault
 import java.time.LocalDate
 
 @Entity
-@Data
 @Table(name = "issues")
 class Issue {
   @Id

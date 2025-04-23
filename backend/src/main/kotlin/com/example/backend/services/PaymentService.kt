@@ -3,23 +3,26 @@ package com.example.backend.services
 import com.example.backend.dtos.PaymentDTO
 import com.example.backend.models.Payment
 import com.example.backend.repositories.PaymentRepository
+import com.example.backend.repositories.PaymentsViewRepository
 import org.springframework.stereotype.Service
 import java.util.*
 
 @Service
 class PaymentService(
-  private val paymentRepository: PaymentRepository
+  private val paymentRepository: PaymentRepository,
+  private val paymentsViewRepository: PaymentsViewRepository,
 ) {
 
   fun getAllPayments(): List<PaymentDTO> {
-    return paymentRepository.findAll().map { payment ->
+    return paymentsViewRepository.findAll().map { payment ->
       PaymentDTO(
-        id = payment.id,
-        amount = payment.totalAmount,
-        date = payment.paymentDate,
-        description = "payment,.description",
+        id = payment.paymentId,
+        amountPaid = payment.paymentTotalAmount,
+        paymentDate = payment.paymentDate,
+        serviceName = payment.serviceName,
+        serviceDescription = payment.serviceDescription,
         paymentMethod = payment.paymentMethod,
-        status =" payment.p",
+        billingCycleStatus =payment.billingCycleStatus,
       )
     }
   }

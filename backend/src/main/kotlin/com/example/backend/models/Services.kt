@@ -1,11 +1,9 @@
 package com.example.backend.models
 
 import jakarta.persistence.*
-import lombok.Data
 import org.hibernate.annotations.ColumnDefault
 
 @Entity
-@Data
 @Table(name = "services")
 class Services {
   @Id

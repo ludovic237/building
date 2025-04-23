@@ -1,12 +1,10 @@
 package com.example.backend.models
 
 import jakarta.persistence.*
-import lombok.Data
 import java.math.BigDecimal
 import java.time.LocalDate
 
 @Entity
-@Data
 @Table(name = "billing_cycles")
 class BillingCycle {
   @Id

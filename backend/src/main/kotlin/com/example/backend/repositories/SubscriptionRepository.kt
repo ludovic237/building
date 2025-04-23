@@ -11,7 +11,7 @@ interface SubscriptionRepository : JpaRepository<Subscription, Long> {
   // Find subscriptions by status
   fun findByStatus(status: String): List<Subscription>
 
-  fun findByTenant(tenant: Tenant): Subscription
+  fun findByTenant(tenant: Tenant): List<Subscription>
 
   // Find subscriptions by start date
   fun findByStartDate(startDate: LocalDate): List<Subscription>

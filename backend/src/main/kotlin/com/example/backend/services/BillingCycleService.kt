@@ -21,14 +21,15 @@ class BillingCycleService(
 ) {
 
   fun getAllBillingCycles(): List<PaymentDTO> {
-    return paymentRepository.findAll().map { payment ->
+    return billingCycleDetailsViewRepository.findAll().map { payment ->
       PaymentDTO(
-        id = payment.id,
-        amount = payment.totalAmount,
-        date = payment.paymentDate,
-        description = "payment,.description",
-        paymentMethod = payment.paymentMethod,
-        status = " payment.p",
+        id = payment.billingCycleId,
+        amountPaid = payment.paymentLineAmountPaid,
+        paymentDate = payment.paymentDate,
+        serviceName = payment.serviceName,
+        serviceDescription = payment.serviceDescription,
+        paymentMethod = payment.paymentId?.let { paymentRepository.findById(it).orElse(null) }?.paymentMethod,
+        billingCycleStatus = payment.billingCycleStatus,
       )
     }
   }

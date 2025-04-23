@@ -3,12 +3,13 @@ package com.example.backend.dtos
 import java.math.BigDecimal
 import java.time.LocalDate
 
-data class PaymentDTO(
+data class PaymentLineDetailDTO(
   val id: Long?,
   val amountPaid: BigDecimal?,
   val paymentDate: LocalDate?,
-  val serviceName: String?,
   val serviceDescription: String?,
   val paymentMethod: String?,
-  val billingCycleStatus: String?
+  val subscriptionStatus: String?,
+  val serviceBillingMode: String?,
+  val billingCycleStatus: String?,
 )

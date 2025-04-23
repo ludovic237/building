@@ -24,6 +24,8 @@ class TenantService(
   private val rentRepository: RentRepository,
   private val userRepository: UserRepository,
   private val housingUnitRepository: HoustingUnitRepository,
+  val issueRepository: IssueRepository,
+  val invoiceRepository: InvoiceRepository,
 ) {
 
   fun getListTenantDetails(): List<TenantDetailsDTO> {
@@ -44,13 +46,14 @@ class TenantService(
   fun getAllTenants(): List<TenantDTO> {
     return tenantRepository.findAll().map { tenant ->
       var subscription = subscriptionRepository.findByTenant(tenantRepository.findByIdOrNull(tenant.id!!)!!)
+        .filter { subscription -> subscription.service?.name == "loyer" }
       println("tenant")
       println(tenant)
       println(tenant.user)
       TenantDTO(
         id = tenant.id,
         userId = tenant.user?.id,
-        paymentStatus = subscription.status,
+        paymentStatus = subscription[0].status,
         housingUnitId = tenant.housingUnit?.id,
         userName = tenant.user?.firstName + " " + tenant.user?.lastName,
         userEmail = tenant.user?.email,
@@ -247,4 +250,107 @@ class TenantService(
     }
     tenantRepository.deleteById(id)
   }
+
+  fun getTenantInformation(tenant: Tenant): Map<String, Any?> {
+    return mapOf(
+      "fullName" to "${tenant.user?.firstName ?: "Unknown"} ${tenant.user?.lastName ?: "Unknown"}",
+      "email" to tenant.user?.email,
+      "phone" to tenant.user?.phone,
+      "username" to tenant.user?.username,
+      "gender" to tenant.user?.gender,
+      "birthday" to tenant.user?.birthday,
+      "housingUnit" to mapOf(
+        "id" to tenant.housingUnit?.id,
+        "number" to tenant.housingUnit?.number,
+        "address" to tenant.housingUnit?.address,
+        "type" to tenant.housingUnit?.type,
+        "floor" to tenant.housingUnit?.floor,
+        "area" to tenant.housingUnit?.area
+      ),
+      "moveInDate" to tenant.moveInDate,
+      "moveOutDate" to tenant.moveOutDate,
+      "securityDeposit" to tenant.securityDeposit,
+      "monthlyRent" to tenant.houstingPrice
+    )
+  }
+
+  fun getFinancialInformation(tenant: Tenant): Map<String, Any?> {
+    val subscriptions = subscriptionRepository.findByTenant(tenant).orEmpty()
+    val billingCycles = subscriptions.flatMap { subscription ->
+      billingCycleRepository.findBySubscription(subscription).orEmpty()
+    }
+    val paidBillingCycles = billingCycles.filter { it.status == "Paid" }
+    val unpaidBillingCycles = billingCycles.filter { it.status != "Paid" }
+
+    return mapOf(
+      "billingCycles" to billingCycles.map { cycle ->
+        mapOf(
+          "id" to cycle.id,
+          "amountDue" to cycle.amountDue,
+          "periodStart" to cycle.periodStart,
+          "periodEnd" to cycle.periodEnd,
+          "status" to cycle.status
+        )
+      },
+      "subscriptions" to subscriptions.map { subscription ->
+        mapOf(
+          "id" to subscription.id,
+          "serviceName" to subscription.service?.name,
+          "price" to subscription.price,
+          "startDate" to subscription.startDate,
+          "endDate" to subscription.endDate,
+          "status" to subscription.status
+        )
+      },
+      "totalPayments" to billingCycles.size,
+      "completedPayments" to paidBillingCycles.size,
+      "remainingPayments" to unpaidBillingCycles.size,
+      "amountPaid" to paidBillingCycles.sumOf { it.amountDue ?: BigDecimal.ZERO },
+      "outstandingDebt" to unpaidBillingCycles.sumOf { it.amountDue ?: BigDecimal.ZERO }
+    )
+  }
+
+  fun getIssueTracking(tenant: Tenant): List<Map<String, Any?>> {
+    val issues = issueRepository.findByTenant(tenant).orEmpty()
+    return issues.map { issue ->
+      mapOf(
+        "id" to issue.id,
+        "title" to issue.title,
+        "description" to issue.description,
+        "declarationDate" to issue.declarationDate,
+        "status" to issue.status
+      )
+    }
+  }
+
+  fun getAdditionalInformation(tenant: Tenant): Map<String, Any?> {
+    val invoices = invoiceRepository.findByTenant(tenant).orEmpty()
+    return mapOf(
+      "invoices" to invoices.map { invoice ->
+        mapOf(
+          "id" to invoice.id,
+          "type" to invoice.type,
+          "month" to invoice.month,
+          "year" to invoice.year,
+          "amount" to invoice.amount,
+          "paymentDate" to invoice.paymentDate,
+          "status" to invoice.status
+        )
+      },
+      "userActivity" to mapOf(
+        "registrationDate" to tenant.user?.registrationDate,
+        "accountStatus" to if (tenant.user?.isActive == true) "Active" else "Inactive"
+      )
+    )
+  }
+
+  fun getAllTenantDetails(tenant: Tenant): Map<String, Any?> {
+    return mapOf(
+      "tenantInformation" to getTenantInformation(tenant),
+      "financialInformation" to getFinancialInformation(tenant),
+      "issueTracking" to getIssueTracking(tenant),
+      "additionalInformation" to getAdditionalInformation(tenant)
+    )
+  }
+
 }

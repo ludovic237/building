@@ -5,6 +5,13 @@
       <button mat-raised-button color="primary" (click)="openTenantDialog(null)">Add Tenant</button>
     </div>
     <mat-divider></mat-divider>
+    <div class="p-3">
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Search Tenants</mat-label>
+        <input matInput [(ngModel)]="searchQuery" (ngModelChange)="filterTenants()" placeholder="Enter tenant name or apartment">
+      </mat-form-field>
+    </div>
+    <mat-divider></mat-divider>
     <div class="mat-mdc-table admin-table">
       <div class="mat-mdc-header-row">
         <div class="mat-mdc-header-cell">Tenant Name</div>
@@ -14,7 +21,7 @@
         <div class="mat-mdc-header-cell">Payment Status</div>
         <div class="mat-mdc-header-cell"></div>
       </div>
-      @for (tenant of tenants | paginate: {itemsPerPage: count, currentPage: page}; track tenant.id) {
+      @for (tenant of filteredTenants | paginate: {itemsPerPage: count, currentPage: page}; track tenant.id) {
         <div class="mat-mdc-row">
           <div class="mat-mdc-cell">{{ tenant.userName }}</div>
           <div class="mat-mdc-cell">{{ tenant.housingUnitName }}</div>
