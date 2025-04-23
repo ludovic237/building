@@ -6,18 +6,17 @@ import org.hibernate.annotations.ColumnDefault
 import java.math.BigDecimal
 import java.time.LocalDate
 
-@Data
 @Entity
+@Data
 @Table(name = "payments")
 class Payment {
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id", nullable = false)
   var id: Long? = null
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "tenant_id", nullable = false)
-  var tenant: Tenant? = null
+  var tenant: com.example.backend.models.Tenant? = null
 
   @ColumnDefault("(curdate())")
   @Column(name = "payment_date")

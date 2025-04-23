@@ -1,6 +1,10 @@
 package com.example.backend.models
 
-import jakarta.persistence.*
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
+import jakarta.persistence.Lob
+import jakarta.persistence.Table
 import lombok.Data
 import org.hibernate.annotations.Immutable
 import java.math.BigDecimal
@@ -9,12 +13,11 @@ import java.time.LocalDate
 /**
  * Mapping for DB view
  */
-@Data
 @Immutable
 @Table(name = "billing_cycle_details_view")
 @Entity
+@Data
 class BillingCycleDetailsView protected constructor() {
-
   @Id
   @Column(name = "billing_cycle_id", nullable = false)
   var billingCycleId: Long? = null

@@ -40,9 +40,11 @@ class BillingCycleService(
       println("Cycle: ${cycle.id}, ${cycle.periodStart}, ${cycle.periodEnd}, ${cycle.amountDue}, ${cycle.status}")
       val paymentLine = paymentLineRepository.findByBillingCycleId(cycle.id!!)
 
-      val payment = paymentLine.paymentId?.let {
-        paymentRepository.findById(it).orElse(null)
-      }
+//      val payment = paymentLine.paymentId?.let {
+//        paymentRepository.findById(it).orElse(null)
+//      }
+
+      val payment = paymentRepository.findById(paymentLine.payment!!.id!!).orElse(null)
 
       BillingCycleDetailsDTO(
         billingCycleId = cycle.id!!,

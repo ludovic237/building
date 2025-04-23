@@ -5,12 +5,11 @@ import lombok.Data
 import org.hibernate.annotations.ColumnDefault
 import java.math.BigDecimal
 
-@Data
 @Entity
+@Data
 @Table(name = "housting_units")
 class HoustingUnit {
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id", nullable = false)
   var id: Long? = null
 
@@ -34,7 +33,7 @@ class HoustingUnit {
   @JoinColumn(name = "tenant_id")
   var tenant: com.example.backend.models.Tenant? = null
 
-  @ColumnDefault("0")
-  @Column(name = "price")
+  @ColumnDefault("0.00")
+  @Column(name = "price", precision = 38, scale = 2)
   var price: BigDecimal? = null
 }

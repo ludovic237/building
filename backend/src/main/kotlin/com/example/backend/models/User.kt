@@ -6,12 +6,11 @@ import org.hibernate.annotations.ColumnDefault
 import java.time.Instant
 import java.time.LocalDate
 
-@Data
 @Entity
+@Data
 @Table(name = "users")
 class User {
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id", nullable = false)
   var id: Long? = null
 

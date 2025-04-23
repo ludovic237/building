@@ -4,12 +4,11 @@ import jakarta.persistence.*
 import lombok.Data
 import org.hibernate.annotations.ColumnDefault
 
-@Data
 @Entity
+@Data
 @Table(name = "services")
 class Services {
-@Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Id
   @Column(name = "id", nullable = false)
   var id: Long? = null
 

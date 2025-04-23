@@ -5,12 +5,11 @@ import lombok.Data
 import org.hibernate.annotations.ColumnDefault
 import java.time.LocalDate
 
-@Data
 @Entity
+@Data
 @Table(name = "issues")
 class Issue {
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id", nullable = false)
   var id: Long? = null
 

@@ -4,20 +4,21 @@ import jakarta.persistence.*
 import lombok.Data
 import java.math.BigDecimal
 
-@Data
 @Entity
+@Data
 @Table(name = "payment_lines")
 class PaymentLine {
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id", nullable = false)
   var id: Long? = null
 
-  @Column(name = "payment_id", nullable = true)
-  var paymentId: Long? = null
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "payment_id")
+  var payment: com.example.backend.models.Payment? = null
 
-  @Column(name = "billing_cycle_id", nullable = true)
-  var billingCycleId: Long? = null
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "billing_cycle_id")
+  var billingCycle: BillingCycle? = null
 
   @Column(name = "amount_paid", nullable = false, precision = 10, scale = 2)
   var amountPaid: BigDecimal? = null

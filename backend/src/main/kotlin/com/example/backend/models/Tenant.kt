@@ -6,12 +6,11 @@ import org.hibernate.annotations.ColumnDefault
 import java.math.BigDecimal
 import java.time.LocalDate
 
-@Data
 @Entity
+@Data
 @Table(name = "tenants")
 class Tenant {
-@Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Id
   @Column(name = "id", nullable = false)
   var id: Long? = null
 

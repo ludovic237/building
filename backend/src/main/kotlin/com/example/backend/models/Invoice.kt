@@ -5,12 +5,11 @@ import lombok.Data
 import java.math.BigDecimal
 import java.time.LocalDate
 
-@Data
 @Entity
+@Data
 @Table(name = "invoices")
 class Invoice {
-@Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Id
   @Column(name = "id", nullable = false)
   var id: Long? = null
 

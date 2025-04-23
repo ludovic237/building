@@ -112,7 +112,7 @@ class TenantService(
   fun createTenantNew(tenantData: TenantCreateDataDTO): Tenant {
     tenantData.startDate = tenantData.startDate.plusDays(1)
     var service = serviceRepository.findById(tenantData.serviceId)
-      .orElseThrow { IllegalArgumentException("Service not found with ID: ${tenantData.serviceId}") }
+      .orElseThrow { IllegalArgumentException("Services not found with ID: ${tenantData.serviceId}") }
 
 
     // Step 1: Create Tenant
@@ -223,8 +223,8 @@ class TenantService(
 
   fun createPaymentLine(paymentId: Long?, billingCycleId: Long, remainingAmount: BigDecimal): PaymentLine {
     val paymentLine = PaymentLine()
-    paymentLine.paymentId = paymentId
-    paymentLine.billingCycleId = billingCycleId
+    paymentLine.payment = paymentRepository.findById(paymentId!!).get()
+    paymentLine.billingCycle = billingCycleRepository.findById(billingCycleId).get()
     paymentLine.amountPaid = remainingAmount
     return paymentLineRepository.save(paymentLine)
   }

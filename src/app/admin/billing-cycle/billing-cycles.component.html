@@ -24,7 +24,7 @@
           <div class="mat-mdc-cell">{{ data.amountDue }}</div>
           <div class="mat-mdc-cell">{{ data.paymentLineAmountPaid }}</div>
           <div class="mat-mdc-cell">{{ data.billingMode }}</div>
-          <div class="mat-mdc-cell">
+          <div class="mat-mdc-cell" >
   <span [ngClass]="{
     'yellow-badge': data.billingCycleStatus.toLowerCase() === 'due',
     'green-badge': data.billingCycleStatus.toLowerCase() === 'paid',
