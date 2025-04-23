@@ -1,10 +1,13 @@
 package com.example.backend.repositories
 
     import com.example.backend.models.Payment
+    import com.example.backend.models.Tenant
     import org.springframework.data.jpa.repository.JpaRepository
     import java.util.*
 
     interface PaymentRepository : JpaRepository<Payment, Long> {
+
+      fun findByTenant(tenant: Tenant): List<Payment>
 
         // Find payments by tenant ID
         fun findByTenantId(tenantId: Long): List<Payment>

@@ -32,6 +32,10 @@ export const adminMenuItems = [
   new AdminMenu (205, 'Subscription', '/admin/subscription', null, 'supervisor_account', null, false, 0),
   new AdminMenu (206, 'Rent', '/admin/rent', null, 'supervisor_account', null, false, 0),
   new AdminMenu (207, 'Tenant', '/admin/tenant', null, 'supervisor_account', null, false, 0),
+  new AdminMenu (207, 'Service', '/admin/service', null, 'supervisor_account', null, false, 0),
+  new AdminMenu (207, 'Payment', '/admin/payment', null, 'supervisor_account', null, false, 0),
+  new AdminMenu (207, 'Payment line', '/admin/payment-lines', null, 'supervisor_account', null, false, 0),
+  new AdminMenu (207, 'Billing cycle', '/admin/billing-cycle', null, 'supervisor_account', null, false, 0),
   new AdminMenu (207, 'User new', '/admin/users-new', null, 'supervisor_account', null, false, 0),
 
 ]

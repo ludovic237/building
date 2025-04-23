@@ -1,52 +1,37 @@
 <div class="p-2">
-          <mat-card>
-            <div fxLayout="row wrap" fxLayoutAlign="space-between center" class="w-100 p-3">
-              <h2>Subscription Management</h2>
-              <button mat-raised-button color="primary" (click)="openSubscriptionDialog(null)">Add Subscription</button>
-            </div>
-            <mat-divider></mat-divider>
-            <div class="mat-mdc-table admin-table">
-              <div class="mat-mdc-header-row">
-                <div class="mat-mdc-header-cell">Tenant</div>
-                <div class="mat-mdc-header-cell">Service</div>
-                <div class="mat-mdc-header-cell">Start Date</div>
-                <div class="mat-mdc-header-cell">End Date</div>
-                <div class="mat-mdc-header-cell">Status</div>
-                <div class="mat-mdc-header-cell"></div>
-              </div>
-              @for ( subscription of subscriptions | paginate: { itemsPerPage: count, currentPage: page }; track $index) {
-                <div class="mat-mdc-row">
-                  <div class="mat-mdc-cell">{{ getTenantName(subscription.locataireId) }}</div>
-                  <div class="mat-mdc-cell">{{ getServiceName(subscription.serviceId) }}</div>
-                  <div class="mat-mdc-cell">{{ subscription.dateDebut }}</div>
-                  <div class="mat-mdc-cell">{{ subscription.dateFin }}</div>
-                  <div class="mat-mdc-cell">{{ subscription.status }}</div>
-                  <div class="mat-mdc-cell">
-                    <button mat-mini-fab color="primary" matTooltip="Edit" (click)="openSubscriptionDialog(subscription)">
-                      <mat-icon>edit</mat-icon>
-                    </button>
-                    <button mat-mini-fab color="warn" matTooltip="Delete" class="mx-1" (click)="removeSubscription(subscription)">
-                      <mat-icon>delete</mat-icon>
-                    </button>
-                  </div>
-                </div>
-              }
-              <div class="mat-mdc-row"
-                   *ngFor="let subscription of subscriptions | paginate: { itemsPerPage: count, currentPage: page }; let i = index">
-                <div class="mat-mdc-cell">{{ getTenantName(subscription.locataireId) }}</div>
-                <div class="mat-mdc-cell">{{ getServiceName(subscription.serviceId) }}</div>
-                <div class="mat-mdc-cell">{{ subscription.dateDebut }}</div>
-                <div class="mat-mdc-cell">{{ subscription.dateFin }}</div>
-                <div class="mat-mdc-cell">{{ subscription.status }}</div>
-                <div class="mat-mdc-cell">
-                  <button mat-mini-fab color="primary" matTooltip="Edit" (click)="openSubscriptionDialog(subscription)">
-                    <mat-icon>edit</mat-icon>
-                  </button>
-                  <button mat-mini-fab color="warn" matTooltip="Delete" class="mx-1" (click)="removeSubscription(subscription)">
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </mat-card>
+  <mat-card>
+    <div fxLayout="row wrap" fxLayoutAlign="space-between center" class="w-100 p-3">
+      <h2>Subscription Management</h2>
+      <button mat-raised-button color="primary" (click)="openSubscriptionDialog(null)">Add Subscription</button>
+    </div>
+    <mat-divider></mat-divider>
+    <div class="mat-mdc-table admin-table">
+      <div class="mat-mdc-header-row">
+        <div class="mat-mdc-header-cell">Tenant</div>
+        <div class="mat-mdc-header-cell">Service</div>
+        <div class="mat-mdc-header-cell">Start Date</div>
+        <div class="mat-mdc-header-cell">End Date</div>
+        <div class="mat-mdc-header-cell">Status</div>
+        <div class="mat-mdc-header-cell"></div>
+      </div>
+      @for (subscription of subscriptions | paginate: {itemsPerPage: count, currentPage: page}; track $index) {
+        <div class="mat-mdc-row">
+          <div class="mat-mdc-cell">{{ subscription.tenantName }}</div>
+          <div class="mat-mdc-cell">{{ subscription.serviceName }}</div>
+          <div class="mat-mdc-cell">{{ subscription.moveInDate }}</div>
+          <div class="mat-mdc-cell">{{ subscription.moveOutDate }}</div>
+          <div class="mat-mdc-cell">{{ subscription.paymentStatus }}</div>
+          <div class="mat-mdc-cell">
+            <button mat-mini-fab color="primary" matTooltip="Edit" (click)="openSubscriptionDialog(subscription)">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-mini-fab color="warn" matTooltip="Delete" class="mx-1"
+                    (click)="removeSubscription(subscription)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
         </div>
+      }
+    </div>
+  </mat-card>
+</div>

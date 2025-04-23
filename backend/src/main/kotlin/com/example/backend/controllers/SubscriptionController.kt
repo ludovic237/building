@@ -1,5 +1,7 @@
 package com.example.backend.controllers
 
+import com.example.backend.dtos.SubscriptionDTO
+import com.example.backend.dtos.SubscriptionDetailsDTO
 import com.example.backend.models.Subscription
 import com.example.backend.services.SubscriptionService
 import org.springframework.http.ResponseEntity
@@ -13,7 +15,7 @@ class SubscriptionController(
 
   @CrossOrigin(origins = ["http://localhost:4200"])
   @GetMapping
-  fun getAllSubscriptions(): ResponseEntity<List<Subscription>> {
+  fun getAllSubscriptions(): ResponseEntity<List<SubscriptionDTO>> {
     return ResponseEntity.ok(subscriptionService.getAllSubscriptions())
   }
 
@@ -44,5 +46,12 @@ class SubscriptionController(
   fun deleteSubscription(@PathVariable id: Long): ResponseEntity<Void> {
     subscriptionService.deleteSubscription(id)
     return ResponseEntity.noContent().build()
+  }
+
+  @CrossOrigin(origins = ["http://localhost:4200"])
+  @GetMapping("/{id}/details")
+  fun getSubscriptionDetails(@PathVariable id: Long): ResponseEntity<SubscriptionDetailsDTO> {
+    val subscriptionDetails = subscriptionService.getSubscriptionDetails(id)
+    return ResponseEntity.ok(subscriptionDetails)
   }
 }

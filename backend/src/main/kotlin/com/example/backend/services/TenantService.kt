@@ -6,6 +6,7 @@ import com.example.backend.dtos.TenantCreateDTO
 import com.example.backend.dtos.TenantCreateDataDTO
 import com.example.backend.models.*
 import com.example.backend.repositories.*
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -42,12 +43,14 @@ class TenantService(
 
   fun getAllTenants(): List<TenantDTO> {
     return tenantRepository.findAll().map { tenant ->
+      var subscription = subscriptionRepository.findByTenant(tenantRepository.findByIdOrNull(tenant.id!!)!!)
       println("tenant")
       println(tenant)
       println(tenant.user)
       TenantDTO(
         id = tenant.id,
         userId = tenant.user?.id,
+        paymentStatus = subscription.status,
         housingUnitId = tenant.housingUnit?.id,
         userName = tenant.user?.firstName + " " + tenant.user?.lastName,
         userEmail = tenant.user?.email,

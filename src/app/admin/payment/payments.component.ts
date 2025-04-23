@@ -1,8 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { customers } from '../../common/data/customers';
-import { SubscriptionDialogComponent } from './subscription-dialog/subscription-dialog.component';
-import { ConfirmDialogComponent } from '@shared-components/confirm-dialog/confirm-dialog.component';
+import { customers } from '../../common/data/customers';import { ConfirmDialogComponent } from '@shared-components/confirm-dialog/confirm-dialog.component';
 import { MatCardModule } from '@angular/material/card';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { MatButtonModule } from '@angular/material/button';
@@ -13,10 +11,11 @@ import { PipesModule } from '../../theme/pipes/pipes.module';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import {CommonModule} from "@angular/common";
 import {Subscription} from "../../model/data";
-import {SubscriptionService} from "@services/subscription.service";
+import {PaymentService} from "@services/payment.service";
+import {PaymentDialogComponent} from "./payment-dialog/payment-dialog.component";
 
 @Component({
-    selector: 'app-subscriptions',
+    selector: 'app-payments',
     imports: [
       CommonModule,
         FlexLayoutModule,
@@ -28,41 +27,41 @@ import {SubscriptionService} from "@services/subscription.service";
         NgxPaginationModule,
         PipesModule
     ],
-    templateUrl: './subscriptions.component.html'
+    templateUrl: './payments.component.html'
 })
-export class SubscriptionsComponent implements OnInit {
+export class PaymentsComponent implements OnInit {
 
 
-  public subscriptions: any[] = [];
+  public payments: any[] = [];
   public locataires: any[] = [];
   public services: any[] = [];
   public page: number = 1;
   public count: number = 5;
 
   constructor(public dialog: MatDialog,
-              public subscriptionService:SubscriptionService) {}
+              public paymentService:PaymentService) {}
 
   ngOnInit(): void {
-    this.getAllSubscription();
+    this.getAllPayment();
 
   }
 
-  private getAllSubscription() {
-    this.subscriptionService.getSubscriptions().subscribe({
+  private getAllPayment() {
+    this.paymentService.getPayments().subscribe({
       next: (data) => {
-        this.subscriptions = data;
-        console.log('Get subscription:', data);
+        this.payments = data;
+        console.log('Get payment:', data);
       },
       error: (err) => {
-        console.error('Error  subscription:', err);
+        console.error('Error  payment:', err);
       }
     });
   }
 
-  public openSubscriptionDialog(data: any): void {
-    const dialogRef = this.dialog.open(SubscriptionDialogComponent, {
+  public openPaymentDialog(data: any): void {
+    const dialogRef = this.dialog.open(PaymentDialogComponent, {
       data: {
-        subscription: data,
+        payment: data,
         locataires: this.locataires,
         services: this.services
       },
@@ -71,44 +70,44 @@ export class SubscriptionsComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe((result: any) => {
-      console.log("subscription");
-      const subscription = {
-        id: result.id || this.subscriptions.length + 1, // Génère un nouvel ID si non défini
+      console.log("payment");
+      const payment = {
+        id: result.id || this.payments.length + 1, // Génère un nouvel ID si non défini
         locataireId: result.locataireId,
         serviceId: result.serviceId,
         dateDebut: new Date(result.dateDebut).toISOString().split('T')[0], // Convert to YYYY-MM-DD
         dateFin: new Date(result.dateFin).toISOString().split('T')[0],     // Convert to YYYY-MM-DD
         status: result.status
       };
-      console.log(subscription);
+      console.log(payment);
 
-      if (subscription) {
-        const index = this.subscriptions.findIndex(s => s.id === subscription.id);
+      if (payment) {
+        const index = this.payments.findIndex(s => s.id === payment.id);
         if (index !== -1) {
-          this.subscriptions[index] = subscription; // Update existing subscription
+          this.payments[index] = payment; // Update existing payment
         } else {
-          subscription.id = this.subscriptions.length + 1; // Assign new ID
-          this.subscriptions.push(subscription); // Add new subscription
+          payment.id = this.payments.length + 1; // Assign new ID
+          this.payments.push(payment); // Add new payment
         }
       }
-      console.log("new this.subscriptions");
-      console.log(this.subscriptions);
+      console.log("new this.payments");
+      console.log(this.payments);
     });
 
   }
 
-  public removeSubscription(subscription: any): void {
+  public removePayment(payment: any): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       maxWidth: '400px',
       data: {
         title: 'Confirm Action',
-        message: 'Are you sure you want to remove this subscription?'
+        message: 'Are you sure you want to remove this payment?'
       }
     });
 
     dialogRef.afterClosed().subscribe(dialogResult => {
       if (dialogResult) {
-        this.subscriptions = this.subscriptions.filter(s => s.id !== subscription.id);
+        this.payments = this.payments.filter(s => s.id !== payment.id);
       }
     });
   }

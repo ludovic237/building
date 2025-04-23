@@ -1,7 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { customers } from '../../common/data/customers';
-import { SubscriptionDialogComponent } from './subscription-dialog/subscription-dialog.component';
+import { BillingCycleDialogComponent } from './billing-cycle-dialog/billing-cycle-dialog.component';
 import { ConfirmDialogComponent } from '@shared-components/confirm-dialog/confirm-dialog.component';
 import { MatCardModule } from '@angular/material/card';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
@@ -13,10 +13,10 @@ import { PipesModule } from '../../theme/pipes/pipes.module';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import {CommonModule} from "@angular/common";
 import {Subscription} from "../../model/data";
-import {SubscriptionService} from "@services/subscription.service";
+import {BillingCycleService} from "@services/billing-cycle.service";
 
 @Component({
-    selector: 'app-subscriptions',
+    selector: 'app-billing-cycles',
     imports: [
       CommonModule,
         FlexLayoutModule,
@@ -28,41 +28,42 @@ import {SubscriptionService} from "@services/subscription.service";
         NgxPaginationModule,
         PipesModule
     ],
-    templateUrl: './subscriptions.component.html'
+    templateUrl: './billing-cycles.component.html'
 })
-export class SubscriptionsComponent implements OnInit {
+export class BillingCyclesComponent implements OnInit {
 
 
-  public subscriptions: any[] = [];
+  public billingCycles: any[] = [];
   public locataires: any[] = [];
   public services: any[] = [];
   public page: number = 1;
   public count: number = 5;
 
   constructor(public dialog: MatDialog,
-              public subscriptionService:SubscriptionService) {}
+              public billinCycleService:BillingCycleService) {}
 
   ngOnInit(): void {
-    this.getAllSubscription();
+    this.getAllBillingCycle();
 
   }
 
-  private getAllSubscription() {
-    this.subscriptionService.getSubscriptions().subscribe({
+  private getAllBillingCycle() {
+    this.billinCycleService.getBillingCyclesDetails().subscribe({
       next: (data) => {
-        this.subscriptions = data;
-        console.log('Get subscription:', data);
+        this.billingCycles = data;
+        this.count = this.billingCycles.length;
+        console.log('Get payment:', data);
       },
       error: (err) => {
-        console.error('Error  subscription:', err);
+        console.error('Error  payment:', err);
       }
     });
   }
 
-  public openSubscriptionDialog(data: any): void {
-    const dialogRef = this.dialog.open(SubscriptionDialogComponent, {
+  public openBillingCycleDialog(data: any): void {
+    const dialogRef = this.dialog.open(BillingCycleDialogComponent, {
       data: {
-        subscription: data,
+        payment: data,
         locataires: this.locataires,
         services: this.services
       },
@@ -71,44 +72,44 @@ export class SubscriptionsComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe((result: any) => {
-      console.log("subscription");
-      const subscription = {
-        id: result.id || this.subscriptions.length + 1, // Génère un nouvel ID si non défini
+      console.log("payment");
+      const payment = {
+        id: result.id || this.billingCycles.length + 1, // Génère un nouvel ID si non défini
         locataireId: result.locataireId,
         serviceId: result.serviceId,
         dateDebut: new Date(result.dateDebut).toISOString().split('T')[0], // Convert to YYYY-MM-DD
         dateFin: new Date(result.dateFin).toISOString().split('T')[0],     // Convert to YYYY-MM-DD
         status: result.status
       };
-      console.log(subscription);
+      console.log(payment);
 
-      if (subscription) {
-        const index = this.subscriptions.findIndex(s => s.id === subscription.id);
+      if (payment) {
+        const index = this.billingCycles.findIndex(s => s.id === payment.id);
         if (index !== -1) {
-          this.subscriptions[index] = subscription; // Update existing subscription
+          this.billingCycles[index] = payment; // Update existing payment
         } else {
-          subscription.id = this.subscriptions.length + 1; // Assign new ID
-          this.subscriptions.push(subscription); // Add new subscription
+          payment.id = this.billingCycles.length + 1; // Assign new ID
+          this.billingCycles.push(payment); // Add new payment
         }
       }
-      console.log("new this.subscriptions");
-      console.log(this.subscriptions);
+      console.log("new this.billingCycles");
+      console.log(this.billingCycles);
     });
 
   }
 
-  public removeSubscription(subscription: any): void {
+  public removeBillingCycle(payment: any): void {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       maxWidth: '400px',
       data: {
         title: 'Confirm Action',
-        message: 'Are you sure you want to remove this subscription?'
+        message: 'Are you sure you want to remove this payment?'
       }
     });
 
     dialogRef.afterClosed().subscribe(dialogResult => {
       if (dialogResult) {
-        this.subscriptions = this.subscriptions.filter(s => s.id !== subscription.id);
+        this.billingCycles = this.billingCycles.filter(s => s.id !== payment.id);
       }
     });
   }

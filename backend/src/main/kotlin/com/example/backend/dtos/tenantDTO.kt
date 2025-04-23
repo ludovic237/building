@@ -9,6 +9,7 @@ data class TenantDTO(
     val housingUnitId: Long?,
     val userName: String?,
     val userEmail: String?,
+    val paymentStatus: String?,
     val housingUnitName: String?,
     val moveInDate: LocalDate?,
     val moveOutDate: LocalDate?,

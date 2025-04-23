@@ -7,7 +7,7 @@ import java.util.*
 interface PaymentLineRepository : JpaRepository<PaymentLine, Long> {
 
   // Find payment lines by payment ID
-  fun findByPaymentId(paymentId: Long): List<PaymentLine>
+  fun findByPaymentId(paymentId: Long): PaymentLine
 
   // Find payment lines by billing cycle ID
   fun findByBillingCycleId(billingCycleId: Long): List<PaymentLine>

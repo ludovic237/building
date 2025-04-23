@@ -1,6 +1,7 @@
 package com.example.backend.repositories
 
 import com.example.backend.models.Subscription
+import com.example.backend.models.Tenant
 import com.example.backend.models.User
 import org.springframework.data.jpa.repository.JpaRepository
 import java.time.LocalDate
@@ -9,6 +10,8 @@ interface SubscriptionRepository : JpaRepository<Subscription, Long> {
 
   // Find subscriptions by status
   fun findByStatus(status: String): List<Subscription>
+
+  fun findByTenant(tenant: Tenant): Subscription
 
   // Find subscriptions by start date
   fun findByStartDate(startDate: LocalDate): List<Subscription>

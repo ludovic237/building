@@ -10,6 +10,9 @@ interface BillingCycleRepository : JpaRepository<BillingCycle, Long> {
 /*  // Find billing cycles by tenant ID
   fun findByTenantId(tenantId: Long): List<BillingCycle>*/
 
+  fun findBySubscriptionId(subscriptionId: Long): List<BillingCycle>
+
+
   // Find billing cycles by status
   fun findByStatus(status: String): List<BillingCycle>
 

@@ -104,6 +104,18 @@ export const routes: Routes = [
             path: 'service',
             loadComponent: () => import('./service/services.component').then(c => c.ServicesComponent),
             data: { breadcrumb: 'Service' }
+          }, {
+            path: 'payment-lines',
+            loadComponent: () => import('./payment-line/payment-lines.component').then(c => c.PaymentLinesComponent),
+            data: { breadcrumb: 'Payment lines' }
+          }, {
+            path: 'payment',
+            loadComponent: () => import('./payment/payments.component').then(c => c.PaymentsComponent),
+            data: { breadcrumb: 'Payment' }
+          }, {
+            path: 'billing-cycle',
+            loadComponent: () => import('./billing-cycle/billing-cycles.component').then(c => c.BillingCyclesComponent),
+            data: { breadcrumb: 'Billing cycle' }
           },
         ]
     }

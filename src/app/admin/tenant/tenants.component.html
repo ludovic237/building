@@ -20,7 +20,7 @@
           <div class="mat-mdc-cell">{{ tenant.housingUnitName }}</div>
           <div class="mat-mdc-cell">{{ tenant.moveInDate | date:'shortDate' }}</div>
           <div class="mat-mdc-cell">{{ tenant.securityDeposit | currency }}</div>
-          <div class="mat-mdc-cell">{{ tenant.status }}</div>
+          <div class="mat-mdc-cell">{{ tenant.paymentStatus }}</div>
           <div class="mat-mdc-cell">
             <div class="p-2 actions">
               <button mat-mini-fab color="primary" matTooltip="Edit" (click)="openTenantDialog(tenant)">
