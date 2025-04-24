@@ -10,6 +10,7 @@ import java.math.BigDecimal
 @com.fasterxml.jackson.annotation.JsonIgnoreProperties(value = ["hibernateLazyInitializer", "handler"], ignoreUnknown = true)
 class HoustingUnit {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     var id: Long? = null
 

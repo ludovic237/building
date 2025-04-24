@@ -7,10 +7,12 @@ import {MatSelectModule} from '@angular/material/select';
 import {MatTabsModule} from '@angular/material/tabs';
 import {FlexLayoutModule} from '@ngbracket/ngx-layout';
 import {MatTableModule} from "@angular/material/table";
+import {CommonModule} from "@angular/common";
 
 @Component({
   selector: 'app-housting-detail-dialog',
   imports: [
+    CommonModule,
     ReactiveFormsModule,
     FlexLayoutModule,
     MatTableModule,
@@ -29,13 +31,13 @@ export class HoustingDetailDialogComponent implements OnInit {
   public financial: any;
   public issues: any[];
   public additional: any;
+  public previousTenants: any[];
 
   constructor(
     public dialogRef: MatDialogRef<HoustingDetailDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any,
     private fb: FormBuilder
-  ) {
-  }
+  ) {}
 
   ngOnInit(): void {
     // Initialize the form
@@ -56,11 +58,11 @@ export class HoustingDetailDialogComponent implements OnInit {
     });
 
     // Load data from the injected dialog data
-
     this.tenant = this.data.tenantInformation || {};
     this.financial = this.data.financialInformation || { billingCycles: [], subscriptions: [] };
     this.issues = this.data.issueTracking || [];
     this.additional = this.data.additionalInformation || { invoices: [] };
+    this.previousTenants = this.data.previousTenants || [];
   }
 
   public onSubmit(): void {

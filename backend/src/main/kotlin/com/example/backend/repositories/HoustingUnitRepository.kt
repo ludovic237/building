@@ -2,8 +2,9 @@ package com.example.backend.repositories
 
 import com.example.backend.models.HoustingUnit
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import java.math.BigDecimal
-import java.util.Optional
+import java.util.*
 
 interface HoustingUnitRepository : JpaRepository<HoustingUnit, Long> {
   // Find housing units by floor
@@ -23,4 +24,7 @@ interface HoustingUnitRepository : JpaRepository<HoustingUnit, Long> {
 
   // Find a housing unit by its number
   fun findByNumber(number: String): Optional<HoustingUnit>
+
+  @Query("SELECT h FROM HoustingUnit h WHERE h.tenant IS NULL")
+  fun findUnoccupiedHoustingUnits(): List<HoustingUnit?>?
 }

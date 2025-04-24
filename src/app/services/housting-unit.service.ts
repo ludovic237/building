@@ -23,6 +23,10 @@ export class HoustingUnitService {
     return this.http.get<any[]>(this.apiUrl, {headers: this.getHeaders()});
   }
 
+  getUnoccupiedHoustingUnits(): Observable<any[]> {
+    return this.http.get<any[]>(this.apiUrl+"/unoccupied", {headers: this.getHeaders()});
+  }
+
   gethousingUnitsOccupationDetails(): Observable<any[]> {
     return this.http.get<any[]>(this.apiUrl+'/occupancy-details', {headers: this.getHeaders()});
   }

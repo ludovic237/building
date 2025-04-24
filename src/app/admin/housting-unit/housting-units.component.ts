@@ -87,6 +87,43 @@ export class HoustingUnitsComponent implements OnInit {
 
 
   public openHoustingUnitDialog(data: any): void {
+    const dialogRef = this.dialog.open(HoustingUnitDialogComponent, {
+      data: {
+        customer: data,
+      },
+      panelClass: ['theme-dialog'],
+      autoFocus: false,
+      direction: (this.settings.rtl) ? 'rtl' : 'ltr'
+    });
+
+    dialogRef.afterClosed().subscribe(housingUnit => {
+      if (housingUnit) {
+        this.housingUnitService.createhousingUnit(housingUnit).subscribe({
+          next: (response) => {
+            this.gethousingUnits()
+            console.log('Housing unit created successfully:', response);
+            this.snackBar.open('Housing unit created successfully!', '×', {
+              panelClass: 'success',
+              verticalPosition: 'top',
+              duration: 3000
+            });
+          },
+          error: (err) => {
+            console.error('Error creating housing unit:', err);
+            this.snackBar.open('Failed to create housing unit.', '×', {
+              panelClass: 'error',
+              verticalPosition: 'top',
+              duration: 3000
+            });
+          }
+        });
+      }
+    });
+  }
+
+
+
+  public openHoustingUnitInfoDialog(data: any): void {
     const dialogRef = this.dialog.open(HoustingDetailDialogComponent, {
       data: {
         customer: data,

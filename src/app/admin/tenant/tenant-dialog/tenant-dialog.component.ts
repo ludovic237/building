@@ -242,7 +242,7 @@ export class TenantDialogComponent implements OnInit {
   }
 
   fetchhousingUnits(): void {
-    this.housingUnitService.gethousingUnits().subscribe({
+    this.housingUnitService.getUnoccupiedHoustingUnits().subscribe({
       next: (data) => {
         this.logements = data;
       },

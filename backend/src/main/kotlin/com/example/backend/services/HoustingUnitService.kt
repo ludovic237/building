@@ -6,6 +6,7 @@ import com.example.backend.repositories.*
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.util.*
+import kotlin.math.log
 
 @Service
 class HoustingUnitService(
@@ -146,36 +147,46 @@ class HoustingUnitService(
     )
   }
 
-  fun getHoustingUnitDetailsById(houstingUnitId: Long, tenantId: Long?): Map<String, Any?> {
-    val houstingUnit = houstingUnitRepository.findById(houstingUnitId)
-      .orElseThrow { IllegalArgumentException("HoustingUnit with ID $houstingUnitId not found") }
+fun getHoustingUnitDetailsById(houstingUnitId: Long?, tenantId: String?): Map<String, Any?> {
+  val houstingUnit = houstingUnitRepository.findById(houstingUnitId!!)
+    .orElseThrow { IllegalArgumentException("HoustingUnit with ID $houstingUnitId not found") }
 
-    return if (tenantId != null) {
-      val tenant = tenantRepository.findById(tenantId)
-        .orElseThrow { IllegalArgumentException("Tenant with ID $tenantId not found") }
+  val tenantIdLong = tenantId?.toLongOrNull() // Safely convert tenantId to Long or null
+  val tenants = tenantRepository.findByHousingUnit(houstingUnit).orEmpty()
 
-      mapOf(
-        "housingUnitDetails" to getHousingUnitDetails(houstingUnit),
-        "tenantInformation" to getTenantInformation(tenant),
-        "financialInformation" to getFinancialInformation(tenant),
-        "issueTracking" to getIssueTracking(tenant),
-        "additionalInformation" to getAdditionalInformation(tenant)
-      )
-    } else {
-      val tenants = tenantRepository.findByHousingUnit(houstingUnit).orEmpty()
-
-      mapOf(
-        "housingUnitDetails" to getHousingUnitDetails(houstingUnit),
-        "previousTenants" to tenants.map { tenant ->
-          mapOf(
-            "tenantInformation" to getTenantInformation(tenant),
-            "financialInformation" to getFinancialInformation(tenant),
-            "issueTracking" to getIssueTracking(tenant),
-            "additionalInformation" to getAdditionalInformation(tenant)
-          )
-        }
-      )
-    }
+  // Exclude the current tenant from the list of previous tenants
+  val previousTenants = tenants.filter { it.id != tenantIdLong }.map { tenant ->
+    mapOf(
+      "tenantInformation" to getTenantInformation(tenant),
+      "financialInformation" to getFinancialInformation(tenant),
+      "issueTracking" to getIssueTracking(tenant),
+      "additionalInformation" to getAdditionalInformation(tenant)
+    )
   }
+
+  return if (tenantIdLong != null) {
+    val tenant = tenantRepository.findById(tenantIdLong)
+      .orElseThrow { IllegalArgumentException("Tenant with ID $tenantIdLong not found") }
+
+    mapOf(
+      "housingUnitDetails" to getHousingUnitDetails(houstingUnit),
+      "tenantInformation" to getTenantInformation(tenant),
+      "financialInformation" to getFinancialInformation(tenant),
+      "issueTracking" to getIssueTracking(tenant),
+      "additionalInformation" to getAdditionalInformation(tenant),
+      "previousTenants" to previousTenants
+    )
+  } else {
+    mapOf(
+      "housingUnitDetails" to getHousingUnitDetails(houstingUnit),
+      "previousTenants" to previousTenants
+    )
+  }
+}
+
+  fun getUnoccupiedHoustingUnits(): List<HoustingUnit?> {
+      return houstingUnitRepository.findUnoccupiedHoustingUnits() ?: emptyList()
+  }
+
 
 }
