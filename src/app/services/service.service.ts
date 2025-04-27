@@ -30,6 +30,10 @@ import { Injectable } from '@angular/core';
         return this.http.post<Service>(this.apiUrl, service,{headers: this.getHeaders()});
       }
 
+      createServiceData(service: any): Observable<Service> {
+        return this.http.post<Service>(this.apiUrl+'/create', service,{headers: this.getHeaders()});
+      }
+
       updateService(id: number, service: Service): Observable<Service> {
         return this.http.put<Service>(`${this.apiUrl}/${id}`, service,{headers: this.getHeaders()});
       }
@@ -37,4 +41,14 @@ import { Injectable } from '@angular/core';
       deleteService(id: number): Observable<void> {
         return this.http.delete<void>(`${this.apiUrl}/${id}`,{headers: this.getHeaders()});
       }
+
+
+      getServiceWithOptions(id: number): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/${id}/with-options`, { headers: this.getHeaders() });
+      }
+
+      updateServiceWithOptions(id: number, updatedServiceDTO: any): Observable<any> {
+        return this.http.put<any>(`${this.apiUrl}/${id}/with-options`, updatedServiceDTO, { headers: this.getHeaders() });
+      }
+
     }

@@ -8,18 +8,11 @@
         <mat-form-field appearance="outline" class="w-100">
           <mat-label>Code</mat-label>
           <input matInput formControlName="code" required maxlength="50">
-          @if (form.controls.code.errors?.minlength) {
-            <mat-error>Code must be at least {{ form.controls.code.errors?.minlength.requiredLength }}characters
-            </mat-error>
-          }
-          @if (form.controls.code.errors?.pattern) {
-            <mat-error>Code must contain only letters and numbers</mat-error>
+          @if (form.controls.code.errors?.required) {
+            <mat-error>Code is required</mat-error>
           }
           @if (form.controls.code.errors?.maxlength) {
             <mat-error>Code must be at most 50 characters</mat-error>
-          }
-          @if (form.controls.code.errors?.required) {
-            <mat-error>Code is required</mat-error>
           }
         </mat-form-field>
       </div>
@@ -29,9 +22,8 @@
         <mat-form-field appearance="outline" class="w-100">
           <mat-label>Name</mat-label>
           <input matInput formControlName="name" required>
-          @if (form.controls.name.errors?.minlength) {
-            <mat-error>Name must be at least {{ form.controls.name.errors?.minlength.requiredLength }}characters
-            </mat-error>
+          @if (form.controls.name.errors?.required) {
+            <mat-error>Name is required</mat-error>
           }
         </mat-form-field>
       </div>
@@ -41,10 +33,8 @@
         <mat-form-field appearance="outline" class="w-100">
           <mat-label>Description</mat-label>
           <textarea matInput formControlName="description" rows="4" required></textarea>
-          @if (form.controls.description.errors?.minlength) {
-            <mat-error>Description must be at least {{ form.controls.description.errors?.minlength.requiredLength }}
-              characters
-            </mat-error>
+          @if (form.controls.description.errors?.required) {
+            <mat-error>Description is required</mat-error>
           }
         </mat-form-field>
       </div>
@@ -54,10 +44,8 @@
         <mat-form-field appearance="outline" class="w-100">
           <mat-label>Billing Mode</mat-label>
           <mat-select formControlName="billingMode" required>
-            @for ( mode of billingModes;track mode) {
-              <mat-option [value]="mode">
-                {{ mode }}
-              </mat-option>
+            @for (mode of billingModes; track mode) {
+              <mat-option [value]="mode">{{ mode }}</mat-option>
             }
           </mat-select>
           @if (form.controls.billingMode.errors?.required) {
@@ -66,10 +54,86 @@
         </mat-form-field>
       </div>
 
-
       <!-- Is Active -->
       <div fxFlex="100" class="px-2">
         <mat-checkbox formControlName="isActive">Is Active</mat-checkbox>
+      </div>
+
+      <!-- Options -->
+      <div fxFlex="100" class="px-2 mt-3">
+        <h3>Options</h3>
+        <div formArrayName="options">
+          @for (option of options.controls; let i = $index; track option) {
+            <div [formGroupName]="i" class="option-group">
+              <div fxLayout="row wrap" class="mt-2">
+                <div fxFlex="30" class="px-2">
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Option Name</mat-label>
+                    <input matInput formControlName="name" required>
+                    @if (option.get('name')?.errors?.required) {
+                      <mat-error>Option Name is required</mat-error>
+                    }
+                  </mat-form-field>
+                </div>
+                <div fxFlex="20" class="px-2">
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Price</mat-label>
+                    <input matInput type="number" formControlName="price" required>
+                    @if (option.get('price')?.errors?.required) {
+                      <mat-error>Price is required</mat-error>
+                    }
+                  </mat-form-field>
+                </div>
+                <div fxFlex="20" class="px-2">
+                  <mat-form-field appearance="outline" class="w-100">
+                    <mat-label>Quantity</mat-label>
+                    <input matInput type="number" formControlName="quantity" required>
+                    @if (option.get('quantity')?.errors?.required) {
+                      <mat-error>Quantity is required</mat-error>
+                    }
+                  </mat-form-field>
+                </div>
+                <div fxFlex="10" class="px-2">
+                  <button mat-raised-button color="primary" (click)="validateOption(i)" type="button">
+                    Validate
+                  </button>
+                </div>
+                <div fxFlex="10" class="px-2">
+                  <button mat-icon-button color="warn" (click)="removeOption(i)" type="button">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+        <button mat-raised-button color="primary" (click)="addOption()" type="button" class="mt-2">
+          Add Option
+        </button>
+      </div>
+
+      <!-- Validated Options -->
+<!--      <div fxFlex="100" class="px-2 mt-3">-->
+<!--        <mat-form-field appearance="outline" class="w-100">-->
+<!--          <mat-label>Validated Options</mat-label>-->
+<!--          <mat-select formControlName="validatedOptions" multiple>-->
+<!--            @for (option of validatedOptions; track option) {-->
+<!--              <mat-option [value]="option">-->
+<!--                {{ option.name }} - ({{ option.price }})-->
+<!--              </mat-option>-->
+<!--            }-->
+<!--          </mat-select>-->
+<!--        </mat-form-field>-->
+<!--      </div>-->
+
+      <div *ngFor="let item of validatedOptions; let i = index"
+           class="mat-mdc-button selected-item"
+           [class.active]="item.isSelected"
+           (click)="toggleSelection(i)">
+        {{ item.name }} - ({{ item.price }})
+        <button mat-icon-button>
+          <mat-icon (click)="removeValidatedOption(i)">close</mat-icon>
+        </button>
       </div>
 
     </div>
@@ -77,7 +141,8 @@
   <div mat-dialog-actions>
     <div fxLayout="row" fxLayoutAlign="space-between center" class="w-100 p-3">
       <button mat-raised-button color="warn" type="button" mat-dialog-close>Close</button>
-      <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Save</button>
+<!--      <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Save</button>-->
+      <button mat-raised-button color="primary" type="submit" [disabled]="isSaveDisabled">Save</button>
     </div>
   </div>
 </form>

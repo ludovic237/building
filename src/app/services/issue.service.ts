@@ -20,7 +20,7 @@ import { Injectable } from '@angular/core';
             id: 1,
             locataireId: 101,
             titre: 'Plumbing Issue',
-            description: 'Leaking pipe in the kitchen',
+            price: 'Leaking pipe in the kitchen',
             dateDeclaration: new Date('2023-01-10'),
             status: 'ouvert'
           },
@@ -28,7 +28,7 @@ import { Injectable } from '@angular/core';
             id: 2,
             locataireId: 102,
             titre: 'Electrical Issue',
-            description: 'Power outage in the living room',
+            price: 'Power outage in the living room',
             dateDeclaration: new Date('2023-02-05'),
             status: 'en cours'
           }
@@ -42,7 +42,7 @@ import { Injectable } from '@angular/core';
           id,
           locataireId: 101,
           titre: 'Plumbing Issue',
-          description: 'Leaking pipe in the kitchen',
+          price: 'Leaking pipe in the kitchen',
           dateDeclaration: new Date('2023-01-10'),
           status: 'ouvert'
         };

@@ -32,6 +32,43 @@ class PaymentService(
     }
   }
 
+/*fun getAllPaymentsSimple(): List<Map<String, Any?>> {
+    return paymentRepository.findAll().map { payment ->
+      var pa
+        mapOf(
+            "paymentId" to payment.id,
+            "amountPaid" to payment.paymentLines.sumOf { it.amountPaid ?: BigDecimal.ZERO },
+            "paymentDate" to payment.paymentDate,
+            "paymentMethod" to payment.paymentMethod,
+            "billingCycleStatus" to payment.paymentLines.firstOrNull()?.billingCycle?.status,
+            "subscription" to payment.paymentLines.firstOrNull()?.billingCycle?.subscription?.let { subscription ->
+                mapOf(
+                    "subscriptionId" to subscription.id,
+                    "subscriptionStatus" to subscription.status
+                )
+            },
+            "tenant" to payment.tenant?.let { tenant ->
+                mapOf(
+                    "tenantId" to tenant.id,
+                    "moveInDate" to tenant.moveInDate,
+                    "moveOutDate" to tenant.moveOutDate,
+                    "securityDeposit" to tenant.securityDeposit
+                )
+            },
+            "service" to payment.paymentLines.firstOrNull()?.billingCycle?.subscription?.service?.let { service ->
+                mapOf(
+                    "serviceId" to service.id,
+                    "serviceName" to service.name,
+                    "serviceDescription" to service.description,
+                    "serviceCode" to service.code,
+                    "billingMode" to service.billingMode,
+                    "isActive" to service.isActive
+                )
+            }
+        )
+    }
+}*/
+
   fun getPaymentById(id: Long): Optional<Payment> {
     return paymentRepository.findById(id)
   }

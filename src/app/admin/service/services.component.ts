@@ -55,6 +55,7 @@ export class ServicesComponent implements OnInit {
   private loadServices(): void {
     this.serviceService.getServices().subscribe({
       next: (data: Service[]) => {
+        this.count = data.length;
         this.services = data;
       },
       error: (err) => {

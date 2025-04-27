@@ -3,6 +3,7 @@ package com.example.backend.models
 import jakarta.persistence.*
 import org.hibernate.annotations.ColumnDefault
 
+
 @Entity
 @Table(name = "services")
 class Services {
@@ -12,7 +13,7 @@ class Services {
   var id: Long? = null
 
   @Column(name = "code", nullable = false, length = 50)
-  var code: String? = null
+  var code: String = "DEFAULT_CODE"
 
   @Column(name = "name", nullable = false, length = 100)
   var name: String? = null
@@ -28,4 +29,5 @@ class Services {
   @ColumnDefault("1")
   @Column(name = "is_active")
   var isActive: Boolean? = null
+
 }
