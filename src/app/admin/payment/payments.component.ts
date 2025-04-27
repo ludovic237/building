@@ -50,6 +50,7 @@ export class PaymentsComponent implements OnInit {
     this.paymentService.getPayments().subscribe({
       next: (data) => {
         this.payments = data;
+        this.count= this.payments.length;
         console.log('Get payment:', data);
       },
       error: (err) => {

@@ -5,6 +5,8 @@ import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Lob
 import jakarta.persistence.Table
+import lombok.Data
+import lombok.ToString
 import org.hibernate.annotations.Immutable
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -15,8 +17,13 @@ import java.time.LocalDate
 @Immutable
 @Table(name = "payments_view")
 @Entity
+@Data
+@ToString
 class PaymentsView protected constructor() {
   @Id
+  @Column(name = "id", nullable = false)
+  var id: Long? = null
+
   @Column(name = "payment_id", nullable = false)
   var paymentId: Long? = null
 
@@ -101,4 +108,8 @@ class PaymentsView protected constructor() {
 
   @Column(name = "service_is_active")
   var serviceIsActive: Boolean? = null
+
+  override fun toString(): String {
+    return "PaymentsView(paymentId=$paymentId, paymentMethod=$paymentMethod, paymentTotalAmount=$paymentTotalAmount, paymentDate=$paymentDate, amountPaid=$amountPaid, tenantId=$tenantId, userFirstName=$userFirstName, userLastName=$userLastName, billingCycleId=$billingCycleId, billingCycleStatus=$billingCycleStatus, serviceName=$serviceName, serviceDescription=$serviceDescription)"
+  }
 }

@@ -21,4 +21,11 @@ class PaymentController(
     val payments: List<PaymentDTO> = paymentService!!.getAllPayments()
     return ResponseEntity.ok(payments)
   }
+
+  @CrossOrigin(origins = ["http://localhost:4200"])
+  @DeleteMapping("/delete/{id}")
+  fun deletePaymentWithValidationAndUpdate(@PathVariable   id:String): ResponseEntity<Map<String, String>> {
+    val payments = paymentService!!.deletePaymentWithValidationAndUpdate(id.toLong())
+    return ResponseEntity.ok(payments)
+  }
 }

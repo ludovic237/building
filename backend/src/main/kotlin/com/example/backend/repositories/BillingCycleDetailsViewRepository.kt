@@ -11,6 +11,9 @@ import java.time.LocalDate
 interface BillingCycleDetailsViewRepository : JpaRepository<BillingCycleDetailsView, Long> {
 
   // Find by status
+  fun findByBillingCycleId(billingCycleId: Long): BillingCycleDetailsView
+
+  // Find by status
   fun findByBillingCycleStatus(billingCycleStatus: String): List<BillingCycleDetailsView>
 
   // Find by tenant ID

@@ -7,6 +7,7 @@ import org.hibernate.annotations.ColumnDefault
 @Table(name = "services")
 class Services {
   @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id", nullable = false)
   var id: Long? = null
 

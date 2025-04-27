@@ -34,6 +34,6 @@ export class PaymentService {
   }
 
   deletePayment(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`,{headers: this.getHeaders()});
+    return this.http.delete<void>(`${this.apiUrl}/delete/${id}`,{headers: this.getHeaders()});
   }
 }

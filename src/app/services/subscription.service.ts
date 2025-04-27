@@ -22,12 +22,20 @@ export class SubscriptionService {
     return this.http.get<Subscription[]>(this.apiUrl,{headers: this.getHeaders()});
   }
 
+  getSubscriptionByITenantId(tenantId: number): Observable<any> {
+    return this.http.get<Subscription>(`${this.apiUrl}/tenant/${tenantId}/info`,{headers: this.getHeaders()});
+  }
+
   getSubscriptionById(id: number): Observable<Subscription> {
     return this.http.get<Subscription>(`${this.apiUrl}/${id}`,{headers: this.getHeaders()});
   }
 
   createSubscription(subscription: Subscription): Observable<Subscription> {
     return this.http.post<Subscription>(this.apiUrl, subscription,{headers: this.getHeaders()});
+  }
+
+  processPayment(subscription: any): Observable<Subscription> {
+    return this.http.post<Subscription>(this.apiUrl+'/process-payment', subscription,{headers: this.getHeaders()});
   }
 
   updateSubscription(id: number, subscription: Subscription): Observable<Subscription> {

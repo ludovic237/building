@@ -1,10 +1,6 @@
 package com.example.backend.models
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.Id
-import jakarta.persistence.Lob
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import org.hibernate.annotations.Immutable
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -17,6 +13,9 @@ import java.time.LocalDate
 @Entity
 class BillingCycleDetailsView protected constructor() {
   @Id
+  @Column(name = "id", nullable = false)
+  var id: Long? = null
+
   @Column(name = "billing_cycle_id", nullable = false)
   var billingCycleId: Long? = null
 

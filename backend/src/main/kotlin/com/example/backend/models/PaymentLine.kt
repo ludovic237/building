@@ -7,6 +7,7 @@ import java.math.BigDecimal
 @Table(name = "payment_lines")
 class PaymentLine {
   @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id", nullable = false)
   var id: Long? = null
 

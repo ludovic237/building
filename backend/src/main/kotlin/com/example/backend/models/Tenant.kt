@@ -9,6 +9,7 @@ import java.time.LocalDate
 @Table(name = "tenants")
 class Tenant {
   @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id", nullable = false)
   var id: Long? = null
 

@@ -160,6 +160,7 @@ alter table issues
 
 CREATE VIEW billing_cycle_details_view AS
 SELECT
+  row_number() OVER ()   AS `id`,
   bc.id AS billing_cycle_id,
   bc.period_start AS start_date,
   bc.period_end AS end_date,
@@ -201,6 +202,7 @@ FROM
 
 CREATE VIEW payment_lines_view AS
 SELECT
+  row_number() OVER ()   AS `id`,
     pl.id AS payment_line_id,
     pl.amount_paid,
     p.id AS payment_id,
@@ -247,6 +249,7 @@ LEFT JOIN
 
 CREATE VIEW payments_view AS
 SELECT
+  row_number() OVER ()   AS `id`,
   p.id AS payment_id,
   p.payment_method AS payment_method,
   p.total_amount AS payment_total_amount,

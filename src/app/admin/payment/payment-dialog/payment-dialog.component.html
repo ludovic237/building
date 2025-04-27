@@ -1,92 +1,98 @@
-<h1 mat-dialog-title>Subscription</h1>
-<form [formGroup]="form" (ngSubmit)="onSubmit()" autocomplete="off">
-  <div mat-dialog-content>
-    <div fxLayout="row wrap" class="mt-3">
+<h1 mat-dialog-title>Payment</h1>
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" autocomplete="off">
+        <div mat-dialog-content>
+          <div fxLayout="row wrap" class="mt-3">
 
-      <!-- Tenant -->
-      <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
-        <mat-form-field appearance="outline" class="w-100">
-          <mat-label>Tenant</mat-label>
-          <mat-select formControlName="locataireId" required>
-            <mat-option [value]="">-</mat-option>
-            @for (locataire of locataires; track $index) {
-              <mat-option [value]="locataire.id">
-                {{ locataire.name }}
-              </mat-option>
-            }
-          </mat-select>
-          @if (form.controls.locataireId.errors?.required) {
-            <mat-error>Tenant is required</mat-error>
-          }
-        </mat-form-field>
-      </div>
+            <!-- Tenant Selection -->
+            <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
+              <mat-form-field appearance="outline" class="w-100">
+                <mat-label>Tenant</mat-label>
+                <mat-select formControlName="tenantId" (selectionChange)="onTenantChange($event.value)" required>
+                  <mat-option [value]="">-</mat-option>
+                  <mat-option *ngFor="let tenant of tenants" [value]="tenant.id">
+                    {{ tenant.userName }}
+                  </mat-option>
+                </mat-select>
+                <mat-error *ngIf="form.controls.tenantId.errors?.required">Tenant is required</mat-error>
+              </mat-form-field>
+            </div>
 
-      <!-- Service -->
-      <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
-        <mat-form-field appearance="outline" class="w-100">
-          <mat-label>Service</mat-label>
-          <mat-select formControlName="serviceId" required>
-            <mat-option [value]="">-</mat-option>
-            @for (services of services; track $index) {
-              <mat-option [value]="services.id">
-                {{ services.nom }}
-              </mat-option>
-            }
-          </mat-select>
-          @if (form.controls.serviceId.errors?.required) {
-            <mat-error>Service is required</mat-error>
-          }
-        </mat-form-field>
-      </div>
+            <!-- Subscription Selection -->
+            <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
+              <mat-form-field appearance="outline" class="w-100">
+                <mat-label>Subscription</mat-label>
+                <mat-select formControlName="subscriptionId" (selectionChange)="onSubscriptionChange($event.value)"
+                            [disabled]="subscriptions.length === 0" required>
+                  <mat-option [value]="">-</mat-option>
+                  <mat-option *ngFor="let subscription of subscriptions" [value]="subscription.id">
+                    {{ subscription.serviceName }}
+                  </mat-option>
+                </mat-select>
+                <mat-error *ngIf="form.controls.subscriptionId.errors?.required">Subscription is required</mat-error>
+              </mat-form-field>
+            </div>
 
-      <!-- Start Date -->
-      <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
-        <mat-form-field appearance="outline" class="w-100">
-          <mat-label>Start Date</mat-label>
-          <input matInput [matDatepicker]="startDatePicker" formControlName="dateDebut" required>
-          <mat-datepicker-toggle matSuffix [for]="startDatePicker"></mat-datepicker-toggle>
-          <mat-datepicker #startDatePicker></mat-datepicker>
-          @if (form.controls.dateDebut.errors?.required) {
-            <mat-error>Start date is required</mat-error>
-          }
-        </mat-form-field>
-      </div>
+            <!-- Remaining Billing Cycles -->
+            <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
+              <mat-form-field appearance="outline" class="w-100">
+                <mat-label>Remaining Billing Cycles</mat-label>
+                <input matInput [value]="remainingCycles" [disabled]="remainingCycles === null" readonly>
+              </mat-form-field>
+            </div>
 
-      <!-- End Date -->
-      <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
-        <mat-form-field appearance="outline" class="w-100">
-          <mat-label>End Date</mat-label>
-          <input matInput [matDatepicker]="endDatePicker" formControlName="dateFin" required>
-          <mat-datepicker-toggle matSuffix [for]="endDatePicker"></mat-datepicker-toggle>
-          <mat-datepicker #endDatePicker></mat-datepicker>
-          @if (form.controls.dateFin.errors?.required) {
-            <mat-error>End date is required</mat-error>
-          }
-        </mat-form-field>
-      </div>
+            <!-- Billing Mode -->
+            <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
+              <mat-form-field appearance="outline" class="w-100">
+                <mat-label>Billing Mode</mat-label>
+                <input matInput [value]="billingMode" [disabled]="billingMode === null" readonly>
+              </mat-form-field>
+            </div>
 
-      <!-- Status -->
-      <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
-        <mat-form-field appearance="outline" class="w-100">
-          <mat-label>Status</mat-label>
-          <mat-select formControlName="status" required>
-            <mat-option [value]="">-</mat-option>
-            @for (status of statuss; track $index) {
-              <mat-option [value]="status">{{ status }}</mat-option>
-            }
-          </mat-select>
-          @if (form.controls.status.errors?.required) {
-            <mat-error>Status is required</mat-error>
-          }
-        </mat-form-field>
-      </div>
+            <!-- Remaining Amount -->
+            <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
+              <mat-form-field appearance="outline" class="w-100">
+                <mat-label>Remaining Amount</mat-label>
+                <input matInput [value]="remainingAmount | currency" [disabled]="remainingAmount === null" readonly>
+              </mat-form-field>
+            </div>
 
-    </div>
-  </div>
-  <div mat-dialog-actions>
-    <div fxLayout="row" fxLayoutAlign="space-between center" class="w-100 p-3">
-      <button mat-raised-button color="warn" type="button" mat-dialog-close>Close</button>
-      <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Save</button>
-    </div>
-  </div>
-</form>
+            <!-- Payment Amount -->
+            <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
+              <mat-form-field appearance="outline" class="w-100">
+                <mat-label>Payment Amount</mat-label>
+                <input matInput formControlName="paymentAmount" type="number" [disabled]="remainingAmount === null"
+                       [max]="remainingAmount" required>
+                <mat-error *ngIf="form.controls.paymentAmount.errors?.required">Payment amount is required</mat-error>
+                <mat-error *ngIf="form.controls.paymentAmount.errors?.max">
+                  Payment amount cannot exceed {{ remainingAmount | currency }}
+                </mat-error>
+              </mat-form-field>
+            </div>
+
+            <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
+              <mat-form-field style="margin-top: 20px;" appearance="outline" class="w-100">
+                <mat-label>Payment Mode</mat-label>
+                <mat-select formControlName="paymentMode" required>
+                  <mat-option [value]="">-</mat-option>
+                  <mat-option value="Credit Card">Credit Card</mat-option>
+                  <mat-option value="Debit Card">Debit Card</mat-option>
+                  <mat-option value="Bank Transfer">Bank Transfer</mat-option>
+                  <mat-option value="Cash">Cash</mat-option>
+                  <mat-option value="Orange Money">Orange Money</mat-option>
+                  <mat-option value="MTN Mobile Money">MTN Mobile Money</mat-option>
+                </mat-select>
+                @if (form.get('paymentMode')?.hasError('required')) {
+                  <mat-error>Payment mode is required</mat-error>
+                }
+              </mat-form-field>
+            </div>
+
+          </div>
+        </div>
+        <div mat-dialog-actions>
+          <div fxLayout="row" fxLayoutAlign="space-between center" class="w-100 p-3">
+            <button mat-raised-button color="warn" type="button" mat-dialog-close>Close</button>
+            <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Save</button>
+          </div>
+        </div>
+      </form>

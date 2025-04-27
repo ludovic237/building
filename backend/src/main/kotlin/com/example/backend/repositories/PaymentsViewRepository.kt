@@ -1,6 +1,7 @@
 package com.example.backend.repositories
 
 import com.example.backend.models.PaymentsView
+import com.example.backend.models.Subscription
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
@@ -11,11 +12,15 @@ import java.time.LocalDate
 @Repository
 interface PaymentsViewRepository : JpaRepository<PaymentsView, Long> {
 
+
   // Find by payment method
   fun findByPaymentMethod(paymentMethod: String): List<PaymentsView>
 
   // Find by tenant ID
   fun findByTenantId(tenantId: Long): List<PaymentsView>
+
+  // Find by subscription ID
+  fun findBySubscriptionId(subscriptionId: Long): List<PaymentsView>
 
   // Find by username
   fun findByUserUsername(username: String): List<PaymentsView>

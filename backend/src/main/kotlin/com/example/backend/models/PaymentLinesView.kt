@@ -17,6 +17,9 @@ import java.time.LocalDate
 @Entity
 class PaymentLinesView protected constructor() {
   @Id
+  @Column(name = "id", nullable = false)
+  var id: Long? = null
+
   @Column(name = "payment_line_id", nullable = false)
   var paymentLineId: Long? = null
 

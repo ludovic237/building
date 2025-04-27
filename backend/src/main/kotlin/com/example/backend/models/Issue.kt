@@ -8,6 +8,7 @@ import java.time.LocalDate
 @Table(name = "issues")
 class Issue {
   @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   @Column(name = "id", nullable = false)
   var id: Long? = null
 
