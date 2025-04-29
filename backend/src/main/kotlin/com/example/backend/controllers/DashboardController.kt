@@ -5,6 +5,7 @@ import com.example.backend.services.DashboardService
 import com.example.backend.services.PaymentService
 import com.example.backend.services.UserService
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -17,9 +18,10 @@ class DashboardController(
 
 
   @CrossOrigin(origins = ["http://localhost:4200"])
+  @PreAuthorize("isAuthenticated()")
   @GetMapping
   fun getDashboardData(): ResponseEntity<DashboardDTO> {
-    val dashboardData:DashboardDTO = dashboardService!!.getDashboardData();
+    val dashboardData: DashboardDTO = dashboardService!!.getDashboardData();
     return ResponseEntity.ok(dashboardData);
   }
 

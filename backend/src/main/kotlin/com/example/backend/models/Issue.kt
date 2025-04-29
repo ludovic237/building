@@ -30,4 +30,8 @@ class Issue {
   @Lob
   @Column(name = "status", nullable = false)
   var status: String? = null
+
+  override fun toString(): String {
+    return "Issue(id=$id, tenant=${tenant?.id}, title=$title, description=$description, declarationDate=$declarationDate, status='$status')"
+  }
 }

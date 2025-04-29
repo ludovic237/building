@@ -3,6 +3,7 @@ package com.example.backend.controllers
 import com.example.backend.models.Issue
 import com.example.backend.services.IssueService
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -12,30 +13,35 @@ class IssueController(
 ) {
 
   @CrossOrigin(origins = ["http://localhost:4200"])
+  @PreAuthorize("isAuthenticated()")
   @GetMapping
   fun getAllIssues(): ResponseEntity<List<Issue>> {
     return ResponseEntity.ok(issueService.getAllIssues())
   }
 
   @CrossOrigin(origins = ["http://localhost:4200"])
+  @PreAuthorize("isAuthenticated()")
   @GetMapping("/{id}")
   fun getIssueById(@PathVariable id: Long): ResponseEntity<Issue> {
     return ResponseEntity.ok(issueService.getIssueById(id).orElseThrow { IllegalArgumentException("Issue not found") })
   }
 
   @CrossOrigin(origins = ["http://localhost:4200"])
+  @PreAuthorize("isAuthenticated()")
   @PostMapping
   fun createIssue(@RequestBody issue: Issue): ResponseEntity<Issue> {
     return ResponseEntity.ok(issueService.createIssue(issue))
   }
 
   @CrossOrigin(origins = ["http://localhost:4200"])
+  @PreAuthorize("isAuthenticated()")
   @PutMapping("/{id}")
   fun updateIssue(@PathVariable id: Long, @RequestBody updatedIssue: Issue): ResponseEntity<Issue> {
     return ResponseEntity.ok(issueService.updateIssue(id, updatedIssue))
   }
 
   @CrossOrigin(origins = ["http://localhost:4200"])
+  @PreAuthorize("isAuthenticated()")
   @DeleteMapping("/{id}")
   fun deleteIssue(@PathVariable id: Long): ResponseEntity<Void> {
     issueService.deleteIssue(id)

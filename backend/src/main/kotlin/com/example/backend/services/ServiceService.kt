@@ -136,9 +136,14 @@ class ServiceService(
   }
 
   fun deleteService(id: Long) {
-    if (!serviceRepository.existsById(id)) {
-      throw IllegalArgumentException("Services with ID $id not found")
-    }
+    val service = serviceRepository.findById(id)
+      .orElseThrow { IllegalArgumentException("Services with ID $id not found") }
+
+    // Supprimer les options associées au service
+    val associatedOptions = serviceOptionRepository.findByService(service)
+    serviceOptionRepository.deleteAll(associatedOptions)
+
+    // Supprimer le service
     serviceRepository.deleteById(id)
   }
 }

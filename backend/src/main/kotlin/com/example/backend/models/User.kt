@@ -1,11 +1,14 @@
 package com.example.backend.models
 
 import jakarta.persistence.*
+import lombok.Data
+import lombok.ToString
 import org.hibernate.annotations.ColumnDefault
 import java.time.Instant
 import java.time.LocalDate
-
+@Data
 @Entity
+@ToString
 @Table(name = "users")
 class User {
   @Id
@@ -36,7 +39,7 @@ class User {
   var birthday: LocalDate? = null
 
   @Lob
-  @Column(name = "gender", nullable = false)
+  @Column(name = "gender", nullable = true)
   var gender: String? = null
 
   @Column(name = "image")

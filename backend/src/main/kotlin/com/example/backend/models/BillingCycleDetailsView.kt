@@ -87,4 +87,8 @@ class BillingCycleDetailsView protected constructor() {
 
   @Column(name = "payment_line_amount_paid", precision = 10, scale = 2)
   var paymentLineAmountPaid: BigDecimal? = null
+
+  override fun toString(): String {
+    return "BillingCycleDetailsView(id=$id, billingCycleId=$billingCycleId, startDate=$startDate, endDate=$endDate, amountDue=$amountDue, billingCycleStatus='$billingCycleStatus', subscriptionId=$subscriptionId, subscriptionTenantId=$subscriptionTenantId, subscriptionStartDate=$subscriptionStartDate, subscriptionEndDate=$subscriptionEndDate, serviceId=$serviceId, serviceBillingMode='$serviceBillingMode', serviceCode='$serviceCode', serviceName='$serviceName', serviceDescription='$serviceDescription', tenantId=$tenantId, userId=$userId, userFirstName='$userFirstName', userLastName='$userLastName', userUsername='$userUsername', paymentId=$paymentId, paymentTotalAmount=$paymentTotalAmount, paymentDate=$paymentDate, paymentLineAmountPaid=$paymentLineAmountPaid)"
+  }
 }

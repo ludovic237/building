@@ -38,4 +38,9 @@ class JwtUtil {
       return false
     }
   }
+
+  fun getUsernameFromToken(token: String): String {
+      val claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).body
+      return claims.subject
+  }
 }

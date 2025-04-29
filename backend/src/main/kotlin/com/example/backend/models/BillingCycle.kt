@@ -28,4 +28,8 @@ class BillingCycle {
   @Lob
   @Column(name = "status", nullable = false)
   var status: String? = null
+
+  override fun toString(): String {
+    return "BillingCycle(id=$id, subscription=${subscription?.id}, amountDue=$amountDue, periodStart=$periodStart, periodEnd=$periodEnd, status='$status')"
+  }
 }

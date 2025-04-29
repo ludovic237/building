@@ -1,6 +1,6 @@
 import {HttpClient, HttpHeaders} from '@angular/common/http';
 import {Injectable} from '@angular/core';
-import {Observable} from 'rxjs';
+import {BehaviorSubject, Observable} from 'rxjs';
 import {User, UserNew} from "../model/data";
 
 @Injectable({
@@ -11,6 +11,8 @@ export class AuthService {
 
   constructor(private http: HttpClient) {
   }
+
+  private loggedIn = new BehaviorSubject<boolean>(false);
 
   private getHeaders(): HttpHeaders {
     const token = localStorage.getItem('token');
@@ -34,4 +36,22 @@ export class AuthService {
   logout(): Observable<any> {
     return this.http.post(`${this.baseUrl}/logout`, {});
   }
+
+  setToken(token: string) {
+    localStorage.setItem('token', token);
+    this.loggedIn.next(true);
+  }
+
+  getToken(): string | null {
+    return localStorage.getItem('token');
+  }
+
+  isLoggedIn() {
+    return this.loggedIn.asObservable();
+  }
+
+  // logout() {
+  //   localStorage.removeItem('token');
+  //   this.loggedIn.next(false);
+  // }
 }

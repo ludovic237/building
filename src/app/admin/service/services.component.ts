@@ -88,6 +88,7 @@ export class ServicesComponent implements OnInit {
     const dialogRef = this.dialog.open(ConfirmDialogComponent, {
       maxWidth: '400px',
       data: {
+        id: service.id,
         title: 'Confirm Action',
         message: 'Are you sure you want to remove this service?'
       }

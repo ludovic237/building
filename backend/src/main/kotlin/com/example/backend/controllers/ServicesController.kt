@@ -4,6 +4,7 @@ import com.example.backend.dtos.ServiceDataDTO
 import com.example.backend.models.Services
 import com.example.backend.services.ServiceService
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 
 @RestController
@@ -13,12 +14,14 @@ class ServicesController(
 ) {
 
   @CrossOrigin(origins = ["http://localhost:4200"])
+  @PreAuthorize("isAuthenticated()")
   @GetMapping
   fun getAllServices(): ResponseEntity<List<Services>> {
     return ResponseEntity.ok(serviceService.getAllServices())
   }
 
   @CrossOrigin(origins = ["http://localhost:4200"])
+  @PreAuthorize("isAuthenticated()")
   @GetMapping("/{id}")
   fun getServiceById(@PathVariable id: Long): ResponseEntity<Services> {
     return ResponseEntity.ok(
@@ -26,18 +29,21 @@ class ServicesController(
   }
 
   @CrossOrigin(origins = ["http://localhost:4200"])
+  @PreAuthorize("isAuthenticated()")
   @PostMapping
   fun createService(@RequestBody services: Services): ResponseEntity<Services> {
     return ResponseEntity.ok(serviceService.createService(services))
   }
 
   @CrossOrigin(origins = ["http://localhost:4200"])
+  @PreAuthorize("isAuthenticated()")
   @PutMapping("/{id}")
   fun updateService(@PathVariable id: Long, @RequestBody updatedServices: Services): ResponseEntity<Services> {
     return ResponseEntity.ok(serviceService.updateService(id, updatedServices))
   }
 
   @CrossOrigin(origins = ["http://localhost:4200"])
+  @PreAuthorize("isAuthenticated()")
   @DeleteMapping("/{id}")
   fun deleteService(@PathVariable id: Long): ResponseEntity<Void> {
     serviceService.deleteService(id)
@@ -45,12 +51,14 @@ class ServicesController(
   }
 
   @CrossOrigin(origins = ["http://localhost:4200"])
+  @PreAuthorize("isAuthenticated()")
   @PostMapping("/create")
   fun createServiceData(@RequestBody serviceDataDTO: ServiceDataDTO): ResponseEntity<Services> {
     return ResponseEntity.ok(serviceService.createServiceData(serviceDataDTO))
   }
 
   @CrossOrigin(origins = ["http://localhost:4200"])
+  @PreAuthorize("isAuthenticated()")
   @GetMapping("/{id}/with-options")
   fun getServiceWithOptions(@PathVariable id: Long): ResponseEntity<ServiceDataDTO> {
     val serviceData = serviceService.getServiceWithOptions(id)
@@ -58,6 +66,7 @@ class ServicesController(
   }
 
   @CrossOrigin(origins = ["http://localhost:4200"])
+  @PreAuthorize("isAuthenticated()")
   @PutMapping("/{id}/with-options")
   fun updateServiceWithOptions(
     @PathVariable id: Long,

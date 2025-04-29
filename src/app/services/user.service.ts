@@ -17,6 +17,7 @@ export class UserService {
     return new HttpHeaders({
       'Authorization': `Bearer ${token}`
     });
+    // return new HttpHeaders();
   }
 
   getUsers(): Observable<UserNew[]> {

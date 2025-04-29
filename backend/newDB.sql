@@ -9,7 +9,7 @@ create table if not exists users
   phone             varchar(20)             null,
   role              tinytext                not null,
   birthday          date                    null,
-  gender            enum ('male', 'female') not null,
+  gender            enum ('male', 'female')  null,
   image             varchar(255)            null,
   is_active         boolean                 not null default true,
   is_deleted        boolean                 not null default false,
@@ -135,7 +135,7 @@ CREATE TABLE service_options
   service_id BIGINT         NOT NULL,
   name       VARCHAR(255)   NOT NULL,
   price      DECIMAL(10, 2) NOT NULL,
-  quantity        INT DEFAULT 0,
+  quantity   INT     DEFAULT 0,
   is_active  BOOLEAN DEFAULT TRUE
 );
 
@@ -154,6 +154,18 @@ CREATE TABLE service_usage
   option_id       BIGINT NOT NULL,
   quantity_used   INT    NOT NULL,
   usage_date      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE audit_logs
+(
+  id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id     BIGINT        NULL,
+  action      VARCHAR(50)   NULL,
+  method_name VARCHAR(255)  NULL,
+  arguments   TEXT,
+  result      TEXT,
+  exception   TEXT,
+  timestamp   DATETIME     DEFAULT CURRENT_TIMESTAMP
 );
 
 -- foreign key constraints

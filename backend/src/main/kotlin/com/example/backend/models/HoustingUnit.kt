@@ -41,4 +41,8 @@ class HoustingUnit {
   @ColumnDefault("0.00")
   @Column(name = "price", precision = 38, scale = 2)
   var price: BigDecimal? = null
+
+  override fun toString(): String {
+    return "HoustingUnit(id=$id, number=$number, floor=$floor, area=$area, address=$address, type=$type, tenant=${tenant?.id}, price=$price)"
+  }
 }
