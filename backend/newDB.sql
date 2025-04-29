@@ -168,6 +168,8 @@ CREATE TABLE audit_logs
   timestamp   DATETIME     DEFAULT CURRENT_TIMESTAMP
 );
 
+ALTER TABLE audit_logs MODIFY result TEXT;
+
 -- foreign key constraints
 alter table subscriptions
   add foreign key (tenant_id) references tenants (id),

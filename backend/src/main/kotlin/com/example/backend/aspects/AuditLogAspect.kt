@@ -58,83 +58,44 @@ class AuditLogAspect(
   fun serviceMethods() {
   }
 
-  @Pointcut(" !execution(* com.example.backend.controllers.AuthController.*(..))")
+  @Pointcut(" !execution(* com.example.backend.services.AuditLogService.*(..)) && !execution(* com.example.backend.controllers.AuthController.*(..)) && !execution(* com.example.backend.services.CustomUserDetailsService.*(..))")
   fun excludeAuth() {
   }
 
   @Before("serviceMethods() && excludeAuth()")
   fun logBefore(joinPoint: JoinPoint) {
-    try {
-      val methodName = joinPoint.signature.name
-      val args = joinPoint.args?.joinToString() ?: ""
+    val methodName = joinPoint.signature.name
+    val args = joinPoint.args.joinToString()
+    val userActionLog = AuditLog()
+    userActionLog.userId = userUtils.getCurrentUserId()
+    userActionLog.action = "BEFORE"
+    userActionLog.methodName = methodName
+    userActionLog.arguments = args
 
-      // Vérifiez si l'utilisateur est authentifié
-      val userId = try {
-        val authentication = SecurityContextHolder.getContext().authentication
-        if (authentication != null && authentication.isAuthenticated && authentication.principal != "anonymousUser") {
-          userUtils.getCurrentUserId()?.toLong()
-        } else {
-          null // Utilisateur non authentifié
-        }
-      } catch (e: Exception) {
-        null // En cas d'erreur, considérer l'utilisateur comme non authentifié
-      }
-
-      // Créez et enregistrez le log
-      val userActionLog = AuditLog().apply {
-        this.userId = userId
-        this.action = "BEFORE"
-        this.methodName = methodName
-        this.arguments = args
-      }
-      auditLogRepository.save(userActionLog)
-    } catch (e: Exception) {
-      println("Error in logBefore: ${e.message}")
-    }
+    auditLogService.saveLog(userActionLog)
   }
 
   @AfterReturning(value = "serviceMethods() && excludeAuth()", returning = "result")
   fun logAfterReturning(joinPoint: JoinPoint, result: Any?) {
     val methodName = joinPoint.signature.name
-    val userId = try {
-      val authentication = SecurityContextHolder.getContext().authentication
-      if (authentication != null && authentication.isAuthenticated && authentication.principal != "anonymousUser") {
-        userUtils.getCurrentUserId()?.toLong()
-      } else {
-        null // Utilisateur non authentifié
-      }
-    } catch (e: Exception) {
-      null // En cas d'erreur, considérer l'utilisateur comme non authentifié
-    }
-    val userActionLog = AuditLog().apply {
-      this.userId = userId
-      this.action = "AFTER_RETURNING"
-      this.methodName = methodName
-      this.result = result?.toString()
-    }
-    auditLogRepository.save(userActionLog)
+    val userActionLog = AuditLog()
+    userActionLog.userId = userUtils.getCurrentUserId()
+    userActionLog.action = "AFTER_RETURNING"
+    userActionLog.methodName = methodName
+    userActionLog.result = result?.toString()
+    auditLogService.saveLog(userActionLog)
   }
 
   @AfterThrowing(value = "serviceMethods() && excludeAuth()", throwing = "exception")
   fun logAfterThrowing(joinPoint: JoinPoint, exception: Throwable) {
     val methodName = joinPoint.signature.name
-    val userId = try {
-      val authentication = SecurityContextHolder.getContext().authentication
-      if (authentication != null && authentication.isAuthenticated && authentication.principal != "anonymousUser") {
-        userUtils.getCurrentUserId()?.toLong()
-      } else {
-        null // Utilisateur non authentifié
-      }
-    } catch (e: Exception) {
-      null // En cas d'erreur, considérer l'utilisateur comme non authentifié
-    }
-    val userActionLog = AuditLog().apply {
-      this.userId = userId
-      this.action = "AFTER_THROWING"
-      this.methodName = methodName
-      this.exception = exception.message
-    }
-    auditLogRepository.save(userActionLog)
+    val userActionLog = AuditLog()
+    userActionLog.userId = userUtils.getCurrentUserId()
+    userActionLog.action = "AFTER_THROWING"
+    userActionLog.methodName = methodName
+    userActionLog.exception = exception.message
+
+    auditLogService.saveLog(userActionLog)
   }
 
 }

@@ -27,7 +27,7 @@ class UserUtils(
         // Fetch your custom User entity using the email (username)
         val user:User = userRepository.findByEmail(username)
 
-        if (user != null) {
+        if (user.id != null) {
           println("User found in DB: ID = ${user.id}")
           return user.id
         } else {
