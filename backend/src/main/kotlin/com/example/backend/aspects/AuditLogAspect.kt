@@ -65,13 +65,13 @@ class AuditLogAspect(
   @Before("serviceMethods() && excludeAuth()")
   fun logBefore(joinPoint: JoinPoint) {
     val methodName = joinPoint.signature.name
-    val args = joinPoint.args.joinToString()
+    val arguments = joinPoint.args.map { it?.toString() ?: "null" }.joinToString(",")
     val userActionLog = AuditLog()
     userActionLog.userId = userUtils.getCurrentUserId()
     userActionLog.action = "BEFORE"
     userActionLog.methodName = methodName
-    userActionLog.arguments = args
-
+    userActionLog.arguments = arguments
+    println("Captured arguments: ${joinPoint.args.map { it?.toString() ?: "null" }}")
     auditLogService.saveLog(userActionLog)
   }
 

@@ -27,7 +27,7 @@ class AuditLog {
   var arguments: String? = null
 
   @Lob
-  @Column(name = "result")
+  @Column(columnDefinition = "LONGTEXT")
   var result: String? = null
 
   @Lob

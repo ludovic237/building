@@ -163,12 +163,11 @@ CREATE TABLE audit_logs
   action      VARCHAR(50)   NULL,
   method_name VARCHAR(255)  NULL,
   arguments   TEXT,
-  result      TEXT,
+  result      LONGTEXT,
   exception   TEXT,
   timestamp   DATETIME     DEFAULT CURRENT_TIMESTAMP
 );
 
-ALTER TABLE audit_logs MODIFY result TEXT;
 
 -- foreign key constraints
 alter table subscriptions
