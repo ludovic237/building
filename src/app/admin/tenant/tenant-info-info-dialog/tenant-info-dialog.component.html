@@ -1,0 +1,299 @@
+<div class="p-2">
+  <h2 mat-dialog-title>Information</h2>
+  <mat-dialog-content>
+    <mat-tab-group>
+      <!-- Tenant Information Tab -->
+      <mat-tab label="Tenant Information">
+        <div fxLayout="row wrap" class="py-3">
+          <div fxFlex="100" fxFlex.gt-sm="50" class="px-1">
+            <mat-form-field appearance="outline" class="w-100">
+              <mat-label>Full Name</mat-label>
+              <input matInput [(ngModel)]="tenant.fullName"/>
+            </mat-form-field>
+          </div>
+          <div fxFlex="100" fxFlex.gt-sm="50" class="px-1">
+            <mat-form-field appearance="outline" class="w-100">
+              <mat-label>Email</mat-label>
+              <input matInput [(ngModel)]="tenant.email"/>
+            </mat-form-field>
+          </div>
+          <div fxFlex="100" fxFlex.gt-sm="50" class="px-1">
+            <mat-form-field appearance="outline" class="w-100">
+              <mat-label>Phone</mat-label>
+              <input matInput [(ngModel)]="tenant.phone"/>
+            </mat-form-field>
+          </div>
+          <div fxFlex="100" fxFlex.gt-sm="50" class="px-1">
+            <mat-form-field appearance="outline" class="w-100">
+              <mat-label>Username</mat-label>
+              <input matInput [(ngModel)]="tenant.username"/>
+            </mat-form-field>
+          </div>
+          <div fxFlex="100" fxFlex.gt-sm="50" class="px-1">
+            <mat-form-field appearance="outline" class="w-100">
+              <mat-label>Gender</mat-label>
+              <input matInput [(ngModel)]="tenant.gender"/>
+            </mat-form-field>
+          </div>
+          <div fxFlex="100" fxFlex.gt-sm="50" class="px-1">
+            <mat-form-field appearance="outline" class="w-100">
+              <mat-label>Birthday</mat-label>
+              <input matInput [(ngModel)]="tenant.birthday"/>
+            </mat-form-field>
+          </div>
+          <div fxFlex="100" fxFlex.gt-sm="50" class="px-1">
+            <mat-form-field appearance="outline" class="w-100">
+              <mat-label>Move-In Date</mat-label>
+              <input matInput [(ngModel)]="tenant.moveInDate"/>
+            </mat-form-field>
+          </div>
+          <div fxFlex="100" fxFlex.gt-sm="50" class="px-1">
+            <mat-form-field appearance="outline" class="w-100">
+              <mat-label>Move-Out Date</mat-label>
+              <input matInput [(ngModel)]="tenant.moveOutDate"/>
+            </mat-form-field>
+          </div>
+          <div fxFlex="100" fxFlex.gt-sm="50" class="px-1">
+            <mat-form-field appearance="outline" class="w-100">
+              <mat-label>Security Deposit</mat-label>
+              <input matInput [(ngModel)]="tenant.securityDeposit"/>
+            </mat-form-field>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Housing Unit Tab -->
+      <mat-tab label="Housing Unit">
+        <div class="p-4">
+          <mat-card class="housing-unit-card">
+            <h3 class="section-title">Housing Unit Details</h3>
+            <div fxLayout="row wrap" fxLayoutGap="16px">
+              <div fxFlex="100" fxFlex.gt-sm="48">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Number</mat-label>
+                  <input matInput [(ngModel)]="tenant.housingUnit.number" readonly/>
+                </mat-form-field>
+              </div>
+              <div fxFlex="100" fxFlex.gt-sm="48">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Address</mat-label>
+                  <input matInput [(ngModel)]="tenant.housingUnit.address" readonly/>
+                </mat-form-field>
+              </div>
+              <div fxFlex="100" fxFlex.gt-sm="48">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Type</mat-label>
+                  <input matInput [(ngModel)]="tenant.housingUnit.type" readonly/>
+                </mat-form-field>
+              </div>
+              <div fxFlex="100" fxFlex.gt-sm="48">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Floor</mat-label>
+                  <input matInput [(ngModel)]="tenant.housingUnit.floor" readonly/>
+                </mat-form-field>
+              </div>
+              <div fxFlex="100" fxFlex.gt-sm="48">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Area (m²)</mat-label>
+                  <input matInput [(ngModel)]="tenant.housingUnit.area" readonly/>
+                </mat-form-field>
+              </div>
+            </div>
+          </mat-card>
+        </div>
+      </mat-tab>
+
+      <!-- Subscriptions Tab -->
+      <mat-tab label="Subscriptions">
+        <div class="p-2">
+          @if (subscriptions?.length) {
+            <mat-card>
+              <div class="mat-mdc-table  cart-table">
+                <div class="mat-mdc-header-row mat-toolbar mat-primary">
+                  <div class="mat-mdc-header-cell">Service</div>
+                  <div class="mat-mdc-header-cell">Price</div>
+                  <div class="mat-mdc-header-cell">Start Date</div>
+                  <div class="mat-mdc-header-cell">End Date</div>
+                  <div class="mat-mdc-header-cell">Status</div>
+                </div>
+                @for (subscription of subscriptions; track subscription) {
+                  <div class="mat-mdc-row">
+                    <div class="mat-mdc-cell">{{ subscription.serviceName }}</div>
+                    <div class="mat-mdc-cell">{{ subscription.price }}</div>
+                    <div class="mat-mdc-cell">{{ subscription.startDate }}</div>
+                    <div class="mat-mdc-cell">{{ subscription.endDate }}</div>
+                    <div class="mat-mdc-cell">{{ subscription.status }}</div>
+                  </div>
+                }
+              </div>
+            </mat-card>
+          } @else {
+            <mat-card fxLayout="column" fxLayoutAlign="center center" class="text-center py-5">
+              <svg viewBox="0 0 24 24" class="mat-icon empty-cart-icon primary-color">
+                <path
+                  d="M19 20C19 21.11 18.11 22 17 22C15.89 22 15 21.1 15 20C15 18.89 15.89 18 17 18C18.11 18 19 18.9 19 20M7 18C5.89 18 5 18.89 5 20C5 21.1 5.89 22 7 22C8.11 22 9 21.11 9 20S8.11 18 7 18M7.2 14.63L7.17 14.75C7.17 14.89 7.28 15 7.42 15H19V17H7C5.89 17 5 16.1 5 15C5 14.65 5.09 14.32 5.24 14.04L6.6 11.59L3 4H1V2H4.27L5.21 4H20C20.55 4 21 4.45 21 5C21 5.17 20.95 5.34 20.88 5.5L17.3 11.97C16.96 12.58 16.3 13 15.55 13H8.1L7.2 14.63M8.5 11H10V9H7.56L8.5 11M11 9V11H14V9H11M14 8V6H11V8H14M17.11 9H15V11H16L17.11 9M18.78 6H15V8H17.67L18.78 6M6.14 6L7.08 8H10V6H6.14Z"/>
+              </svg>
+              <h1 class="mt-3">Your Subscription Is Currently Empty!</h1>
+              <p class="text-muted">Before proceed to checkout you must add some items to your shopping cart.</p>
+            </mat-card>
+          }
+        </div>
+      </mat-tab>
+
+      <!-- Payments Tab -->
+      <mat-tab label="Payments">
+        <div class="p-2">
+          @if (payments?.length) {
+            <mat-card>
+              <div class="mat-mdc-table cart-table">
+                <div class="mat-mdc-header-row mat-toolbar mat-primary">
+                  <div class="mat-mdc-header-cell">Amount</div>
+                  <div class="mat-mdc-header-cell">Date</div>
+                  <div class="mat-mdc-header-cell">Method</div>
+                  <div class="mat-mdc-header-cell">Status</div>
+                </div>
+                @for (payment of payments; track payment) {
+                  <div class="mat-mdc-row">
+                    <div class="mat-mdc-cell">{{ payment.amountPaid }}</div>
+                    <div class="mat-mdc-cell">{{ payment.paymentDate }}</div>
+                    <div class="mat-mdc-cell">{{ payment.paymentMethod }}</div>
+                    <div class="mat-mdc-cell">{{ payment.billingCycleStatus }}</div>
+                  </div>
+                }
+              </div>
+            </mat-card>
+          } @else {
+            <mat-card fxLayout="column" fxLayoutAlign="center center" class="text-center py-5">
+              <svg viewBox="0 0 24 24" class="mat-icon empty-cart-icon primary-color">
+                <path
+                  d="M19 20C19 21.11 18.11 22 17 22C15.89 22 15 21.1 15 20C15 18.89 15.89 18 17 18C18.11 18 19 18.9 19 20M7 18C5.89 18 5 18.89 5 20C5 21.1 5.89 22 7 22C8.11 22 9 21.11 9 20S8.11 18 7 18M7.2 14.63L7.17 14.75C7.17 14.89 7.28 15 7.42 15H19V17H7C5.89 17 5 16.1 5 15C5 14.65 5.09 14.32 5.24 14.04L6.6 11.59L3 4H1V2H4.27L5.21 4H20C20.55 4 21 4.45 21 5C21 5.17 20.95 5.34 20.88 5.5L17.3 11.97C16.96 12.58 16.3 13 15.55 13H8.1L7.2 14.63M8.5 11H10V9H7.56L8.5 11M11 9V11H14V9H11M14 8V6H11V8H14M17.11 9H15V11H16L17.11 9M18.78 6H15V8H17.67L18.78 6M6.14 6L7.08 8H10V6H6.14Z"/>
+              </svg>
+              <h1 class="mt-3">Your Subscription Is Currently Empty!</h1>
+              <p class="text-muted">Before proceed to checkout you must add some items to your shopping cart.</p>
+
+            </mat-card>
+          }
+        </div>
+      </mat-tab>
+
+      <!-- Billing Cycles Tab -->
+      <mat-tab label="Billing Cycles">
+        <div class="p-2">
+          @if (billingCycles?.length) {
+            <mat-card>
+              <div class="mat-mdc-table cart-table">
+                <div class="mat-mdc-header-row mat-toolbar mat-primary">
+                  <div class="mat-mdc-header-cell">Service</div>
+                  <div class="mat-mdc-header-cell">Amount Due</div>
+                  <div class="mat-mdc-header-cell">Period</div>
+                  <div class="mat-mdc-header-cell">Status</div>
+                </div>
+                @for (cycle of billingCycles; track cycle) {
+                  <div class="mat-mdc-row">
+                    <div class="mat-mdc-cell">{{ cycle.serviceName }}</div>
+                    <div class="mat-mdc-cell">{{ cycle.amountDue }}</div>
+                    <div class="mat-mdc-cell">{{ cycle.periodStart }} - {{ cycle.periodEnd }}</div>
+                    <div class="mat-mdc-cell">{{ cycle.status }}</div>
+                  </div>
+                }
+              </div>
+            </mat-card>
+          } @else {
+            <mat-card fxLayout="column" fxLayoutAlign="center center" class="text-center py-5">
+              <svg viewBox="0 0 24 24" class="mat-icon empty-cart-icon primary-color">
+                <path
+                  d="M19 20C19 21.11 18.11 22 17 22C15.89 22 15 21.1 15 20C15 18.89 15.89 18 17 18C18.11 18 19 18.9 19 20M7 18C5.89 18 5 18.89 5 20C5 21.1 5.89 22 7 22C8.11 22 9 21.11 9 20S8.11 18 7 18M7.2 14.63L7.17 14.75C7.17 14.89 7.28 15 7.42 15H19V17H7C5.89 17 5 16.1 5 15C5 14.65 5.09 14.32 5.24 14.04L6.6 11.59L3 4H1V2H4.27L5.21 4H20C20.55 4 21 4.45 21 5C21 5.17 20.95 5.34 20.88 5.5L17.3 11.97C16.96 12.58 16.3 13 15.55 13H8.1L7.2 14.63M8.5 11H10V9H7.56L8.5 11M11 9V11H14V9H11M14 8V6H11V8H14M17.11 9H15V11H16L17.11 9M18.78 6H15V8H17.67L18.78 6M6.14 6L7.08 8H10V6H6.14Z"/>
+              </svg>
+              <h1 class="mt-3">Your Subscription Is Currently Empty!</h1>
+              <p class="text-muted">Before proceed to checkout you must add some items to your shopping cart.</p>
+            </mat-card>
+          }
+        </div>
+      </mat-tab>
+
+      <!-- Financial Summary Tab -->
+      <mat-tab label="Financial Summary">
+        <div class="p-2">
+          @if (financialSummary?.length) {
+            <mat-card>
+              <div class="mat-mdc-table cart-table">
+                <div class="mat-mdc-header-row mat-toolbar mat-primary">
+                  <div class="mat-mdc-header-cell">Total Amount</div>
+                  <div class="mat-mdc-header-cell">Paid Amount</div>
+                  <div class="mat-mdc-header-cell">Outstanding Amount</div>
+                </div>
+                <div class="mat-mdc-row">
+                  <div class="mat-mdc-cell">{{ financialSummary?.totalAmount }}</div>
+                  <div class="mat-mdc-cell">{{ financialSummary?.paidAmount }}</div>
+                  <div class="mat-mdc-cell">{{ financialSummary?.outstandingAmount }}</div>
+                </div>
+              </div>
+            </mat-card>
+          } @else {
+            <mat-card fxLayout="column" fxLayoutAlign="center center" class="text-center py-5">
+              <svg viewBox="0 0 24 24" class="mat-icon empty-cart-icon primary-color">
+                <path
+                  d="M19 20C19 21.11 18.11 22 17 22C15.89 22 15 21.1 15 20C15 18.89 15.89 18 17 18C18.11 18 19 18.9 19 20M7 18C5.89 18 5 18.89 5 20C5 21.1 5.89 22 7 22C8.11 22 9 21.11 9 20S8.11 18 7 18M7.2 14.63L7.17 14.75C7.17 14.89 7.28 15 7.42 15H19V17H7C5.89 17 5 16.1 5 15C5 14.65 5.09 14.32 5.24 14.04L6.6 11.59L3 4H1V2H4.27L5.21 4H20C20.55 4 21 4.45 21 5C21 5.17 20.95 5.34 20.88 5.5L17.3 11.97C16.96 12.58 16.3 13 15.55 13H8.1L7.2 14.63M8.5 11H10V9H7.56L8.5 11M11 9V11H14V9H11M14 8V6H11V8H14M17.11 9H15V11H16L17.11 9M18.78 6H15V8H17.67L18.78 6M6.14 6L7.08 8H10V6H6.14Z"/>
+              </svg>
+              <h1 class="mt-3">Your Subscription Is Currently Empty!</h1>
+              <p class="text-muted">Before proceed to checkout you must add some items to your shopping cart.</p>
+            </mat-card>
+          }
+        </div>
+      </mat-tab>
+
+      <!-- Services Tab -->
+      <mat-tab label="Services">
+        <div class="p-2">
+          @if (services?.length) {
+            <mat-card>
+              <div class="mat-mdc-table cart-table">
+                <div class="mat-mdc-header-row mat-toolbar mat-primary">
+                  <div class="mat-mdc-header-cell">Service</div>
+                  <div class="mat-mdc-header-cell">Price</div>
+                  <div class="mat-mdc-header-cell">Billing Mode</div>
+                  <div class="mat-mdc-header-cell">Subscribed</div>
+                  <div class="mat-mdc-header-cell">Options</div>
+                </div>
+                @for (service of services; track service) {
+                  <div class="mat-mdc-row">
+                    <div class="mat-mdc-cell">{{ service.name }}</div>
+                    <div class="mat-mdc-cell">{{ service.price }}</div>
+                    <div class="mat-mdc-cell">{{ service.billingMode }}</div>
+                    <div class="mat-mdc-cell">{{ service.isSubscribed ? 'Yes' : 'No' }}</div>
+                    <div class="mat-mdc-cell">
+<!--                      <button mat-icon-button [matMenuTriggerFor]="menu_{{service.id}}">-->
+<!--                      <button mat-icon-button [matMenuTriggerFor]="menu_{{service.id}}">-->
+<!--                        <mat-icon>more_vert</mat-icon>-->
+<!--                      </button>-->
+                      <div fxLayout="row wrap" fxLayoutAlign="space-between center" class="filter-buttons">
+                        @for (option of service.options; track option) {
+                          <button mat-raised-button [class.selected]="option.isSubscribed" (click)="selectOption(service, option)">
+                            {{ option.name }}
+                          </button>
+                        }
+                      </div>
+                    </div>
+                  </div>
+                }
+              </div>
+            </mat-card>
+          } @else {
+            <mat-card fxLayout="column" fxLayoutAlign="center center" class="text-center py-5">
+              <svg viewBox="0 0 24 24" class="mat-icon empty-cart-icon primary-color">
+                <path
+                  d="M19 20C19 21.11 18.11 22 17 22C15.89 22 15 21.1 15 20C15 18.89 15.89 18 17 18C18.11 18 19 18.9 19 20M7 18C5.89 18 5 18.89 5 20C5 21.1 5.89 22 7 22C8.11 22 9 21.11 9 20S8.11 18 7 18M7.2 14.63L7.17 14.75C7.17 14.89 7.28 15 7.42 15H19V17H7C5.89 17 5 16.1 5 15C5 14.65 5.09 14.32 5.24 14.04L6.6 11.59L3 4H1V2H4.27L5.21 4H20C20.55 4 21 4.45 21 5C21 5.17 20.95 5.34 20.88 5.5L17.3 11.97C16.96 12.58 16.3 13 15.55 13H8.1L7.2 14.63M8.5 11H10V9H7.56L8.5 11M11 9V11H14V9H11M14 8V6H11V8H14M17.11 9H15V11H16L17.11 9M18.78 6H15V8H17.67L18.78 6M6.14 6L7.08 8H10V6H6.14Z"/>
+              </svg>
+              <h1 class="mt-3">Your Subscription Is Currently Empty!</h1>
+              <p class="text-muted">Before proceed to checkout you must add some items to your shopping cart.</p>
+            </mat-card>
+          }
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </mat-dialog-content>
+<mat-dialog-actions fxLayout="row" fxLayoutAlign="end center" class="dialog-footer">
+  <button mat-button mat-dialog-close>Cancel</button>
+  <button mat-button [mat-dialog-close]="true">Install</button>
+</mat-dialog-actions>
+</div>

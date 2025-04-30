@@ -1,9 +1,6 @@
 package com.example.backend.services
 
-import com.example.backend.dtos.TenantDTO
-import com.example.backend.dtos.TenantDetailsDTO
-import com.example.backend.dtos.TenantCreateDTO
-import com.example.backend.dtos.TenantCreateDataDTO
+import com.example.backend.dtos.*
 import com.example.backend.models.*
 import com.example.backend.repositories.*
 import org.springframework.data.repository.findByIdOrNull
@@ -15,6 +12,9 @@ import java.util.*
 
 @Service
 class TenantService(
+  private val paymentsViewRepository: PaymentsViewRepository,
+  private val serviceOptionRepository: ServiceOptionRepository,
+  private val subscriptionOptionRepository: SubscriptionOptionRepository,
   private val tenantRepository: TenantRepository,
   private val paymentRepository: PaymentRepository,
   private val billingCycleRepository: BillingCycleRepository,
@@ -127,7 +127,7 @@ class TenantService(
     tenant.securityDeposit = tenantData.securityDeposit
     tenant = tenantRepository.save(tenant)
 
-   var houstingUnit =  housingUnitRepository.findById(tenantData.housingUnitId)
+    var houstingUnit = housingUnitRepository.findById(tenantData.housingUnitId)
       .orElseThrow { IllegalArgumentException("Housing Unit not found with ID: ${tenantData.housingUnitId}") }
     houstingUnit.tenant = tenant
     houstingUnit = housingUnitRepository.save(houstingUnit)
@@ -147,16 +147,16 @@ class TenantService(
     var currentStartDate = tenantData.startDate
 
     var remainingDeposit = tenantData.securityDeposit
-    var totalAmount = tenantData.logementBasePrice*tenantData.numberOfSubscription.toBigDecimal()
+    var totalAmount = tenantData.logementBasePrice * tenantData.numberOfSubscription.toBigDecimal()
 
-    var tenantPrice :BigDecimal = 0.0.toBigDecimal()
+    var tenantPrice: BigDecimal = 0.0.toBigDecimal()
 
-    var currentEndDate:LocalDate? = null;
+    var currentEndDate: LocalDate? = null;
     for (i in 1..tenantData.numberOfSubscription) {
-       currentEndDate = when (service.billingMode!!.lowercase()) {
-          "monthly" -> currentStartDate.plusMonths(1)
-          "yearly" -> currentStartDate.plusYears(1)
-          else -> throw IllegalArgumentException("Unsupported billing mode")
+      currentEndDate = when (service.billingMode!!.lowercase()) {
+        "monthly" -> currentStartDate.plusMonths(1)
+        "yearly" -> currentStartDate.plusYears(1)
+        else -> throw IllegalArgumentException("Unsupported billing mode")
       }
 
       val billingCycle = BillingCycle()
@@ -165,7 +165,7 @@ class TenantService(
       billingCycle.amountDue = tenantData.logementBasePrice
       billingCycle.subscription = subscription
 
-      tenantPrice =  tenantPrice + tenantData.logementBasePrice
+      tenantPrice = tenantPrice + tenantData.logementBasePrice
       // Determine the status based on the remaining deposit
       if (remainingDeposit >= tenantPrice) {
         billingCycle.status = "Paid"
@@ -179,7 +179,7 @@ class TenantService(
         val payment = createPayment(
           tenant = tenant,
           depositAmount = tenantData.logementBasePrice,
-            paymentMode = tenantData.paymentMode
+          paymentMode = tenantData.paymentMode
         )
         createPaymentLine(
           paymentId = payment.id!!,
@@ -215,7 +215,7 @@ class TenantService(
     return tenant
   }
 
-  fun createPayment(tenant: Tenant?, depositAmount: BigDecimal,paymentMode:String): Payment {
+  fun createPayment(tenant: Tenant?, depositAmount: BigDecimal, paymentMode: String): Payment {
     val payment = Payment()
     payment.tenant = tenant
     payment.totalAmount = depositAmount
@@ -350,6 +350,153 @@ class TenantService(
       "financialInformation" to getFinancialInformation(tenant),
       "issueTracking" to getIssueTracking(tenant),
       "additionalInformation" to getAdditionalInformation(tenant)
+    )
+  }
+
+  fun getTenantDetailsAsMap(tenantId: Long): Map<String, Any?> {
+    val tenant = tenantRepository.findById(tenantId)
+      .orElseThrow { IllegalArgumentException("Tenant not found") }
+
+    val subscriptions = subscriptionRepository.findByTenant(tenant).map { subscription ->
+      val subscribedOptions = subscriptionOptionRepository.findBySubscription(subscription).map { option ->
+        mapOf(
+          "id" to option.id,
+          "name" to option.option!!.name,
+          "price" to option.option!!.price
+        )
+      }
+
+      mapOf(
+        "id" to subscription.id,
+        "serviceName" to subscription.service?.name,
+        "price" to subscription.price,
+        "startDate" to subscription.startDate,
+        "endDate" to subscription.endDate,
+        "status" to subscription.status,
+        "options" to subscribedOptions
+      )
+    }
+
+    val subscriptionsSimple = subscriptionRepository.findByTenant(tenant)
+
+    val payments = paymentsViewRepository.findByTenantId(tenantId).map { payment ->
+      mapOf(
+        "id" to payment.paymentId,
+        "amountPaid" to payment.amountPaid,
+        "paymentDate" to payment.paymentDate,
+        "serviceName" to payment.serviceName,
+        "serviceDescription" to payment.serviceDescription,
+        "paymentMethod" to payment.paymentMethod,
+        "billingCycleStatus" to payment.billingCycleStatus,
+      )
+    }
+
+    val billingCycles = subscriptionsSimple.flatMap { subscription ->
+      val subscriptionEntity = subscription // Explicitly cast to Subscription
+      billingCycleRepository.findBySubscription(subscriptionEntity).orEmpty().map { cycle ->
+        mapOf(
+          "id" to cycle.id,
+          "serviceId" to cycle.subscription?.service?.id,
+          "serviceName" to cycle.subscription?.service?.name,
+          "amountDue" to cycle.amountDue,
+          "periodStart" to cycle.periodStart,
+          "periodEnd" to cycle.periodEnd,
+          "status" to cycle.status
+        )
+      }
+    }
+
+
+    val financialSummary = mapOf(
+      "totalPayments" to billingCycles.size,
+      "completedPayments" to billingCycles.count { it["status"] == "Paid" },
+      "remainingPayments" to billingCycles.count { it["status"] != "Paid" },
+      "amountPaid" to billingCycles.filter { it["status"] == "Paid" }.sumOf { it["amountDue"] as BigDecimal },
+      "outstandingDebt" to billingCycles.filter { it["status"] != "Paid" }.sumOf { it["amountDue"] as BigDecimal }
+    )
+
+    val issues = issueRepository.findByTenant(tenant).map { issue ->
+      mapOf(
+        "id" to issue.id,
+        "title" to issue.title,
+        "description" to issue.description,
+        "declarationDate" to issue.declarationDate,
+        "status" to issue.status
+      )
+    }
+
+    val invoices = invoiceRepository.findByTenant(tenant).map { invoice ->
+      mapOf(
+        "id" to invoice.id,
+        "type" to invoice.type,
+        "month" to invoice.month,
+        "year" to invoice.year,
+        "amount" to invoice.amount,
+        "paymentDate" to invoice.paymentDate,
+        "status" to invoice.status
+      )
+    }
+
+    val userActivity = mapOf(
+      "registrationDate" to tenant.user?.registrationDate,
+      "accountStatus" to if (tenant.user?.isActive == true) "Active" else "Inactive"
+    )
+
+val subscribedServices = subscriptionRepository.findByTenant(tenant).map { it.service?.id }
+val subscribedOptions = subscriptionRepository.findByTenant(tenant)
+    .flatMap { subscription -> subscriptionOptionRepository.findBySubscription(subscription) }
+    .map { it.option?.id }
+
+val services = serviceRepository.findAll().map { service ->
+    val serviceOptions = serviceOptionRepository.findByService(service).map { option ->
+        mapOf(
+            "id" to option.id,
+            "name" to option.name,
+            "price" to option.price,
+            "isSubscribed" to (option.id in subscribedOptions)
+        )
+    }
+
+    mapOf(
+        "id" to service.id,
+        "name" to service.name,
+        "price" to service.billingMode,
+        "billingMode" to service.billingMode,
+        "isSubscribed" to (service.id in subscribedServices),
+        "options" to serviceOptions
+    )
+}
+
+    return mapOf(
+      "tenant" to mapOf(
+        "id" to tenant.id,
+        "fullName" to "${tenant.user?.firstName} ${tenant.user?.lastName}",
+        "email" to tenant.user?.email,
+        "phone" to tenant.user?.phone,
+        "username" to tenant.user?.username,
+        "gender" to tenant.user?.gender,
+        "birthday" to tenant.user?.birthday,
+        "housingUnit" to mapOf(
+          "id" to tenant.housingUnit?.id,
+          "number" to tenant.housingUnit?.number,
+          "address" to tenant.housingUnit?.address,
+          "type" to tenant.housingUnit?.type,
+          "floor" to tenant.housingUnit?.floor,
+          "area" to tenant.housingUnit?.area
+        ),
+        "moveInDate" to tenant.moveInDate,
+        "moveOutDate" to tenant.moveOutDate,
+        "securityDeposit" to tenant.securityDeposit,
+        "monthlyRent" to tenant.houstingPrice
+      ),
+      "subscriptions" to subscriptions,
+      "payments" to payments,
+      "billingCycles" to billingCycles,
+      "financialSummary" to financialSummary,
+      "issues" to issues,
+      "invoices" to invoices,
+      "userActivity" to userActivity,
+      "services" to services
     )
   }
 

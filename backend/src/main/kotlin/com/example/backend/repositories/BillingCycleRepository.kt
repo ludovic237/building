@@ -15,7 +15,6 @@ interface BillingCycleRepository : JpaRepository<BillingCycle, Long> {
 
   fun findBySubscription(subscription: Subscription): List<BillingCycle>
 
-
   // Find billing cycles by status
   fun findByStatus(status: String): List<BillingCycle>
 

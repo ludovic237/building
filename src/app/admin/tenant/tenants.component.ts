@@ -20,6 +20,7 @@ import {TenantService} from "@services/tenant.service";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {MatInputModule} from "@angular/material/input";
+import {TenantInfoDialogComponent} from "./tenant-info-info-dialog/tenant-info-dialog.component";
 
 @Component({
   selector: 'app-tenants',
@@ -131,6 +132,41 @@ filterTenants(): void {
       data: data,
       panelClass: ['theme-dialog'],
       autoFocus: false,
+      direction: (this.settings.rtl) ? 'rtl' : 'ltr'
+    });
+
+    dialogRef.afterClosed().subscribe(tenant => {
+      if (tenant) {
+        const formattedTenant = {
+          id: this.tenants.length + 1, // Generate a new ID
+          // name: usersDial.find(user => user.id === tenant.userId)?.name || 'Unknown',
+          // apartment: logementsDial.find(logement => logement.id === tenant.housingUnitId)?.name || 'Unknown',
+          entryDate: tenant.moveInDate,
+          deposit: tenant.securityDeposit,
+          paymentStatus: tenant.status
+        };
+        console.log('New Tenant Data:', formattedTenant);
+        // this.tenants.push(tenant); // Add the new tenant to the list
+        const index: number = this.tenants.findIndex(x => x.id === tenant.id);
+        if (index !== -1) {
+          this.tenants[index] = tenant; // Mise à jour d'un locataire existant
+        } else {
+          tenant.id = this.tenants.length + 1; // Attribution d'un nouvel ID
+          this.tenants.push(formattedTenant); // Ajout d'un nouveau locataire
+        }
+        console.log("this.tenants");
+        console.log(this.tenants);
+      }
+    });
+  }
+
+  public openDetailTenantDialog(data: any): void {
+    const dialogRef = this.dialog.open(TenantInfoDialogComponent, {
+      data: data,
+      panelClass: ['theme-dialog'],
+      autoFocus: false,
+      width: '80%', // 80% of the window width
+      height: '70%' ,// 70% of the window height
       direction: (this.settings.rtl) ? 'rtl' : 'ltr'
     });
 

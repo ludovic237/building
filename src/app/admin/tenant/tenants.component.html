@@ -13,7 +13,7 @@
     </div>
     <mat-divider></mat-divider>
     <div class="mat-mdc-table admin-table">
-      <div class="mat-mdc-header-row">
+      <div class="mat-mdc-header-row mat-toolbar mat-primary">
         <div class="mat-mdc-header-cell">Tenant Name</div>
         <div class="mat-mdc-header-cell">Apartment</div>
         <div class="mat-mdc-header-cell">Entry Date</div>
@@ -30,7 +30,7 @@
           <div class="mat-mdc-cell">{{ tenant.paymentStatus }}</div>
           <div class="mat-mdc-cell">
             <div class="p-2 actions">
-              <button mat-mini-fab color="primary" matTooltip="Edit" (click)="openTenantDialog(tenant)">
+              <button mat-mini-fab color="primary" matTooltip="Edit" (click)="openDetailTenantDialog(tenant)">
                 <mat-icon>edit</mat-icon>
               </button>
               <button mat-mini-fab color="warn" matTooltip="Delete" class="mx-1" (click)="removeTenant(tenant)">

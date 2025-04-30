@@ -66,4 +66,14 @@ class TenantController(
     tenantService.deleteTenant(id)
     return ResponseEntity.noContent().build()
   }
+
+
+  @CrossOrigin(origins = ["http://localhost:4200"])
+  @PreAuthorize("isAuthenticated()")
+  @GetMapping("/{id}/details")
+  fun getTenantDetails(@PathVariable id: Long): ResponseEntity<Map<String, Any?>> {
+    val tenantDetails = tenantService.getTenantDetailsAsMap(id)
+    return ResponseEntity.ok(tenantDetails)
+  }
+
 }
