@@ -2,7 +2,7 @@ package com.example.backend.models
 
 import jakarta.persistence.*
 import org.hibernate.annotations.ColumnDefault
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "issues")
@@ -25,7 +25,7 @@ class Issue {
 
   @ColumnDefault("(curdate())")
   @Column(name = "declaration_date")
-  var declarationDate: LocalDate? = null
+  var declarationDate: LocalDateTime? = null
 
   @Lob
   @Column(name = "status", nullable = false)

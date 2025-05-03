@@ -35,7 +35,7 @@ export class InvoiceDialogComponent implements OnInit {
               @Inject(MAT_DIALOG_DATA) public data: any,
               public fb: FormBuilder) {
     this.form = this.fb.group({
-      locataireId: [data?.locataireId || '', Validators.required],
+      tenantId: [data?.tenantId || '', Validators.required],
       type: [data?.type || '', Validators.required],
       mois: [data?.mois || '', Validators.required],
       montant: [data?.montant || '', [Validators.required, Validators.min(0)]],

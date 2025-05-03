@@ -3,7 +3,7 @@ package com.example.backend.models
 import jakarta.persistence.*
 import org.hibernate.annotations.ColumnDefault
 import java.math.BigDecimal
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "tenants")
@@ -22,10 +22,10 @@ class Tenant {
   var housingUnit: HoustingUnit? = null
 
   @Column(name = "move_in_date", nullable = false)
-  var moveInDate: LocalDate? = null
+  var moveInDate: LocalDateTime? = null
 
   @Column(name = "move_out_date")
-  var moveOutDate: LocalDate? = null
+  var moveOutDate: LocalDateTime? = null
 
   @ColumnDefault("0.00")
   @Column(name = "security_deposit", precision = 10, scale = 2)

@@ -51,4 +51,9 @@ import { Injectable } from '@angular/core';
         return this.http.put<any>(`${this.apiUrl}/${id}/with-options`, updatedServiceDTO, { headers: this.getHeaders() });
       }
 
+
+      getServiceAllWithOptions(): Observable<any> {
+        return this.http.get<any>(`${this.apiUrl}/with-options`, { headers: this.getHeaders() });
+      }
+
     }

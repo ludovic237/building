@@ -2,12 +2,12 @@ package com.example.backend.dtos
 
 import com.example.backend.models.Payment
 import java.math.BigDecimal
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 data class BillingCycleDetailsDTO(
   var billingCycleId: Long?,
-  var startDate: LocalDate?,
-  var endDate: LocalDate?,
+  var startDate: LocalDateTime?,
+  var endDate: LocalDateTime?,
   var amountDue: BigDecimal?,
   var amountPaid: BigDecimal?,
   var status: String?,

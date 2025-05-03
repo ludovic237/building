@@ -1,4 +1,12 @@
-<h1 mat-dialog-title>Subscription</h1>
+<mat-toolbar color="primary" class="mat-toolbar mat-primary">
+  <div fxLayout="row" fxLayoutAlign="space-between center" class="w-100 p-3">
+    <h2>{{ title }}</h2>
+    <!--    <button mat-icon-button (click)="onClose()">-->
+    <button mat-icon-button>
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+</mat-toolbar>
 <form [formGroup]="form" (ngSubmit)="onSubmit()" autocomplete="off">
   <div mat-dialog-content>
     <div fxLayout="row wrap" class="mt-3">
@@ -7,15 +15,15 @@
       <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
         <mat-form-field appearance="outline" class="w-100">
           <mat-label>Tenant</mat-label>
-          <mat-select formControlName="locataireId" required>
+          <mat-select formControlName="tenantId" required>
             <mat-option [value]="">-</mat-option>
             @for (locataire of locataires; track $index) {
               <mat-option [value]="locataire.id">
-                {{ locataire.name }}
+                {{ locataire.userName }}
               </mat-option>
             }
           </mat-select>
-          @if (form.controls.locataireId.errors?.required) {
+          @if (form.controls.tenantId.errors?.required) {
             <mat-error>Tenant is required</mat-error>
           }
         </mat-form-field>
@@ -25,11 +33,12 @@
       <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
         <mat-form-field appearance="outline" class="w-100">
           <mat-label>Service</mat-label>
-          <mat-select formControlName="serviceId" required>
-            <mat-option [value]="">-</mat-option>
+          <mat-select formControlName="serviceId"
+                      (selectionChange)="onServiceChange($event.value)" required
+                      [disabled]="!isReadonly">
             @for (services of services; track $index) {
               <mat-option [value]="services.id">
-                {{ services.nom }}
+                {{ services.name }}
               </mat-option>
             }
           </mat-select>
@@ -39,11 +48,82 @@
         </mat-form-field>
       </div>
 
+      <mat-divider></mat-divider>
+
+
+      <div  fxFlex="100" fxFlex.gt-sm="50" class="px-2">
+        <mat-card  >
+          <mat-card-header color="primary">
+            <mat-card-title>Options</mat-card-title>
+            <mat-card-subtitle>Select an option and specify the quantity</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div fxLayout="column" fxLayoutGap="16px">
+              <!-- Option Selection -->
+              <mat-form-field appearance="outline" class="w-100">
+                <mat-label>Select Option</mat-label>
+                <mat-select  formControlName="options"  [(ngModel)]="selectedOption"  [disabled]="!isReadonly">
+                  <mat-option *ngFor="let option of selectedServiceOptions" [value]="option">
+                    {{ option.name }} - {{ option.price | currency }} (Max: {{ option.quantity }})
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <!-- Quantity Input -->
+              <mat-form-field appearance="outline" class="w-100">
+                <mat-label>Quantity</mat-label>
+                <input matInput type="number" [(ngModel)]="selectedQuantity" [min]="0" [max]="selectedOption?.quantity"
+                       [ngModelOptions]="{standalone: true}" [readonly]="!isReadonly">
+              </mat-form-field>
+
+              <!-- Add Button -->
+              <button mat-raised-button color="primary" (click)="addOption()"
+                      [disabled]="!selectedOption || !selectedQuantity">
+                Add Option
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+      <div  fxFlex="100" fxFlex.gt-sm="50" class="px-2">
+        <mat-card >
+          <mat-card-header color="primary">
+            <mat-card-title>Added Options</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <mat-chip-listbox multiple>
+              <mat-chip-option *ngFor="let option of addedOptions" [selected]="true">
+                <!--                         (removed)="removeOption(option)">-->
+                {{ option.name }} - {{ option.quantity }} ({{ option.price | currency }})
+                <button mat-icon-button matChipRemove (click)="removeOption(option)">
+                  <mat-icon>cancel</mat-icon>
+                </button>
+              </mat-chip-option>
+            </mat-chip-listbox>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+
+      <!-- Total Price -->
+<!--      <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">-->
+<!--        <strong>Total Price: </strong> {{ totalPrice | currency }}-->
+<!--      </div>-->
+      <mat-divider></mat-divider>
+
+      <div fxFlex="100" fxFlex.gt-sm="34" class="px-2" style="margin-top: 20px;">
+        <mat-form-field appearance="outline"  class="w-100">
+          <mat-label>Total price</mat-label>
+          <input matInput [value]="totalPrice" [readonly]="true">
+        </mat-form-field>
+      </div>
+
       <!-- Start Date -->
-      <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
+      <div fxFlex="100" fxFlex.gt-sm="33" class="px-2" style="margin-top: 20px;">
         <mat-form-field appearance="outline" class="w-100">
           <mat-label>Start Date</mat-label>
-          <input matInput [matDatepicker]="startDatePicker" formControlName="dateDebut" required>
+          <input matInput [matDatepicker]="startDatePicker" formControlName="dateDebut" required
+                 [readonly]="!isReadonly">
           <mat-datepicker-toggle matSuffix [for]="startDatePicker"></mat-datepicker-toggle>
           <mat-datepicker #startDatePicker></mat-datepicker>
           @if (form.controls.dateDebut.errors?.required) {
@@ -53,10 +133,11 @@
       </div>
 
       <!-- End Date -->
-      <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
+      <div fxFlex="100" fxFlex.gt-sm="33" class="px-2" style="margin-top: 20px;">
         <mat-form-field appearance="outline" class="w-100">
           <mat-label>End Date</mat-label>
-          <input matInput [matDatepicker]="endDatePicker" formControlName="dateFin" required>
+          <input matInput [matDatepicker]="endDatePicker" formControlName="dateFin" required
+                 [readonly]="!isReadonly">
           <mat-datepicker-toggle matSuffix [for]="endDatePicker"></mat-datepicker-toggle>
           <mat-datepicker #endDatePicker></mat-datepicker>
           @if (form.controls.dateFin.errors?.required) {
@@ -66,27 +147,24 @@
       </div>
 
       <!-- Status -->
-      <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
-        <mat-form-field appearance="outline" class="w-100">
-          <mat-label>Status</mat-label>
-          <mat-select formControlName="status" required>
-            <mat-option [value]="">-</mat-option>
-            @for (status of statuss; track $index) {
-              <mat-option [value]="status">{{ status }}</mat-option>
-            }
-          </mat-select>
-          @if (form.controls.status.errors?.required) {
-            <mat-error>Status is required</mat-error>
-          }
-        </mat-form-field>
-      </div>
+     <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
+       <mat-checkbox formControlName="status"
+                     [checked]="form.get('status')?.value === 'actif'"
+                     (change)="form.get('status')?.setValue($event.checked ? 'actif' : 'inactif')"
+                     [disabled]="!isReadonly">
+         Status Actif
+       </mat-checkbox>
+       <mat-error *ngIf="form.controls.status.errors?.required">Status is required</mat-error>
+     </div>
 
     </div>
   </div>
-  <div mat-dialog-actions>
+  <div mat-dialog-actions class="mat-toolbar mat-primary">
     <div fxLayout="row" fxLayoutAlign="space-between center" class="w-100 p-3">
       <button mat-raised-button color="warn" type="button" mat-dialog-close>Close</button>
-      <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Save</button>
+      <button mat-raised-button color="primary" *ngIf="!isReadonly" (click)="onSubmit()">
+        Save
+      </button>
     </div>
   </div>
 </form>

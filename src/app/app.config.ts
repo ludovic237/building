@@ -24,6 +24,10 @@ import { InMemoryWebApiModule } from 'angular-in-memory-web-api';
 import { UsersData } from './common/data/users-data';
 import {provideAnimations} from "@angular/platform-browser/animations";
 import {MatNativeDateModule} from "@angular/material/core";
+import {MatChipsModule} from "@angular/material/chips";
+import {FormsModule} from "@angular/forms";
+import {MatDialogModule} from "@angular/material/dialog";
+import {CommonModule} from "@angular/common";
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -39,6 +43,10 @@ export const appConfig: ApplicationConfig = {
     provideAnimationsAsync(),
     importProvidersFrom(
       MatNativeDateModule,
+      CommonModule,
+      FormsModule,
+      MatDialogModule,
+      MatChipsModule, // Ensure required modules are imported
       [
       TranslateModule.forRoot({
         loader: {

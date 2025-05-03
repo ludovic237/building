@@ -61,11 +61,7 @@ export class SubscriptionsComponent implements OnInit {
 
   public openSubscriptionDialog(data: any): void {
     const dialogRef = this.dialog.open(SubscriptionDialogComponent, {
-      data: {
-        subscription: data,
-        locataires: this.locataires,
-        services: this.services
-      },
+      data: data,
       panelClass: ['theme-dialog'],
       autoFocus: false
     });
@@ -74,7 +70,7 @@ export class SubscriptionsComponent implements OnInit {
       console.log("subscription");
       const subscription = {
         id: result.id || this.subscriptions.length + 1, // Génère un nouvel ID si non défini
-        locataireId: result.locataireId,
+        tenantId: result.tenantId,
         serviceId: result.serviceId,
         dateDebut: new Date(result.dateDebut).toISOString().split('T')[0], // Convert to YYYY-MM-DD
         dateFin: new Date(result.dateFin).toISOString().split('T')[0],     // Convert to YYYY-MM-DD
@@ -113,8 +109,8 @@ export class SubscriptionsComponent implements OnInit {
     });
   }
 
-  getTenantName(locataireId: number): string {
-    const tenant = this.locataires.find(l => l.id === locataireId);
+  getTenantName(tenantId: number): string {
+    const tenant = this.locataires.find(l => l.id === tenantId);
     return tenant ? tenant.name : 'Unknown';
   }
 

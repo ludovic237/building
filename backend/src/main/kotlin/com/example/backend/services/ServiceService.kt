@@ -85,6 +85,38 @@ class ServiceService(
     )
   }
 
+fun getServiceAllWithOptions(): List<ServiceDataDTO> {
+      val services = serviceRepository.findAll()
+      return services.map { service ->
+        // Load associated options for each service
+        val options = serviceOptionRepository.findByService(service)
+        println("options")
+        println(options)
+        val activeOptions = options.map { option ->
+         println(option.name)
+         println(option.quantity)
+         println(option.isActive)
+          ActiveOption(
+            id = option.id!!,
+            name = option.name!!,
+            price = option.price!!,
+            quantity = option.quantity!!,
+            isSelected = option.isActive ?: false,
+          )
+        }
+
+        ServiceDataDTO(
+          id = service.id ?: 0L,
+          name = service.name ?: "",
+          code = service.code,
+          description = service.description ?: "",
+          billingMode = service.billingMode ?: "",
+          isActive = service.isActive ?: false,
+          activeOptions = activeOptions
+        )
+      }
+    }
+
   fun updateServiceWithOptions(id: Long, updatedServiceDTO: ServiceDataDTO): Services {
     val existingService = serviceRepository.findById(id)
       .orElseThrow { IllegalArgumentException("Service with ID $id not found") }

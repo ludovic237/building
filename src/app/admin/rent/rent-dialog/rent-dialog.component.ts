@@ -41,7 +41,7 @@ export class RentDialogComponent implements OnInit {
               @Inject(MAT_DIALOG_DATA) public data: any,
               public fb: FormBuilder) {
     this.form = this.fb.group({
-      locataireId: [data?.locataireId || '', Validators.required],
+      tenantId: [data?.tenantId || '', Validators.required],
       housingUnitId: [data?.housingUnitId || '', Validators.required],
       mois: [data?.mois || '', Validators.required],
       annee: [data?.annee || '', [Validators.required, Validators.min(1900)]],
@@ -60,7 +60,7 @@ export class RentDialogComponent implements OnInit {
     // ];
     this.fetchTenantsDetails();
     // Subscribe to tenant selection changes
-    this.form.get('locataireId')?.valueChanges.subscribe((tenantId) => {
+    this.form.get('tenantId')?.valueChanges.subscribe((tenantId) => {
       const selectedTenant = this.tenants.find((tenant) => tenant.tenantId === tenantId);
       if (selectedTenant) {
         this.form.patchValue({

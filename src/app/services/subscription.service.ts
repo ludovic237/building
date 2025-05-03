@@ -45,4 +45,13 @@ export class SubscriptionService {
   deleteSubscription(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`,{headers: this.getHeaders()});
   }
+
+  createSubscriptionWithDetails(data: any): Observable<Subscription> {
+    return this.http.post<Subscription>(`${this.apiUrl}/add-subscription`,data,{headers: this.getHeaders()});
+  }
+
+  getSubscriptionFormattedData(id: number): Observable<any> {
+    return this.http.get<Subscription>(`${this.apiUrl}/${id}/get-subscription`,{headers: this.getHeaders()});
+  }
+
 }

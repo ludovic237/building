@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
 import org.springframework.stereotype.Repository
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Repository
 interface BillingCycleDetailsViewRepository : JpaRepository<BillingCycleDetailsView, Long> {
@@ -23,7 +23,7 @@ interface BillingCycleDetailsViewRepository : JpaRepository<BillingCycleDetailsV
   fun findByUserUsername(username: String): List<BillingCycleDetailsView>
 
   // Find by billing cycle date range
-  fun findByStartDateBetween(startDate: LocalDate, endDate: LocalDate): List<BillingCycleDetailsView>
+  fun findByStartDateBetween(startDate: LocalDateTime, endDate: LocalDateTime): List<BillingCycleDetailsView>
 
   // Find by user first name and last name
   fun findByUserFirstNameAndUserLastName(firstName: String, lastName: String): List<BillingCycleDetailsView>
@@ -44,8 +44,8 @@ interface BillingCycleDetailsViewRepository : JpaRepository<BillingCycleDetailsV
     @Param("billingCycleStatus") billingCycleStatus: String?,
     @Param("tenantId") tenantId: Long?,
     @Param("username") username: String?,
-    @Param("startDate") startDate: LocalDate?,
-    @Param("endDate") endDate: LocalDate?,
+    @Param("startDate") startDate: LocalDateTime?,
+    @Param("endDate") endDate: LocalDateTime?,
     @Param("userFirstName") userFirstName: String?,
     @Param("userLastName") userLastName: String?
   ): List<BillingCycleDetailsView>

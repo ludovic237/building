@@ -67,6 +67,14 @@ class ServicesController(
 
   @CrossOrigin(origins = ["http://localhost:4200"])
   @PreAuthorize("isAuthenticated()")
+  @GetMapping("/with-options")
+  fun getServiceAllWithOptions(): ResponseEntity<List<ServiceDataDTO>> {
+    val serviceData = serviceService.getServiceAllWithOptions()
+    return ResponseEntity.ok(serviceData)
+  }
+
+  @CrossOrigin(origins = ["http://localhost:4200"])
+  @PreAuthorize("isAuthenticated()")
   @PutMapping("/{id}/with-options")
   fun updateServiceWithOptions(
     @PathVariable id: Long,

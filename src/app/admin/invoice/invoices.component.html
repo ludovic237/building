@@ -16,7 +16,7 @@
                 <div class="mat-mdc-header-cell"></div>
               </div>
               <div class="mat-mdc-row" *ngFor="let invoice of invoices">
-                <div class="mat-mdc-cell">{{ getTenantName(invoice.locataireId) }}</div>
+                <div class="mat-mdc-cell">{{ getTenantName(invoice.tenantId) }}</div>
                 <div class="mat-mdc-cell">{{ invoice.type }}</div>
                 <div class="mat-mdc-cell">{{ invoice.mois }}</div>
                 <div class="mat-mdc-cell">{{ invoice.montant | currency }}</div>

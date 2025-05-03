@@ -36,7 +36,7 @@ export class BillingCycleDialogComponent implements OnInit {
               @Inject(MAT_DIALOG_DATA) public data: any,
               private fb: FormBuilder) {
     this.form = this.fb.group({
-      locataireId: [data?.locataireId || '', Validators.required],
+      tenantId: [data?.tenantId || '', Validators.required],
       serviceId: [data?.serviceId || '', Validators.required],
       dateDebut: [data?.dateDebut || '', Validators.required],
       dateFin: [data?.dateFin || '', Validators.required],

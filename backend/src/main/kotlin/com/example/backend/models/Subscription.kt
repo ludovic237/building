@@ -2,7 +2,7 @@ package com.example.backend.models
 
 import jakarta.persistence.*
 import java.math.BigDecimal
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "subscriptions")
@@ -24,10 +24,10 @@ class Subscription {
   var price: BigDecimal? = null
 
   @Column(name = "start_date", nullable = false)
-  var startDate: LocalDate? = null
+  var startDate: LocalDateTime? = null
 
   @Column(name = "end_date")
-  var endDate: LocalDate? = null
+  var endDate: LocalDateTime? = null
 
   @Lob
   @Column(name = "status", nullable = false)

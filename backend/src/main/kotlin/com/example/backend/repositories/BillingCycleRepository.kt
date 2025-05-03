@@ -3,7 +3,7 @@ package com.example.backend.repositories
 import com.example.backend.models.BillingCycle
 import com.example.backend.models.Subscription
 import org.springframework.data.jpa.repository.JpaRepository
-import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.*
 
 interface BillingCycleRepository : JpaRepository<BillingCycle, Long> {
@@ -19,7 +19,7 @@ interface BillingCycleRepository : JpaRepository<BillingCycle, Long> {
   fun findByStatus(status: String): List<BillingCycle>
 
   // Find billing cycles within a specific period
-  fun findByPeriodStartBetween(startDate: LocalDate, endDate: LocalDate): List<BillingCycle>
+  fun findByPeriodStartBetween(startDate: LocalDateTime, endDate: LocalDateTime): List<BillingCycle>
 
 /*  // Find a billing cycle by its ID
   fun findById(billingCycleId: Long): Optional<BillingCycle>*/

@@ -16,7 +16,7 @@
       </div>
       @for (issue of issues | paginate: { itemsPerPage: count, currentPage: page }; track $index) {
         <div class="mat-mdc-row" [ngClass]="{ 'mat-mdc-row-even': $index % 2 === 0 }">
-          <div class="mat-mdc-cell">{{ getTenantName(issue.locataireId) }}</div>
+          <div class="mat-mdc-cell">{{ getTenantName(issue.tenantId) }}</div>
           <div class="mat-mdc-cell">{{ issue.titre }}</div>
           <div class="mat-mdc-cell">{{ issue.description }}</div>
           <div class="mat-mdc-cell">{{ issue.dateDeclaration | date: 'dd/MM/yyyy' }}</div>

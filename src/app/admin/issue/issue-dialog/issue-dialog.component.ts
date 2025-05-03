@@ -35,7 +35,7 @@ export class IssueDialogComponent implements OnInit {
               @Inject(MAT_DIALOG_DATA) public data: any,
               public fb: FormBuilder) {
     this.form = this.fb.group({
-      locataireId: [data?.locataireId || '', Validators.required],
+      tenantId: [data?.tenantId || '', Validators.required],
       titre: [data?.titre || '', Validators.required],
       description: [data?.description || '', Validators.required],
       dateDeclaration: [data?.dateDeclaration || '', Validators.required],

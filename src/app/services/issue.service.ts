@@ -18,7 +18,7 @@ import { Injectable } from '@angular/core';
         const mockData: Issue[] = [
           {
             id: 1,
-            locataireId: 101,
+            tenantId: 101,
             titre: 'Plumbing Issue',
             price: 'Leaking pipe in the kitchen',
             dateDeclaration: new Date('2023-01-10'),
@@ -26,7 +26,7 @@ import { Injectable } from '@angular/core';
           },
           {
             id: 2,
-            locataireId: 102,
+            tenantId: 102,
             titre: 'Electrical Issue',
             price: 'Power outage in the living room',
             dateDeclaration: new Date('2023-02-05'),
@@ -40,7 +40,7 @@ import { Injectable } from '@angular/core';
         // return this.http.get<Issue>(`${this.apiUrl}/${id}`);
         const mockData: Issue = {
           id,
-          locataireId: 101,
+          tenantId: 101,
           titre: 'Plumbing Issue',
           price: 'Leaking pipe in the kitchen',
           dateDeclaration: new Date('2023-01-10'),

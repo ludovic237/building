@@ -2,18 +2,18 @@ package com.example.backend.services
 
 import com.example.backend.dtos.SubscriptionDTO
 import com.example.backend.dtos.SubscriptionDetailsDTO
-import com.example.backend.models.Payment
-import com.example.backend.models.PaymentLine
-import com.example.backend.models.ServiceUsage
-import com.example.backend.models.Subscription
+import com.example.backend.models.*
 import com.example.backend.repositories.*
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
-import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 @Service
 class SubscriptionService(
+  private val serviceRepository: ServiceRepository,
+  private val serviceOptionRepository: ServiceOptionRepository,
   private val subscriptionRepository: SubscriptionRepository,
   private val subscriptionOptionRepository: SubscriptionOptionRepository,
   private val serviceUsageRepository: ServiceUsageRepository,
@@ -167,7 +167,7 @@ class SubscriptionService(
         this.tenant = tenant
         this.totalAmount = paymentAmount
         this.paymentMethod = paymentMode
-        this.paymentDate = LocalDate.now()
+        this.paymentDate = LocalDateTime.now()
       }
     )
 
@@ -214,8 +214,8 @@ class SubscriptionService(
     val subscription = subscriptionRepository.findById(subscriptionId)
       .orElseThrow { IllegalArgumentException("Subscription not found") }
     return subscription.status == "active" &&
-      subscription.startDate!! <= LocalDate.now() &&
-      (subscription.endDate == null || subscription.endDate!! >= LocalDate.now())
+      subscription.startDate!! <= LocalDateTime.now() &&
+      (subscription.endDate == null || subscription.endDate!! >= LocalDateTime.now())
   }
 
   fun recordServiceUsage(subscriptionId: Long, optionId: Long, quantityUsed: Int): ServiceUsage {
@@ -250,11 +250,78 @@ class SubscriptionService(
 
     val endDate = subscription.endDate
     return when {
-      endDate != null && endDate.isBefore(LocalDate.now()) -> "Expired"
+      endDate != null && endDate.isBefore(LocalDateTime.now()) -> "Expired"
       allOptionsUsed -> "Completed"
       else -> "Active"
     }
   }
 
+  fun createSubscriptionWithDetails(
+    tenantId: Long,
+    serviceId: Long,
+    dateDebut: String,
+    dateFin: String,
+    status: String,
+    options: List<Map<String, Any>>
+  ): Subscription {
+    val tenant = tenantRepository.findById(tenantId)
+      .orElseThrow { IllegalArgumentException("Tenant not found with ID $tenantId") }
+
+    val service = serviceRepository.findById(serviceId)
+      .orElseThrow { IllegalArgumentException("Service not found with ID $serviceId") }
+    val formatter = DateTimeFormatter.ISO_DATE_TIME
+    val subscription = Subscription().apply {
+      this.tenant = tenant
+      this.service = service
+      this.startDate = LocalDateTime.parse(dateDebut, formatter) // Extract only the date part
+      this.endDate = LocalDateTime.parse(dateFin, formatter) // Extract only the date part
+      this.status = status
+    }
+
+    // Save the subscription
+    val savedSubscription = subscriptionRepository.save(subscription)
+
+    // Save the options
+    options.forEach { option ->
+      val optionId = (option["id"] as Number).toLong()
+      val serviceOption = serviceOptionRepository.findById(optionId)
+        .orElseThrow { IllegalArgumentException("Service option not found with ID $optionId") }
+      val quantity = (option["quantity"] as Number).toInt()
+      subscriptionOptionRepository.save(
+        SubscriptionOption().apply {
+          this.subscription = savedSubscription
+          this.quantity = quantity
+          this.option = serviceOption
+        }
+      )
+    }
+
+    return savedSubscription
+  }
+
+  fun getSubscriptionWithDetails(
+    subscriptionId: Long,
+  ): Map<String, Any?> {
+    val subscription = subscriptionRepository.getById(subscriptionId)
+
+    val subscriptionOptions = subscriptionOptionRepository.findBySubscription(subscription)
+
+    val formattedData = mapOf(
+      "tenantId" to (subscription.tenant?.id ?: throw IllegalArgumentException("Tenant is null")),
+      "serviceId" to (subscription.service?.id ?: throw IllegalArgumentException("Service is null")),
+      "dateDebut" to subscription.startDate.toString(),
+      "dateFin" to subscription.endDate.toString(),
+      "status" to subscription.status,
+      "options" to subscriptionOptions.map { subscriptionOption ->
+        mapOf(
+          "subscriptionOptionId" to subscriptionOption.id,
+          "subscriptionId" to subscriptionOption.subscription?.id,
+          "optionId" to subscriptionOption.option?.id,
+          "quantity" to subscriptionOption.quantity
+        )
+      }
+    )
+    return formattedData
+  }
 
 }

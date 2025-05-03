@@ -6,7 +6,7 @@ package com.example.backend.repositories
     import org.springframework.data.repository.query.Param
     import org.springframework.stereotype.Repository
     import java.math.BigDecimal
-    import java.time.LocalDate
+    import java.time.LocalDateTime
 
     @Repository
     interface PaymentLinesViewRepository : JpaRepository<PaymentLinesView, Long> {
@@ -21,7 +21,7 @@ package com.example.backend.repositories
         fun findByUserUsername(username: String): List<PaymentLinesView>
 
         // Find by payment date range
-        fun findByPaymentDateBetween(startDate: LocalDate, endDate: LocalDate): List<PaymentLinesView>
+        fun findByPaymentDateBetween(startDate: LocalDateTime, endDate: LocalDateTime): List<PaymentLinesView>
 
         // Find by amount paid greater than or equal to a value
         fun findByAmountPaidGreaterThanEqual(amount: BigDecimal): List<PaymentLinesView>
@@ -56,8 +56,8 @@ package com.example.backend.repositories
             @Param("paymentMethod") paymentMethod: String?,
             @Param("tenantId") tenantId: Long?,
             @Param("username") username: String?,
-            @Param("startDate") startDate: LocalDate?,
-            @Param("endDate") endDate: LocalDate?,
+            @Param("startDate") startDate: LocalDateTime?,
+            @Param("endDate") endDate: LocalDateTime?,
             @Param("amountPaidMin") amountPaidMin: BigDecimal?,
             @Param("amountPaidMax") amountPaidMax: BigDecimal?,
             @Param("serviceName") serviceName: String?,

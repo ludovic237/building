@@ -21,6 +21,7 @@ import {MatFormFieldModule} from "@angular/material/form-field";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {MatInputModule} from "@angular/material/input";
 import {TenantInfoDialogComponent} from "./tenant-info-info-dialog/tenant-info-dialog.component";
+import {MatChipsModule} from "@angular/material/chips";
 
 @Component({
   selector: 'app-tenants',
@@ -28,6 +29,7 @@ import {TenantInfoDialogComponent} from "./tenant-info-info-dialog/tenant-info-d
     CommonModule,
     FlexLayoutModule,
     MatCardModule,
+    MatChipsModule,
     MatButtonModule,
     MatDividerModule,
     MatIconModule,
@@ -40,7 +42,8 @@ import {TenantInfoDialogComponent} from "./tenant-info-info-dialog/tenant-info-d
     MatInputModule,
     PipesModule
   ],
-  templateUrl: './tenants.component.html'
+  templateUrl: './tenants.component.html',
+  styleUrl: './tenants.component.scss'
 })
 export class TenantsComponent implements OnInit {
 
@@ -165,8 +168,10 @@ filterTenants(): void {
       data: data,
       panelClass: ['theme-dialog'],
       autoFocus: false,
-      width: '80%', // 80% of the window width
-      height: '70%' ,// 70% of the window height
+      // width: '600px',
+      // height: 'auto',
+      // width: '80%', // 80% of the window width
+      // height: '70%' ,// 70% of the window height
       direction: (this.settings.rtl) ? 'rtl' : 'ltr'
     });
 

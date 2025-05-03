@@ -2,7 +2,7 @@ package com.example.backend.models
 
 import jakarta.persistence.*
 import java.math.BigDecimal
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "billing_cycles")
@@ -20,10 +20,10 @@ class BillingCycle {
   var amountDue: BigDecimal? = null
 
   @Column(name = "period_start", nullable = false)
-  var periodStart: LocalDate? = null
+  var periodStart: LocalDateTime? = null
 
   @Column(name = "period_end", nullable = false)
-  var periodEnd: LocalDate? = null
+  var periodEnd: LocalDateTime? = null
 
   @Lob
   @Column(name = "status", nullable = false)

@@ -18,7 +18,7 @@
       </div>
       @for (rent of rents; track $index) {
         <div class="mat-mdc-row">
-          <div class="mat-mdc-cell">{{ getTenantName(rent.locataireId) }}</div>
+          <div class="mat-mdc-cell">{{ getTenantName(rent.tenantId) }}</div>
           <div class="mat-mdc-cell">{{ gethousingUnitName(rent.housingUnitId) }}</div>
           <div class="mat-mdc-cell">{{ rent.mois }}</div>
           <div class="mat-mdc-cell">{{ rent.annee }}</div>

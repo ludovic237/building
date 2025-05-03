@@ -5,7 +5,7 @@ import lombok.Data
 import lombok.ToString
 import org.hibernate.annotations.ColumnDefault
 import java.time.Instant
-import java.time.LocalDate
+import java.time.LocalDateTime
 @Data
 @Entity
 @ToString
@@ -36,7 +36,7 @@ class User {
   var role: String? = null
 
   @Column(name = "birthday")
-  var birthday: LocalDate? = null
+  var birthday: LocalDateTime? = null
 
   @Lob
   @Column(name = "gender", nullable = true)

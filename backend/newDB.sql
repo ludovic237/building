@@ -8,7 +8,7 @@ create table if not exists users
   password          varchar(255)            not null,
   phone             varchar(20)             null,
   role              tinytext                not null,
-  birthday          date                    null,
+  birthday          datetime                    null,
   gender            enum ('male', 'female')  null,
   image             varchar(255)            null,
   is_active         boolean                 not null default true,
@@ -27,8 +27,8 @@ create table if not exists tenants
     primary key,
   user_id          bigint                      null,
   housing_unit_id  bigint                      null,
-  move_in_date     date                        not null,
-  move_out_date    date                        null,
+  move_in_date     datetime                        not null,
+  move_out_date    datetime                        null,
   security_deposit decimal(10, 2) default 0.00 null,
   housting_price   decimal(10, 2) default 0.00 null
 );
@@ -56,7 +56,7 @@ create table if not exists invoices
   month        int            null,
   year         int            null,
   amount       decimal(10, 2) null,
-  payment_date date           null,
+  payment_date datetime           null,
   status       tinytext       not null,
   check (`month` between 1 and 12)
 );
@@ -80,8 +80,8 @@ create table if not exists subscriptions
   tenant_id  bigint         null,
   service_id bigint         null,
   price      decimal(10, 2) null,
-  start_date date           not null,
-  end_date   date           null,
+  start_date datetime           not null,
+  end_date   datetime           null,
   status     tinytext       not null
 
 );
@@ -93,8 +93,8 @@ create table if not exists billing_cycles
     primary key,
   subscription_id bigint         null,
   amount_due      decimal(10, 2) null,
-  period_start    date           not null,
-  period_end      date           not null,
+  period_start    datetime           not null,
+  period_end      datetime           not null,
   status          tinytext       not null
 );
 
@@ -115,7 +115,7 @@ create table if not exists issues
   tenant_id        bigint                   null,
   title            varchar(150)             not null,
   description      tinytext                 null,
-  declaration_date date default (curdate()) null,
+  declaration_date datetime default (curdate()) null,
   status           tinytext                 not null
 );
 
@@ -124,7 +124,7 @@ create table if not exists payments
 (
   id             bigint auto_increment primary key,
   tenant_id      bigint                   not null,
-  payment_date   date default (curdate()) null,
+  payment_date   datetime default (curdate()) null,
   total_amount   decimal(10, 2)           not null,
   payment_method varchar(50)
 );

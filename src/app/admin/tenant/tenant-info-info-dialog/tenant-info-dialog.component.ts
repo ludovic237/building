@@ -30,10 +30,29 @@ import {MatIconModule} from "@angular/material/icon";
 import {NgxPaginationModule} from "ngx-pagination";
 import {PipesModule} from "../../../theme/pipes/pipes.module";
 import {MatMenuModule} from "@angular/material/menu";
+import {MatDividerModule} from "@angular/material/divider";
+import {MatExpansionModule} from "@angular/material/expansion";
+import {MatChipListbox, MatChipsModule} from "@angular/material/chips";
+import {MatGridList, MatGridListModule} from "@angular/material/grid-list";
+import {MatToolbarModule} from "@angular/material/toolbar";
 
 @Component({
   selector: 'app-tenant-info-dialog',
   imports: [
+    MatTableModule,
+    MatIconModule,
+    MatDividerModule,
+    MatListModule,
+    MatChipsModule,
+    MatGridListModule,
+    MatToolbarModule,
+
+    MatCardModule,
+    MatExpansionModule,
+    MatTableModule,
+    MatIconModule,
+    MatDividerModule,
+
     ReactiveFormsModule,
     FlexLayoutModule,
     MatTabsModule,
@@ -43,6 +62,10 @@ import {MatMenuModule} from "@angular/material/menu";
     MatButtonModule,
     MatDatepickerModule,
     MatNativeDateModule,
+    CommonModule,
+    FormsModule,
+    MatDialogModule,
+    MatChipsModule, // Import MatChipsModule
     MatStepperModule,
     MatCardModule,
     MatButtonModule,
@@ -85,7 +108,7 @@ export class TenantInfoDialogComponent implements OnInit {
   payments: any[] = [];
   billingCycles: any[] = [];
   financialSummary: any;
-  services: any[] = [];
+  services: Service[] = [];
 
   constructor(
     public dialogRef: MatDialogRef<TenantInfoDialogComponent>,
@@ -132,6 +155,7 @@ export class TenantInfoDialogComponent implements OnInit {
       this.billingCycles = data.billingCycles || [];
       this.financialSummary = data.financialSummary || {};
       this.services = data.services || [];
+      this.services = this.services.map(service => ({ ...service, grayedOut: false })) || [];
     });
   }
 
@@ -162,13 +186,36 @@ export class TenantInfoDialogComponent implements OnInit {
     );
   }
 
-  confirmSubscription(): void {
-    console.log('Selected Services:', this.selectedServices);
-    // Handle subscription confirmation logic
+
+  onServiceToggle(service: any): void {
+    if (!service.subscribed) {
+      service.active = false; // Ensure non-subscribed services cannot be activated
+    }
   }
 
-  selectOption(service: any, option: string): void {
-    console.log(`Selected option: ${option} for service: ${service.name}`);
+  toggleServiceCard(service: any): void {
+    console.log("service");
+    console.log(service);
+    if (service.subscribed) {
+      service.grayedOut = !service.grayedOut;
+    }
   }
 
+  toggleSubscription(service: any): void {
+    service.isSubscribed = !service.isSubscribed;
+    console.log(`${service.name} is now ${service.isSubscribed ? 'subscribed' : 'unsubscribed'}`);
+  }
+
+}
+
+
+interface Service {
+  id: number;
+  name: string;
+  price: string;
+  billingMode: string;
+  description: string;
+  isSubscribed: boolean;
+  options: any[];
+  grayedOut?: boolean;
 }

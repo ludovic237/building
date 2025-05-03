@@ -74,7 +74,7 @@ export class PaymentsComponent implements OnInit {
       console.log("payment");
       const payment = {
         id: result.id || this.payments.length + 1, // Génère un nouvel ID si non défini
-        locataireId: result.locataireId,
+        tenantId: result.tenantId,
         serviceId: result.serviceId,
         dateDebut: new Date(result.dateDebut).toISOString().split('T')[0], // Convert to YYYY-MM-DD
         dateFin: new Date(result.dateFin).toISOString().split('T')[0],     // Convert to YYYY-MM-DD
@@ -113,8 +113,8 @@ export class PaymentsComponent implements OnInit {
     });
   }
 
-  getTenantName(locataireId: number): string {
-    const tenant = this.locataires.find(l => l.id === locataireId);
+  getTenantName(tenantId: number): string {
+    const tenant = this.locataires.find(l => l.id === tenantId);
     return tenant ? tenant.name : 'Unknown';
   }
 

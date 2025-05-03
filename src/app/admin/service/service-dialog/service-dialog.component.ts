@@ -14,6 +14,8 @@ import {MatSnackBar} from "@angular/material/snack-bar";
 import {Service} from "../../../model/data";
 import {CommonModule} from "@angular/common";
 import {MatIconModule} from "@angular/material/icon";
+import {MatChipsModule} from "@angular/material/chips";
+import {MatToolbarModule} from "@angular/material/toolbar";
 
 @Component({
   selector: 'app-service-dialog',
@@ -23,12 +25,14 @@ import {MatIconModule} from "@angular/material/icon";
     FlexLayoutModule,
     MatTabsModule,
     MatIconModule,
+    MatChipsModule,
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
     MatDatepickerModule,
     MatNativeDateModule,
     MatCheckboxModule,
+    MatToolbarModule,
     MatDialogModule
   ],
   templateUrl: './service-dialog.component.html',
@@ -77,7 +81,8 @@ export class ServiceDialogComponent implements OnInit {
           console.error('Error loading service:', err);
         }
       });
-    } else if (this.data?.options) {
+    }
+    else if (this.data?.options) {
       this.data.options.forEach((option: any) => this.addOption(option));
     }
   }
@@ -144,8 +149,12 @@ export class ServiceDialogComponent implements OnInit {
 
 
   removeValidatedOption(index: number): void {
+    console.log("index");
+    console.log(index);
+    console.log("this.selectedOptions");
+    console.log(this.selectedOptions);
     if (index >= 0 && index < this.selectedOptions.length) {
-      this.selectedOptions.splice(index, 1);
+      this.selectedOptions.splice(index, 0);
       this.snackBar.open('Option removed successfully!', 'Close', {
         duration: 2000,
         panelClass: ['success-snackbar']

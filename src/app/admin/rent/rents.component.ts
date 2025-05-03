@@ -39,8 +39,8 @@ export class RentsComponent implements OnInit {
   public rents: any[] = [];
   domHandlerService = inject(DomHandlerService);
   public locataires: any[] = [
-    { id: 1, name: 'John Doe' }, // Matches locataireId: 1 in rents
-    { id: 2, name: 'Jane Smith' }, // Matches locataireId: 2 in rents
+    { id: 1, name: 'John Doe' }, // Matches tenantId: 1 in rents
+    { id: 2, name: 'Jane Smith' }, // Matches tenantId: 2 in rents
     { id: 3, name: 'Alice Johnson' },
     { id: 4, name: 'Bob Brown' }
   ];
@@ -126,8 +126,8 @@ export class RentsComponent implements OnInit {
     });
   }
 
-  getTenantName(locataireId: number): string {
-    const tenant = this.locataires.find(l => l.id === locataireId);
+  getTenantName(tenantId: number): string {
+    const tenant = this.locataires.find(l => l.id === tenantId);
     return tenant ? tenant.name : 'Unknown';
   }
 

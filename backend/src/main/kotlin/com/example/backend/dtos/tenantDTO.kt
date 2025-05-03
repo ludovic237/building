@@ -1,7 +1,7 @@
 package com.example.backend.dtos
 
 import java.math.BigDecimal
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 data class TenantDTO(
     val id: Long?,
@@ -11,8 +11,8 @@ data class TenantDTO(
     val userEmail: String?,
     val paymentStatus: String?,
     val housingUnitName: String?,
-    val moveInDate: LocalDate?,
-    val moveOutDate: LocalDate?,
+    val moveInDate: LocalDateTime?,
+    val moveOutDate: LocalDateTime?,
     val securityDeposit: BigDecimal?,
     val houstinUnitPrice: BigDecimal?
 )

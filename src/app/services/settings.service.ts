@@ -15,14 +15,15 @@ export class Settings {
 })
 export class SettingsService {
   public settings = new Settings(
-    'Emporium',  // theme name
-    'green',     // green, blue, red, pink, purple, grey
+    'Building',  // theme name
+    'grey',     // green, blue, red, pink, purple, grey
     false,       // true = rtl, false = ltr
     true,        // adminSidenavIsOpened
-    true,        // adminSidenavIsPinned 
-    true,        // adminSidenavUserBlock 
+    true,        // adminSidenavIsPinned
+    true,        // adminSidenavUserBlock
     false        // mainToolbarFixed
   )
 
   constructor() { }
+
 }

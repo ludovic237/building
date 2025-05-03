@@ -1,4 +1,12 @@
-<h1 mat-dialog-title>Service</h1>
+<mat-toolbar color="primary" class="mat-elevation-z4">
+  <mat-toolbar-row>
+    <span>Service</span>
+    <span fxLayoutAlign="space-between center"></span>
+    <button mat-icon-button>
+      <mat-icon>close</mat-icon>
+    </button>
+  </mat-toolbar-row>
+</mat-toolbar>
 <form [formGroup]="form" (ngSubmit)="onSubmit()" autocomplete="off">
   <div mat-dialog-content>
     <div fxLayout="row wrap" class="mt-3">
@@ -112,37 +120,31 @@
         </button>
       </div>
 
-      <!-- Validated Options -->
-<!--      <div fxFlex="100" class="px-2 mt-3">-->
-<!--        <mat-form-field appearance="outline" class="w-100">-->
-<!--          <mat-label>Validated Options</mat-label>-->
-<!--          <mat-select formControlName="validatedOptions" multiple>-->
-<!--            @for (option of validatedOptions; track option) {-->
-<!--              <mat-option [value]="option">-->
-<!--                {{ option.name }} - ({{ option.price }})-->
-<!--              </mat-option>-->
-<!--            }-->
-<!--          </mat-select>-->
-<!--        </mat-form-field>-->
-<!--      </div>-->
+      <mat-chip-listbox multiple class="w-100">
+        @for (option of validatedOptions; track option; let i = $index) {
+          <mat-chip-option
+            (click)="toggleSelection(i)"
+            [value]="option"
+            [selected]="option.isSelected">
+            <div fxLayout="row" fxLayoutAlign="space-between center" class="w-100">
+              <span>{{ option.name }} - ({{ option.price }})</span>
+              <button mat-icon-button (click)="removeValidatedOption(i)">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          </mat-chip-option>
+        }
+      </mat-chip-listbox>
 
-      <div *ngFor="let item of validatedOptions; let i = index"
-           class="mat-mdc-button selected-item"
-           [class.active]="item.isSelected"
-           (click)="toggleSelection(i)">
-        {{ item.name }} - ({{ item.price }})
-        <button mat-icon-button>
-          <mat-icon (click)="removeValidatedOption(i)">close</mat-icon>
-        </button>
+    </div>
+  </div>
+  <mat-toolbar align="end">
+    <mat-dialog-actions>
+      <div fxLayout="row" fxLayoutAlign="space-between center" class="w-100 p-3">
+        <button mat-raised-button color="warn" type="button" mat-dialog-close>Close</button>
+        <!--      <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Save</button>-->
+        <button mat-raised-button color="primary" type="submit" [disabled]="isSaveDisabled">Save</button>
       </div>
-
-    </div>
-  </div>
-  <div mat-dialog-actions>
-    <div fxLayout="row" fxLayoutAlign="space-between center" class="w-100 p-3">
-      <button mat-raised-button color="warn" type="button" mat-dialog-close>Close</button>
-<!--      <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Save</button>-->
-      <button mat-raised-button color="primary" type="submit" [disabled]="isSaveDisabled">Save</button>
-    </div>
-  </div>
+    </mat-dialog-actions>
+  </mat-toolbar>
 </form>

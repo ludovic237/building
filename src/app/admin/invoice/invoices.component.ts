@@ -51,7 +51,7 @@ export class InvoicesComponent implements OnInit {
     this.invoices = [
       {
         id: 1,
-        locataireId: 1,
+        tenantId: 1,
         type: 'eau',
         mois: 'January',
         montant: 100,
@@ -60,7 +60,7 @@ export class InvoicesComponent implements OnInit {
       },
       {
         id: 2,
-        locataireId: 2,
+        tenantId: 2,
         type: 'électricité',
         mois: 'February',
         montant: 200,
@@ -113,8 +113,8 @@ export class InvoicesComponent implements OnInit {
     });
   }
 
-  getTenantName(locataireId: number): string {
-    const tenant = this.locataires.find(l => l.id === locataireId);
+  getTenantName(tenantId: number): string {
+    const tenant = this.locataires.find(l => l.id === tenantId);
     return tenant ? tenant.name : 'Unknown';
   }
 }

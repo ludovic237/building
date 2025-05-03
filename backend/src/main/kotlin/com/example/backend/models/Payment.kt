@@ -3,7 +3,7 @@ package com.example.backend.models
 import jakarta.persistence.*
 import org.hibernate.annotations.ColumnDefault
 import java.math.BigDecimal
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "payments")
@@ -19,7 +19,7 @@ class Payment {
 
   @ColumnDefault("(curdate())")
   @Column(name = "payment_date")
-  var paymentDate: LocalDate? = null
+  var paymentDate: LocalDateTime? = null
 
   @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
   var totalAmount: BigDecimal? = null

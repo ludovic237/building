@@ -4,7 +4,7 @@ package com.example.backend.repositories
   import com.example.backend.models.Tenant
   import org.springframework.data.jpa.repository.JpaRepository
   import java.math.BigDecimal
-  import java.time.LocalDate
+  import java.time.LocalDateTime
 
   interface RentRepository : JpaRepository<Rent, Long> {
 
@@ -18,7 +18,7 @@ package com.example.backend.repositories
       fun findByAmountGreaterThanEqual(amount: BigDecimal): List<Rent>
 
       // Find rents by payment date
-      fun findByPaymentDate(paymentDate: LocalDate): List<Rent>
+      fun findByPaymentDate(paymentDate: LocalDateTime): List<Rent>
 
       // Find rents by status
       fun findByStatus(status: String): List<Rent>

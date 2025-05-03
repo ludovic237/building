@@ -98,4 +98,18 @@ class AuditLogAspect(
     auditLogService.saveLog(userActionLog)
   }
 
+/*  fun interpretAuditLogs(auditLogs: List<AuditLog>): List<Pair<AuditLog, String>> {
+      return auditLogs.map { auditLog ->
+          val actionType = when {
+              auditLog.result == null -> "Unknown"
+              auditLog.result is List<*> -> {
+                  if ((auditLog.result as List<*>).isEmpty()) "Deletion" else "Update"
+              }
+              auditLog.result is Map<*, *> -> "Modification"
+              else -> "Creation"
+          }
+          auditLog to actionType
+      }
+  }*/
+
 }

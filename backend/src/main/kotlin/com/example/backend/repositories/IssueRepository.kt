@@ -3,7 +3,7 @@ package com.example.backend.repositories
 import com.example.backend.models.Issue
 import com.example.backend.models.Tenant
 import org.springframework.data.jpa.repository.JpaRepository
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 interface IssueRepository : JpaRepository<Issue, Long> {
 
@@ -17,12 +17,12 @@ interface IssueRepository : JpaRepository<Issue, Long> {
   fun findByStatus(status: String): List<Issue>
 
   // Find issues declared on a specific date
-  fun findByDeclarationDate(declarationDate: LocalDate): List<Issue>
+  fun findByDeclarationDate(declarationDate: LocalDateTime): List<Issue>
 
   // Find issues declared after a specific date
-  fun findByDeclarationDateAfter(date: LocalDate): List<Issue>
+  fun findByDeclarationDateAfter(date: LocalDateTime): List<Issue>
 
   // Find issues declared before a specific date
-  fun findByDeclarationDateBefore(date: LocalDate): List<Issue>
+  fun findByDeclarationDateBefore(date: LocalDateTime): List<Issue>
 
 }

@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
 import java.math.BigDecimal
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 @RestController
 @RequestMapping("/api/housing-units")
@@ -75,8 +75,8 @@ class HoustingUnitController(
       var remainingAmount: BigDecimal = 0.0.toBigDecimal()
       var outstandingDebt: BigDecimal = 0.0.toBigDecimal()
       var amountPaid: BigDecimal = 0.0.toBigDecimal()
-      var leaseStartDate: LocalDate? = null
-      var leaseEndDate: LocalDate? = null
+      var leaseStartDate: LocalDateTime? = null
+      var leaseEndDate: LocalDateTime? = null
       var billingMode: String? = null
       var totalPayments: Int? = null
       var completedPayments: Int? = null
@@ -85,7 +85,7 @@ class HoustingUnitController(
 
       if (isOccupied) {
         val moveOutDate = tenant!!.moveOutDate
-        val currentDate = LocalDate.now()
+        val currentDate = LocalDateTime.now()
 
         leaseStatus = if (moveOutDate == null || moveOutDate.isAfter(currentDate)) {
           "Active"

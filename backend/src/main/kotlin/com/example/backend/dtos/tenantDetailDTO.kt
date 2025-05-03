@@ -1,7 +1,7 @@
 package com.example.backend.dtos
 
 import java.math.BigDecimal
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 data class TenantDetailsDTO(
   val tenantId: Long,

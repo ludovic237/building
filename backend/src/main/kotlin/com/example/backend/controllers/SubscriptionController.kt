@@ -86,5 +86,29 @@ class SubscriptionController(
     return ResponseEntity.ok(data)
   }
 
+  @CrossOrigin(origins = ["http://localhost:4200"])
+  @PreAuthorize("isAuthenticated()")
+  @PostMapping("/add-subscription")
+  fun saveSubscription(@RequestBody subscriptionRequest: Map<String, Any>): ResponseEntity<Subscription> {
+      val tenantId = (subscriptionRequest["tenantId"] as Number).toLong()
+      val serviceId = (subscriptionRequest["serviceId"] as Number).toLong()
+      val dateDebut = subscriptionRequest["dateDebut"] as String
+      val dateFin = subscriptionRequest["dateFin"] as String
+      val status = subscriptionRequest["status"] as String
+      val options = subscriptionRequest["options"] as List<Map<String, Any>>
+
+      val subscription = subscriptionService.createSubscriptionWithDetails(
+          tenantId, serviceId, dateDebut, dateFin, status, options
+      )
+      return ResponseEntity.ok(subscription)
+  }
+
+  @CrossOrigin(origins = ["http://localhost:4200"])
+  @PreAuthorize("isAuthenticated()")
+  @GetMapping("/{id}/get-subscription")
+  fun getSubscriptionFormattedData(@PathVariable id: Long): ResponseEntity<Map<String, Any?>> {
+      val formattedData = subscriptionService.getSubscriptionWithDetails(id)
+      return ResponseEntity.ok(formattedData)
+  }
 
 }

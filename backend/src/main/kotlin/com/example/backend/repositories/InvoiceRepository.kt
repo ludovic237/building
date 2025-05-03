@@ -4,7 +4,7 @@ import com.example.backend.models.Invoice
 import com.example.backend.models.Tenant
 import org.springframework.data.jpa.repository.JpaRepository
 import java.math.BigDecimal
-import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.*
 
 interface InvoiceRepository : JpaRepository<Invoice, Long> {
@@ -25,7 +25,7 @@ interface InvoiceRepository : JpaRepository<Invoice, Long> {
     fun findByAmountGreaterThanEqual(amount: BigDecimal): List<Invoice>
 
     // Find invoices by payment date
-    fun findByPaymentDate(paymentDate: LocalDate): List<Invoice>
+    fun findByPaymentDate(paymentDate: LocalDateTime): List<Invoice>
 
     // Check if an invoice exists by tenant and month/year
     fun existsByTenantAndMonthAndYear(tenant: Tenant, month: Int, year: Int): Boolean

@@ -9,7 +9,7 @@ import com.example.backend.repositories.BillingCycleRepository
 import com.example.backend.repositories.PaymentLineRepository
 import com.example.backend.repositories.PaymentRepository
 import org.springframework.stereotype.Service
-import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.*
 
 @Service
@@ -92,8 +92,8 @@ class BillingCycleService(
     status: String?,
     tenantId: Long?,
     username: String?,
-    startDate: LocalDate?,
-    endDate: LocalDate?,
+    startDate: LocalDateTime?,
+    endDate: LocalDateTime?,
     userFirstName: String?,
     userLastName: String?
   ): List<BillingCycleDetailsView> {

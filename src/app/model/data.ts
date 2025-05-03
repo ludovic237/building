@@ -47,7 +47,7 @@ export class HoustingUnit {
 export class Rent {
   id: number;
   housingUnitId: number;
-  locataireId: number;
+  tenantId: number;
   mois: number;
   annee: number;
   montant: number;
@@ -57,7 +57,7 @@ export class Rent {
 
 export class Invoice {
   id: number;
-  locataireId: number;
+  tenantId: number;
   type: 'eau' | 'électricité' | 'gaz' | 'autre';
   mois: number;
   montant: number;
@@ -67,7 +67,7 @@ export class Invoice {
 
 export class Issue {
   id: number;
-  locataireId: number;
+  tenantId: number;
   titre: string;
   description: string;
   dateDeclaration: Date;
@@ -83,7 +83,7 @@ export class Service {
 
 export class Subscription {
   id: number;
-  locataireId?: number;
+  tenantId?: number;
   utilisateurId?: number;
   serviceId: number;
   dateDebut: Date;

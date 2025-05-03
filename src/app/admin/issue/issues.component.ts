@@ -49,7 +49,7 @@ export class IssuesComponent implements OnInit {
     this.issues = [
       {
         id: 1,
-        locataireId: 1,
+        tenantId: 1,
         titre: 'Water Leak',
         description: 'There is a water leak in the kitchen.',
         dateDeclaration: '2023-10-01',
@@ -57,7 +57,7 @@ export class IssuesComponent implements OnInit {
       },
       {
         id: 2,
-        locataireId: 2,
+        tenantId: 2,
         titre: 'Broken Heater',
         description: 'The heater is not working.',
         dateDeclaration: '2023-10-05',
@@ -105,8 +105,8 @@ export class IssuesComponent implements OnInit {
     });
   }
 
-  getTenantName(locataireId: number): string {
-    const tenant = this.locataires.find(l => l.id === locataireId);
+  getTenantName(tenantId: number): string {
+    const tenant = this.locataires.find(l => l.id === tenantId);
     return tenant ? tenant.name : 'Unknown';
   }
 }

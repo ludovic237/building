@@ -12,6 +12,7 @@ interface ServiceOptionRepository : JpaRepository<ServiceOption, Long> {
   fun findByName(name: String): Optional<ServiceOption>
   // Find services by name
   fun findByService(services: Services): List<ServiceOption>
+  fun findByServiceIn(service: MutableCollection<Services>): List<ServiceOption>
 
   // Check if a services exists by name
   fun existsByName(name: String): Boolean

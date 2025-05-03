@@ -7,13 +7,13 @@
                 <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
                   <mat-form-field appearance="outline" class="w-100">
                     <mat-label>Tenant</mat-label>
-                    <mat-select formControlName="locataireId" required>
+                    <mat-select formControlName="tenantId" required>
                       <mat-option [value]="">-</mat-option>
                       @for (locataire of locataires;track $index){
                         <mat-option [value]="locataire.id">{{ locataire.name }}</mat-option>
                       }
                     </mat-select>
-                    @if (form.controls.locataireId.errors?.required) {
+                    @if (form.controls.tenantId.errors?.required) {
                       <mat-error>Tenant is required</mat-error>
                     }
                   </mat-form-field>

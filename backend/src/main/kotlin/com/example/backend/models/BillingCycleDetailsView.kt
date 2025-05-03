@@ -3,7 +3,7 @@ package com.example.backend.models
 import jakarta.persistence.*
 import org.hibernate.annotations.Immutable
 import java.math.BigDecimal
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 /**
  * Mapping for DB view
@@ -20,10 +20,10 @@ class BillingCycleDetailsView protected constructor() {
   var billingCycleId: Long? = null
 
   @Column(name = "start_date", nullable = false)
-  var startDate: LocalDate? = null
+  var startDate: LocalDateTime? = null
 
   @Column(name = "end_date", nullable = false)
-  var endDate: LocalDate? = null
+  var endDate: LocalDateTime? = null
 
   @Column(name = "amount_due", precision = 10, scale = 2)
   var amountDue: BigDecimal? = null
@@ -39,10 +39,10 @@ class BillingCycleDetailsView protected constructor() {
   var subscriptionTenantId: Long? = null
 
   @Column(name = "subscription_start_date")
-  var subscriptionStartDate: LocalDate? = null
+  var subscriptionStartDate: LocalDateTime? = null
 
   @Column(name = "subscription_end_date")
-  var subscriptionEndDate: LocalDate? = null
+  var subscriptionEndDate: LocalDateTime? = null
 
   @Column(name = "service_id")
   var serviceId: Long? = null
@@ -83,7 +83,7 @@ class BillingCycleDetailsView protected constructor() {
   var paymentTotalAmount: BigDecimal? = null
 
   @Column(name = "payment_date")
-  var paymentDate: LocalDate? = null
+  var paymentDate: LocalDateTime? = null
 
   @Column(name = "payment_line_amount_paid", precision = 10, scale = 2)
   var paymentLineAmountPaid: BigDecimal? = null

@@ -10,7 +10,7 @@ import com.example.backend.services.UserService
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 @RestController
 @RequestMapping("/api/admin/billing-cycle")
@@ -42,8 +42,8 @@ class BillingCycleController(
     @RequestParam(required = false) status: String?,
     @RequestParam(required = false) tenantId: Long?,
     @RequestParam(required = false) username: String?,
-    @RequestParam(required = false) startDate: LocalDate?,
-    @RequestParam(required = false) endDate: LocalDate?,
+    @RequestParam(required = false) startDate: LocalDateTime?,
+    @RequestParam(required = false) endDate: LocalDateTime?,
     @RequestParam(required = false) userFirstName: String?,
     @RequestParam(required = false) userLastName: String?
   ): ResponseEntity<List<BillingCycleDetailsView>> {

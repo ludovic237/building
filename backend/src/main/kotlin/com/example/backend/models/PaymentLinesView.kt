@@ -7,7 +7,7 @@ import jakarta.persistence.Lob
 import jakarta.persistence.Table
 import org.hibernate.annotations.Immutable
 import java.math.BigDecimal
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 /**
  * Mapping for DB view
@@ -36,16 +36,16 @@ class PaymentLinesView protected constructor() {
   var paymentTotalAmount: BigDecimal? = null
 
   @Column(name = "payment_date")
-  var paymentDate: LocalDate? = null
+  var paymentDate: LocalDateTime? = null
 
   @Column(name = "tenant_id")
   var tenantId: Long? = null
 
   @Column(name = "tenant_move_in_date")
-  var tenantMoveInDate: LocalDate? = null
+  var tenantMoveInDate: LocalDateTime? = null
 
   @Column(name = "tenant_move_out_date")
-  var tenantMoveOutDate: LocalDate? = null
+  var tenantMoveOutDate: LocalDateTime? = null
 
   @Column(name = "tenant_security_deposit", precision = 10, scale = 2)
   var tenantSecurityDeposit: BigDecimal? = null

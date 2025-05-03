@@ -4,7 +4,7 @@ import com.example.backend.models.Subscription
 import com.example.backend.models.Tenant
 import com.example.backend.models.User
 import org.springframework.data.jpa.repository.JpaRepository
-import java.time.LocalDate
+import java.time.LocalDateTime
 
 interface SubscriptionRepository : JpaRepository<Subscription, Long> {
 
@@ -14,12 +14,12 @@ interface SubscriptionRepository : JpaRepository<Subscription, Long> {
   fun findByTenant(tenant: Tenant): List<Subscription>
 
   // Find subscriptions by start date
-  fun findByStartDate(startDate: LocalDate): List<Subscription>
+  fun findByStartDate(startDate: LocalDateTime): List<Subscription>
 
   // Find subscriptions by end date
-  fun findByEndDate(endDate: LocalDate): List<Subscription>
+  fun findByEndDate(endDate: LocalDateTime): List<Subscription>
 
   // Find active subscriptions (end date is null or in the future)
-  fun findByEndDateIsNullOrEndDateAfter(date: LocalDate): List<Subscription>
+  fun findByEndDateIsNullOrEndDateAfter(date: LocalDateTime): List<Subscription>
 
 }

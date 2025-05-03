@@ -6,7 +6,7 @@ import com.example.backend.repositories.*
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
-import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
@@ -104,7 +104,7 @@ class TenantService(
 
     // Check if the deposited amount equals the housing unit price
     rent.status = if (tenantCreate.securityDeposit == housingUnit.price) "Complete" else "Pending"
-    rent.paymentDate = Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate() // No payment yet
+    rent.paymentDate = Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() // No payment yet
 
     // Save the Rent
     rentRepository.save(rent)
@@ -151,7 +151,7 @@ class TenantService(
 
     var tenantPrice: BigDecimal = 0.0.toBigDecimal()
 
-    var currentEndDate: LocalDate? = null;
+    var currentEndDate: LocalDateTime? = null;
     for (i in 1..tenantData.numberOfSubscription) {
       currentEndDate = when (service.billingMode!!.lowercase()) {
         "monthly" -> currentStartDate.plusMonths(1)
@@ -220,7 +220,7 @@ class TenantService(
     payment.tenant = tenant
     payment.totalAmount = depositAmount
     payment.paymentMethod = paymentMode
-    payment.paymentDate = Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+    payment.paymentDate = Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
     return paymentRepository.save(payment)
   }
 
