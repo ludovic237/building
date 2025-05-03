@@ -86,9 +86,9 @@ export class SubscriptionDialogComponent implements OnInit {
     if (this.data.id) {
       this.title = "Subscription detail"
 
-      // Object.keys(this.form.controls).forEach(controlName => {
-      //   this.form.get(controlName)?.disable();
-      // });
+      Object.keys(this.form.controls).forEach(controlName => {
+        this.form.get(controlName)?.disable();
+      });
 
       // Object.keys(this.form.controls).forEach(controlName => {
       //   const control = this.form.get(controlName);

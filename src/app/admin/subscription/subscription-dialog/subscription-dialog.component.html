@@ -35,7 +35,7 @@
           <mat-label>Service</mat-label>
           <mat-select formControlName="serviceId"
                       (selectionChange)="onServiceChange($event.value)" required
-                      [disabled]="!isReadonly">
+                      [disabled]="isReadonly">
             @for (services of services; track $index) {
               <mat-option [value]="services.id">
                 {{ services.name }}
@@ -95,9 +95,11 @@
               <mat-chip-option *ngFor="let option of addedOptions" [selected]="true">
                 <!--                         (removed)="removeOption(option)">-->
                 {{ option.name }} - {{ option.quantity }} ({{ option.price | currency }})
-                <button mat-icon-button matChipRemove (click)="removeOption(option)">
-                  <mat-icon>cancel</mat-icon>
-                </button>
+                @if (!isReadonly) {
+                  <button mat-icon-button matChipRemove (click)="removeOption(option)">
+                    <mat-icon>cancel</mat-icon>
+                  </button>
+                }
               </mat-chip-option>
             </mat-chip-listbox>
           </mat-card-content>
