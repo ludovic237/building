@@ -82,6 +82,7 @@ create table if not exists subscriptions
   price      decimal(10, 2) null,
   start_date datetime           not null,
   end_date   datetime           null,
+  subscript_number   int           null,
   status     tinytext       not null
 
 );
@@ -162,9 +163,9 @@ CREATE TABLE audit_logs
   user_id     BIGINT        NULL,
   action      VARCHAR(50)   NULL,
   method_name VARCHAR(255)  NULL,
-  arguments   TEXT,
+  arguments   longtext,
   result      LONGTEXT,
-  exception   TEXT,
+  exception   longtext,
   timestamp   DATETIME     DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -340,3 +341,47 @@ FROM payments p
      subscriptions s ON bc.subscription_id = s.id
        LEFT JOIN
      services srv ON s.service_id = srv.id;
+
+
+CREATE DEFINER = root@localhost VIEW payments_simple_view AS
+SELECT *
+FROM (
+         SELECT ROW_NUMBER() OVER (PARTITION BY p.id ORDER BY p.payment_date DESC) AS row_num,
+                p.id                 AS id,
+                p.id                 AS payment_id,
+                p.payment_method     AS payment_method,
+                p.total_amount       AS payment_total_amount,
+                p.payment_date       AS payment_date,
+                pl.id                AS payment_line_id,
+                pl.amount_paid,
+                t.id                 AS tenant_id,
+                t.move_in_date       AS tenant_move_in_date,
+                t.move_out_date      AS tenant_move_out_date,
+                t.security_deposit   AS tenant_security_deposit,
+                us.id                AS user_id,
+                us.first_name        AS user_first_name,
+                us.last_name         AS user_last_name,
+                us.username          AS user_username,
+                hu.number            AS housing_unit_number,
+                hu.type              AS housing_unit_type,
+                bc.id                AS billing_cycle_id,
+                bc.amount_due        AS billing_cycle_amount_due,
+                bc.status            AS billing_cycle_status,
+                s.id                 AS subscription_id,
+                s.status             AS subscription_status,
+                srv.id               AS service_id,
+                srv.code             AS service_code,
+                srv.name             AS service_name,
+                srv.description      AS service_description,
+                srv.billing_mode     AS service_billing_mode,
+                srv.is_active        AS service_is_active
+         FROM payments p
+                  LEFT JOIN payment_lines pl ON pl.payment_id = p.id
+                  LEFT JOIN tenants t ON p.tenant_id = t.id
+                  LEFT JOIN users us ON t.user_id = us.id
+                  LEFT JOIN housting_units hu ON t.housing_unit_id = hu.id
+                  LEFT JOIN billing_cycles bc ON pl.billing_cycle_id = bc.id
+                  LEFT JOIN subscriptions s ON bc.subscription_id = s.id
+                  LEFT JOIN services srv ON s.service_id = srv.id
+     ) subquery
+WHERE row_num = 1;

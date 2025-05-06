@@ -25,6 +25,8 @@ class PaymentLineService(
         subscriptionStatus =payment.subscriptionStatus,
         billingCycleStatus =payment.billingCycleStatus,
         serviceBillingMode =payment.serviceBillingMode,
+        tenantName = "${payment.userLastName} ${payment.userLastName}",
+        serviceName = payment.serviceName
       )
     }
   }

@@ -19,8 +19,8 @@ class PaymentController(
   @CrossOrigin(origins = ["http://localhost:4200"])
   @PreAuthorize("isAuthenticated()")
   @GetMapping
-  fun getAllPayments(): ResponseEntity<List<PaymentDTO>> {
-    val payments: List<PaymentDTO> = paymentService!!.getAllPayments()
+  fun getAllPayments(): ResponseEntity<List<Map<String, Any?>>> {
+    val payments: List<Map<String, Any?>> = paymentService!!.getAllPayments()
     return ResponseEntity.ok(payments)
   }
 

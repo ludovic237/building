@@ -108,20 +108,18 @@ class SubscriptionService(
         // Calculate the remaining amount to be paid
         val billingCycles = billingCycleRepository.findBySubscriptionId(subscription.id!!)
 
-        var billingCycleIds = billingCycles.filter { it.status == "Due" || it.status == "Partial Paid" }.map { it.id }
+        val billingCycleIds = billingCycles.map { it.id }
         println("Billing Cycle IDs: $billingCycleIds")
-        var totalAmountPaid = paymentLineRepository.findAllByBillingCycleIdIn(billingCycleIds)
+        val totalAmountPaid = paymentLineRepository.findAllByBillingCycleIdIn(billingCycleIds)
           .sumOf { it.amountPaid ?: BigDecimal.ZERO }
         println("Total Amount Paid: $totalAmountPaid")
-        var remainingAmount = billingCycles
-          .filter { it.status == "Due" || it.status == "Partial Paid" }
-          .sumOf { it.amountDue ?: BigDecimal.ZERO }
-        println("Remaining Amount: $remainingAmount")
-        remainingAmount = remainingAmount - totalAmountPaid
+
+        val totalAmountSubscription =
+          (subscription.subscriptNumber ?: 0).toBigDecimal() * (subscription.price ?: BigDecimal.ZERO)
+        val remainingAmount = totalAmountSubscription - totalAmountPaid
 
         // Calculate the number of unpaid cycles
-        val remainingCycles = billingCycles
-          .count { it.status == "Due" }
+        val remainingCycles = subscription.subscriptNumber!! - billingCycles.size
 
         // Build the result map
         mapOf(
@@ -143,7 +141,7 @@ class SubscriptionService(
     subscriptionId: Long,
     paymentAmount: BigDecimal
   ): Map<String, Any?> {
-    var paymentAmount = paymentAmount
+    var remainingAmount = paymentAmount
 
     // Retrieve tenant and subscription
     val tenant = tenantRepository.findById(tenantId)
@@ -152,14 +150,10 @@ class SubscriptionService(
     val subscription = subscriptionRepository.findById(subscriptionId)
       .orElseThrow { IllegalArgumentException("Subscription not found with ID $subscriptionId") }
 
-    // Fetch unpaid billing cycles for the subscription, sorted by period_start
-    val unpaidBillingCycles = billingCycleRepository.findBySubscriptionId(subscriptionId)
-      .filter { it.status == "Due" || it.status == "Partial Paid" }
-      .sortedBy { it.periodStart }
+    val service = subscription.service
+      ?: throw IllegalArgumentException("Service not found for subscription ID $subscriptionId")
 
-    if (unpaidBillingCycles.isEmpty()) {
-      throw IllegalArgumentException("No unpaid billing cycles found for subscription ID $subscriptionId")
-    }
+    val billingPrice = subscription.price ?: BigDecimal.ZERO
 
     // Create a new payment record
     val payment = paymentRepository.save(
@@ -171,39 +165,70 @@ class SubscriptionService(
       }
     )
 
-    // Distribute the payment amount to unpaid billing cycles
-    for (billingCycle in unpaidBillingCycles) {
-      if (paymentAmount <= BigDecimal.ZERO) break
+    // Handle Partial Paid billing cycles
+    val partialPaidCycles = billingCycleRepository.findBySubscription(subscription)
+      .filter { it.status == "Partial Paid" }
 
-      // Retrieve or create a payment line for the billing cycle
-      val paymentLine = paymentLineRepository.findByBillingCycleId(billingCycle.id!!) ?: PaymentLine()
+    partialPaidCycles.forEach { billingCycle ->
+      val remainingDue =
+        (billingCycle.amountDue ?: BigDecimal.ZERO) - paymentLineRepository.findByBillingCycle(billingCycle)
+          .sumOf { it.amountPaid ?: BigDecimal.ZERO }
 
-      // Calculate the amount already paid and the remaining amount to pay
-      val alreadyPaid = paymentLine.amountPaid ?: BigDecimal.ZERO
-      val amountToPay = billingCycle.amountDue!! - alreadyPaid
+      val amountToPay = remainingAmount.min(remainingDue)
+      paymentLineRepository.save(
+        PaymentLine().apply {
+          this.payment = payment
+          this.billingCycle = billingCycle
+          this.amountPaid = amountToPay
+        }
+      )
 
-      // Determine the amount to pay for this cycle
-      val paid = paymentAmount.min(amountToPay)
-      paymentAmount -= paid
-
-      // Update the billing cycle status
-      billingCycle.status = when {
-        paid == amountToPay -> "Paid"
-        paid > BigDecimal.ZERO -> "Partial Paid"
-        else -> billingCycle.status
+      if (amountToPay == remainingDue) {
+        billingCycle.status = "Paid"
+        billingCycleRepository.save(billingCycle)
       }
 
-      billingCycleRepository.save(billingCycle)
-
-      // Update or create the payment line
-      paymentLine.apply {
-        this.payment = if (billingCycle.status == "Due") null else payment
-        this.billingCycle = billingCycle
-        this.amountPaid = alreadyPaid + paid
-      }
-
-      paymentLineRepository.save(paymentLine)
+      remainingAmount -= amountToPay
+      if (remainingAmount <= BigDecimal.ZERO) return@forEach
     }
+
+    // Generate new billing cycles and payment lines
+    val billingCycles = mutableListOf<BillingCycle>()
+    val lastBillingCycle = billingCycleRepository.findBySubscription(subscription)
+      .maxByOrNull { it.periodEnd!! }
+
+    var currentStartDate = lastBillingCycle?.periodEnd?.plusDays(1) ?: subscription.startDate
+
+    while (remainingAmount > BigDecimal.ZERO) {
+      val currentEndDate = when (service.billingMode!!.lowercase()) {
+        "monthly" -> currentStartDate?.plusMonths(1)
+        "yearly" -> currentStartDate?.plusYears(1)
+        else -> throw IllegalArgumentException("Unsupported billing mode")
+      }
+
+      val amountToPay = remainingAmount.min(billingPrice)
+      val billingCycle = BillingCycle().apply {
+        this.periodStart = currentStartDate
+        this.periodEnd = currentEndDate
+        this.amountDue = billingPrice
+        this.subscription = subscription
+        this.status = if (amountToPay == billingPrice) "Paid" else "Partial Paid"
+      }
+      billingCycleRepository.save(billingCycle)
+      billingCycles.add(billingCycle)
+
+      paymentLineRepository.save(
+        PaymentLine().apply {
+          this.payment = payment
+          this.billingCycle = billingCycle
+          this.amountPaid = amountToPay
+        }
+      )
+
+      remainingAmount -= amountToPay
+      currentStartDate = currentEndDate
+    }
+
     return mapOf(
       "message" to "Payment processed successfully",
       "paymentId" to payment.id,

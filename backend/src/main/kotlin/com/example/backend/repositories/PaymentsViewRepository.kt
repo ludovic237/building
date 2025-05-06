@@ -56,4 +56,11 @@ interface PaymentsViewRepository : JpaRepository<PaymentsView, Long> {
     @Param("userFirstName") userFirstName: String?,
     @Param("userLastName") userLastName: String?
   ): List<PaymentsView>
+
+  @Query("""
+      SELECT p FROM PaymentsView p
+      WHERE p.subscriptionId IS NOT NULL
+      GROUP BY p.subscriptionId
+  """)
+  fun findUniqueBySubscriptionId(): List<PaymentsView>
 }

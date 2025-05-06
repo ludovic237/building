@@ -6,7 +6,6 @@ import com.example.backend.repositories.*
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
-import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
@@ -53,7 +52,7 @@ class TenantService(
       TenantDTO(
         id = tenant.id,
         userId = tenant.user?.id,
-        paymentStatus = subscription[0].status,
+        paymentStatus = "",
         housingUnitId = tenant.housingUnit?.id,
         userName = tenant.user?.firstName + " " + tenant.user?.lastName,
         userEmail = tenant.user?.email,
@@ -114,46 +113,50 @@ class TenantService(
 
   fun createTenantNew(tenantData: TenantCreateDataDTO): Tenant {
     tenantData.startDate = tenantData.startDate.plusDays(1)
-    var service = serviceRepository.findById(tenantData.serviceId)
-      .orElseThrow { IllegalArgumentException("Services not found with ID: ${tenantData.serviceId}") }
-
+    val service = serviceRepository.findById(tenantData.serviceId)
+      .orElseThrow { IllegalArgumentException("Service not found with ID: ${tenantData.serviceId}") }
 
     // Step 1: Create Tenant
     var tenant = Tenant()
     tenant.housingUnit = housingUnitRepository.findById(tenantData.housingUnitId).get()
     tenant.user = userRepository.findById(tenantData.userId).get()
     tenant.moveInDate = tenantData.startDate
-    tenant.moveOutDate = tenantData.endDate
     tenant.securityDeposit = tenantData.securityDeposit
     tenant = tenantRepository.save(tenant)
 
-    var houstingUnit = housingUnitRepository.findById(tenantData.housingUnitId)
+    val housingUnit = housingUnitRepository.findById(tenantData.housingUnitId)
       .orElseThrow { IllegalArgumentException("Housing Unit not found with ID: ${tenantData.housingUnitId}") }
-    houstingUnit.tenant = tenant
-    houstingUnit = housingUnitRepository.save(houstingUnit)
+    housingUnit.tenant = tenant
+    housingUnitRepository.save(housingUnit)
 
-    // Step : Create Subscription
+    // Step 2: Create Subscription
     val subscription = Subscription()
-    subscription.service = serviceRepository.findById(tenantData.serviceId).get()
-    subscription.price = tenantData.securityDeposit
+    subscription.service = service
+    subscription.price = tenantData.logementBasePrice
     subscription.startDate = tenantData.startDate
-    subscription.endDate = tenantData.endDate
     subscription.tenant = tenant
+    subscription.subscriptNumber = tenantData.numberOfSubscription
     subscription.status = "Active"
     subscriptionRepository.save(subscription)
 
-    // Step 2: Create Billing Cycles
+    // Step 3: Calculate billing cycles
+    val logementBasePrice = tenantData.logementBasePrice
+    val totalCycles = tenantData.securityDeposit / logementBasePrice
+    val fullCycles = totalCycles.toInt()
+    val partialCycleAmount = tenantData.securityDeposit % logementBasePrice
     val billingCycles = mutableListOf<BillingCycle>()
+
     var currentStartDate = tenantData.startDate
-
     var remainingDeposit = tenantData.securityDeposit
-    var totalAmount = tenantData.logementBasePrice * tenantData.numberOfSubscription.toBigDecimal()
 
-    var tenantPrice: BigDecimal = 0.0.toBigDecimal()
+    val payment = createPayment(
+      tenant = tenant,
+      depositAmount = tenantData.securityDeposit,
+      paymentMode = tenantData.paymentMode
+    )
 
-    var currentEndDate: LocalDateTime? = null;
-    for (i in 1..tenantData.numberOfSubscription) {
-      currentEndDate = when (service.billingMode!!.lowercase()) {
+    for (i in 1..fullCycles) {
+      val currentEndDate = when (service.billingMode!!.lowercase()) {
         "monthly" -> currentStartDate.plusMonths(1)
         "yearly" -> currentStartDate.plusYears(1)
         else -> throw IllegalArgumentException("Unsupported billing mode")
@@ -162,54 +165,64 @@ class TenantService(
       val billingCycle = BillingCycle()
       billingCycle.periodStart = currentStartDate
       billingCycle.periodEnd = currentEndDate
-      billingCycle.amountDue = tenantData.logementBasePrice
+      billingCycle.amountDue = logementBasePrice
       billingCycle.subscription = subscription
-
-      tenantPrice = tenantPrice + tenantData.logementBasePrice
-      // Determine the status based on the remaining deposit
-      if (remainingDeposit >= tenantPrice) {
-        billingCycle.status = "Paid"
-      } else {
-        billingCycle.status = "Due"
-      }
-
+      billingCycle.status = "Paid"
       billingCycleRepository.save(billingCycle)
-
-      if (remainingDeposit >= tenantPrice) {
-        val payment = createPayment(
-          tenant = tenant,
-          depositAmount = tenantData.logementBasePrice,
-          paymentMode = tenantData.paymentMode
-        )
-        createPaymentLine(
-          paymentId = payment.id!!,
-          billingCycleId = billingCycle.id!!,
-          remainingAmount = tenantData.logementBasePrice
-        )
-      } else {
-        createPaymentLine(
-          paymentId = null,
-          billingCycleId = billingCycle.id!!,
-          remainingAmount = 0.toBigDecimal()
-        )
-      }
-
       billingCycles.add(billingCycle)
 
-      // Increment start date for the next cycle
-      currentStartDate = currentEndDate.plusDays(1)
+      // Create PaymentLine
 
-      currentStartDate = when (service.billingMode!!.lowercase()) {
-        "monthly" -> currentEndDate.plusDays(1)
-        "yearly" -> currentEndDate.plusDays(1)
-        else -> throw IllegalArgumentException("Unsupported billing mode")
-      }
+      createPaymentLine(
+        paymentId = payment.id!!,
+        billingCycleId = billingCycle.id!!,
+        remainingAmount = logementBasePrice
+      )
+
+      // Update remaining deposit and start date
+      remainingDeposit -= logementBasePrice
+      currentStartDate = currentEndDate
     }
 
-    tenant.moveOutDate = currentEndDate
-    tenant = tenantRepository.save(tenant)
+    // Handle partial cycle
+    if (partialCycleAmount > BigDecimal.ZERO) {
+      val currentEndDate = when (service.billingMode!!.lowercase()) {
+        "monthly" -> currentStartDate.plusMonths(1)
+        "yearly" -> currentStartDate.plusYears(1)
+        else -> throw IllegalArgumentException("Unsupported billing mode")
+      }
 
-    subscription.endDate = currentEndDate
+      val billingCycle = BillingCycle()
+      billingCycle.periodStart = currentStartDate
+      billingCycle.periodEnd = currentEndDate
+      billingCycle.amountDue = logementBasePrice
+      billingCycle.subscription = subscription
+
+      // Set status to "Partial Paid" for partial payment
+      billingCycle.status = "Partial Paid"
+      billingCycleRepository.save(billingCycle)
+      billingCycles.add(billingCycle)
+
+      // Create PaymentLine for partial cycle
+      createPaymentLine(
+        paymentId = payment.id!!,
+        billingCycleId = billingCycle.id!!,
+        remainingAmount = partialCycleAmount
+      )
+    }
+
+    // Update tenant and subscription end date
+
+    val totalSubscriptions = subscription.subscriptNumber ?: 0
+    val calculatedEndDate = when (service.billingMode!!.lowercase()) {
+      "monthly" -> subscription.startDate?.plusMonths(totalSubscriptions.toLong())
+      "yearly" -> subscription.startDate?.plusYears(totalSubscriptions.toLong())
+      else -> throw IllegalArgumentException("Unsupported billing mode")
+    }
+
+    subscription.endDate = calculatedEndDate
+    tenant.moveOutDate = calculatedEndDate
+    tenant = tenantRepository.save(tenant)
     subscriptionRepository.save(subscription)
 
     return tenant
@@ -366,6 +379,12 @@ class TenantService(
         )
       }
 
+      val totalSubscriptions = subscription.subscriptNumber ?: 0
+      val completedSubscriptions = billingCycleRepository.findBySubscription(subscription)
+        .count { it.status == "Paid" }
+      val remainingSubscriptions = totalSubscriptions - completedSubscriptions
+      val remainingAmount = BigDecimal(remainingSubscriptions) * (subscription.price ?: BigDecimal.ZERO)
+
       mapOf(
         "id" to subscription.id,
         "serviceName" to subscription.service?.name,
@@ -373,7 +392,10 @@ class TenantService(
         "startDate" to subscription.startDate,
         "endDate" to subscription.endDate,
         "status" to subscription.status,
-        "options" to subscribedOptions
+        "options" to subscribedOptions,
+        "totalSubscriptions" to totalSubscriptions,
+        "remainingSubscriptions" to remainingSubscriptions,
+        "remainingAmount" to remainingAmount
       )
     }
 
@@ -391,6 +413,34 @@ class TenantService(
       )
     }
 
+    val paymentsData = paymentRepository.findByTenantId(tenantId)
+    val paymentLines = paymentLineRepository.findAllByPaymentIn(paymentsData)
+    val totalAlreadyPaid = paymentLines.sumOf { it.amountPaid ?: BigDecimal.ZERO }
+
+    val subscriptionsData = subscriptionRepository.findByTenant(tenantRepository.findByIdOrNull(tenantId)!!)
+    val totalSubscription =
+      subscriptionsData.sumOf { BigDecimal(it.subscriptNumber ?: 0) * (it.price ?: BigDecimal.ZERO) }
+
+    val totalRemaining = totalSubscription - totalAlreadyPaid
+
+    val totalPayments = subscriptionsData.sumOf { it.subscriptNumber ?: 0 }
+
+    val completedPayments = paymentLines.count { it.billingCycle?.status == "Paid" }
+    val partialPayments = paymentLines.count { it.billingCycle?.status == "Partial Paid" }
+    val donePayments = completedPayments + partialPayments
+    val remainingPayments = totalPayments - completedPayments
+
+    val paymentSummary = mapOf(
+      "totalPaid" to totalAlreadyPaid,
+      "totalDue" to totalSubscription,
+      "totalRemaining" to totalRemaining,
+      "totalPayments" to totalPayments,
+      "donePayments" to donePayments,
+      "completedPayments" to completedPayments,
+      "partialPayments" to partialPayments,
+      "remainingPayments" to remainingPayments
+    )
+
     val billingCycles = subscriptionsSimple.flatMap { subscription ->
       val subscriptionEntity = subscription // Explicitly cast to Subscription
       billingCycleRepository.findBySubscription(subscriptionEntity).orEmpty().map { cycle ->
@@ -405,7 +455,6 @@ class TenantService(
         )
       }
     }
-
 
     val financialSummary = mapOf(
       "totalPayments" to billingCycles.size,
@@ -442,30 +491,30 @@ class TenantService(
       "accountStatus" to if (tenant.user?.isActive == true) "Active" else "Inactive"
     )
 
-val subscribedServices = subscriptionRepository.findByTenant(tenant).map { it.service?.id }
-val subscribedOptions = subscriptionRepository.findByTenant(tenant)
-    .flatMap { subscription -> subscriptionOptionRepository.findBySubscription(subscription) }
-    .map { it.option?.id }
+    val subscribedServices = subscriptionRepository.findByTenant(tenant).map { it.service?.id }
+    val subscribedOptions = subscriptionRepository.findByTenant(tenant)
+      .flatMap { subscription -> subscriptionOptionRepository.findBySubscription(subscription) }
+      .map { it.option?.id }
 
-val services = serviceRepository.findAll().map { service ->
-    val serviceOptions = serviceOptionRepository.findByService(service).map { option ->
+    val services = serviceRepository.findAll().map { service ->
+      val serviceOptions = serviceOptionRepository.findByService(service).map { option ->
         mapOf(
-            "id" to option.id,
-            "name" to option.name,
-            "price" to option.price,
-            "isSubscribed" to (option.id in subscribedOptions)
+          "id" to option.id,
+          "name" to option.name,
+          "price" to option.price,
+          "isSubscribed" to (option.id in subscribedOptions)
         )
-    }
+      }
 
-    mapOf(
+      mapOf(
         "id" to service.id,
         "name" to service.name,
         "price" to service.billingMode,
         "billingMode" to service.billingMode,
         "isSubscribed" to (service.id in subscribedServices),
         "options" to serviceOptions
-    )
-}
+      )
+    }
 
     return mapOf(
       "tenant" to mapOf(
@@ -492,6 +541,7 @@ val services = serviceRepository.findAll().map { service ->
       "subscriptions" to subscriptions,
       "payments" to payments,
       "billingCycles" to billingCycles,
+      "paymentSummary" to paymentSummary,
       "financialSummary" to financialSummary,
       "issues" to issues,
       "invoices" to invoices,

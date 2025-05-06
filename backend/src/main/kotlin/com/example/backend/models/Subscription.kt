@@ -32,4 +32,8 @@ class Subscription {
   @Lob
   @Column(name = "status", nullable = false)
   var status: String? = null
+
+  @Lob
+  @Column(name = "subscript_number", nullable = false)
+  var subscriptNumber: Int? = null
 }

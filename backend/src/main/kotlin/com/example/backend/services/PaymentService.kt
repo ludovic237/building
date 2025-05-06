@@ -15,9 +15,25 @@ class PaymentService(
   private val paymentLineRepository: PaymentLineRepository,
   private val paymentRepository: PaymentRepository,
   private val paymentsViewRepository: PaymentsViewRepository,
+  private val paymentsSimpleViewRepository: PaymentsSimpleViewRepository,
 ) {
 
-  fun getAllPayments(): List<PaymentDTO> {
+  fun getAllPayments(): List<Map<String, Any?>> {
+    return paymentsSimpleViewRepository.findAll().map { payment ->
+      mapOf(
+        "paymentId" to payment.paymentId,
+        "amountPaid" to payment.paymentTotalAmount,
+        "paymentDate" to payment.paymentDate,
+        "paymentMethod" to payment.paymentMethod,
+        "billingCycleStatus" to payment.billingCycleStatus,
+        "serviceName" to payment.serviceName,
+        "serviceDescription" to payment.serviceDescription,
+        "tenantName" to "${payment.userFirstName} ${payment.userLastName}"
+      )
+    }
+  }
+
+  fun getAllPaymentByPaymentLine(): List<PaymentDTO> {
     return paymentsViewRepository.findAll().map { payment ->
       println("Payment: ${payment.toString()}")
       PaymentDTO(
