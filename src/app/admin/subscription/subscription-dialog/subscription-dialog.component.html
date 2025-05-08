@@ -92,11 +92,10 @@
           </mat-card-header>
           <mat-card-content>
             <mat-chip-listbox multiple>
-              <mat-chip-option *ngFor="let option of addedOptions" [selected]="true">
-                <!--                         (removed)="removeOption(option)">-->
+              <mat-chip-option *ngFor="let option of addedOptions" [selected]="true" [disabled]="data?.id">
                 {{ option.name }} - {{ option.quantity }} ({{ option.price | currency }})
                 @if (!isReadonly) {
-                  <button mat-icon-button matChipRemove (click)="removeOption(option)">
+                  <button mat-icon-button matChipRemove (click)="removeOption(option)" *ngIf="!data?.id">
                     <mat-icon>cancel</mat-icon>
                   </button>
                 }

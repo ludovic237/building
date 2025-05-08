@@ -65,7 +65,7 @@ export class HoustingUnitDialogComponent implements OnInit {
   public onSubmit(): void {
     if (this.form.valid) {
       const houtsingUnit = this.form.value;
-      if (this.data.id) {
+      if (this.data?.id) {
         console.log("housingUnit");
         console.log(houtsingUnit);
         this.housingUnitService.updatehousingUnit(this.data.id,houtsingUnit).subscribe({

@@ -6,7 +6,7 @@ import { Observable, of } from 'rxjs';
   providedIn: 'root'
 })
 export class PaymentService {
-  private apiUrl = 'http://localhost:8080/api/admin/payments';
+  private apiUrl = '/api/admin/payments';
 
   constructor(private http: HttpClient) {}
 
@@ -22,7 +22,7 @@ export class PaymentService {
   }
 
   getPaymentById(id: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/${id}`,{headers: this.getHeaders()});
+    return this.http.get<any>(`${this.apiUrl}/${id}/payment_info`,{headers: this.getHeaders()});
   }
 
   createPayment(payment: any): Observable<any> {

@@ -13,6 +13,7 @@ import {CommonModule} from "@angular/common";
 import {Subscription} from "../../model/data";
 import {PaymentService} from "@services/payment.service";
 import {PaymentDialogComponent} from "./payment-dialog/payment-dialog.component";
+import {PaymentInfoDialogComponent} from "./payment-info-info-dialog/payment-info-dialog.component";
 
 @Component({
     selector: 'app-payments',
@@ -66,6 +67,40 @@ export class PaymentsComponent implements OnInit {
         locataires: this.locataires,
         services: this.services
       },
+      panelClass: ['theme-dialog'],
+      autoFocus: false
+    });
+
+    dialogRef.afterClosed().subscribe((result: any) => {
+      console.log("payment");
+      const payment = {
+        id: result.id || this.payments.length + 1, // Génère un nouvel ID si non défini
+        tenantId: result.tenantId,
+        serviceId: result.serviceId,
+        dateDebut: new Date(result.dateDebut).toISOString().split('T')[0], // Convert to YYYY-MM-DD
+        dateFin: new Date(result.dateFin).toISOString().split('T')[0],     // Convert to YYYY-MM-DD
+        status: result.status
+      };
+      console.log(payment);
+
+      if (payment) {
+        const index = this.payments.findIndex(s => s.id === payment.id);
+        if (index !== -1) {
+          this.payments[index] = payment; // Update existing payment
+        } else {
+          payment.id = this.payments.length + 1; // Assign new ID
+          this.payments.push(payment); // Add new payment
+        }
+      }
+      console.log("new this.payments");
+      console.log(this.payments);
+    });
+
+  }
+
+  public openPaymentInfoDialog(data: any): void {
+    const dialogRef = this.dialog.open(PaymentInfoDialogComponent, {
+      data: data,
       panelClass: ['theme-dialog'],
       autoFocus: false
     });

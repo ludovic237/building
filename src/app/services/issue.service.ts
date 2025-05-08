@@ -7,7 +7,7 @@ import { Injectable } from '@angular/core';
       providedIn: 'root'
     })
     export class IssueService {
-      private apiUrl = 'http://localhost:8080/api/issues';
+      private apiUrl = '/api/issues';
 
       private token = localStorage.getItem('token');
 
@@ -16,22 +16,22 @@ import { Injectable } from '@angular/core';
       getIssues(): Observable<Issue[]> {
         // return this.http.get<Issue[]>(this.apiUrl);
         const mockData: Issue[] = [
-          {
-            id: 1,
-            tenantId: 101,
-            titre: 'Plumbing Issue',
-            price: 'Leaking pipe in the kitchen',
-            dateDeclaration: new Date('2023-01-10'),
-            status: 'ouvert'
-          },
-          {
-            id: 2,
-            tenantId: 102,
-            titre: 'Electrical Issue',
-            price: 'Power outage in the living room',
-            dateDeclaration: new Date('2023-02-05'),
-            status: 'en cours'
-          }
+          // {
+          //   id: 1,
+          //   tenantId: 101,
+          //   titre: 'Plumbing Issue',
+          //   price: 'Leaking pipe in the kitchen',
+          //   dateDeclaration: new Date('2023-01-10'),
+          //   status: 'ouvert'
+          // },
+          // {
+          //   id: 2,
+          //   tenantId: 102,
+          //   titre: 'Electrical Issue',
+          //   price: 'Power outage in the living room',
+          //   dateDeclaration: new Date('2023-02-05'),
+          //   status: 'en cours'
+          // }
         ];
         return of(mockData);
       }

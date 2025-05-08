@@ -7,7 +7,7 @@ import { Subscription } from '../model/data';
   providedIn: 'root'
 })
 export class SubscriptionService {
-  private apiUrl = 'http://localhost:8080/api/subscriptions';
+  private apiUrl = '/api/subscriptions';
 
   constructor(private http: HttpClient) {}
 

@@ -83,7 +83,7 @@ export class SubscriptionDialogComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if (this.data.id) {
+    if (this.data?.id) {
       this.title = "Subscription detail"
 
       Object.keys(this.form.controls).forEach(controlName => {

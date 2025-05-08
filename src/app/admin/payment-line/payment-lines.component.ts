@@ -37,7 +37,7 @@ export class PaymentLinesComponent implements OnInit {
   public locataires: any[] = [];
   public services: any[] = [];
   public page: number = 1;
-  public count: number = 5;
+  public count: number = 0;
 
   constructor(public dialog: MatDialog,
               public paymentLineService:PaymentLineService) {}
@@ -51,6 +51,7 @@ export class PaymentLinesComponent implements OnInit {
     this.paymentLineService.getPaymentLines().subscribe({
       next: (data) => {
         this.payments = data;
+        this.count = data.length;
         console.log('Get payment:', data);
       },
       error: (err) => {
