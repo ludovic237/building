@@ -18,9 +18,16 @@ export class DashboardService {
     });
   }
 
-  getDashboards(): Observable<any[]> {
-    return this.http.get<any[]>(this.apiUrl+'/info', {headers: this.getHeaders()});
-  }
+getDashboards(startDate?: string, endDate?: string): Observable<any[]> {
+  const params: any = {};
+  if (startDate) params.startDate = startDate;
+  if (endDate) params.endDate = endDate;
+
+  return this.http.get<any[]>(this.apiUrl + '/info', {
+    headers: this.getHeaders(),
+    params: params
+  });
+}
 
 
 }

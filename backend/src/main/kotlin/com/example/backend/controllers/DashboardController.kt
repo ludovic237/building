@@ -26,12 +26,14 @@ class DashboardController(
     return ResponseEntity.ok(dashboardData);
   }
 
-  @GetMapping("/info")
-  fun getAdminDashboardData(
+@GetMapping("/info")
+fun getAdminDashboardData(
     @RequestParam(required = false) startDate: LocalDateTime?,
     @RequestParam(required = false) endDate: LocalDateTime?
-  ): Map<String, Any> {
-    return dashboardService!!.getAdminDashboardData(startDate, endDate)
-  }
+): Map<String, Any> {
+    val defaultStartDate = startDate ?: LocalDateTime.now().minusMonths(1) // Par exemple, 1 mois avant aujourd'hui
+    val defaultEndDate = endDate ?: LocalDateTime.now() // Aujourd'hui comme date de fin par défaut
+    return dashboardService!!.getAdminDashboardData(defaultStartDate, defaultEndDate)
+}
 
 }
