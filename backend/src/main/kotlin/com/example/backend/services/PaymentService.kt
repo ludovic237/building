@@ -48,6 +48,21 @@ class PaymentService(
     }
   }
 
+  fun getPaymentByPaymentId(paymentId: Long): List<PaymentDTO> {
+    return paymentsViewRepository.findByPaymentId(paymentId).map { payment ->
+      println("Payment: ${payment.toString()}")
+      PaymentDTO(
+        id = payment.paymentId,
+        amountPaid = payment.amountPaid,
+        paymentDate = payment.paymentDate,
+        serviceName = payment.serviceName,
+        serviceDescription = payment.serviceDescription,
+        paymentMethod = payment.paymentMethod,
+        billingCycleStatus = payment.billingCycleStatus,
+      )
+    }
+  }
+
 /*fun getAllPaymentsSimple(): List<Map<String, Any?>> {
     return paymentRepository.findAll().map { payment ->
       var pa

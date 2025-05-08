@@ -3,6 +3,9 @@ package com.example.backend.repositories
     import com.example.backend.models.Payment
     import com.example.backend.models.Tenant
     import org.springframework.data.jpa.repository.JpaRepository
+    import org.springframework.data.jpa.repository.Query
+    import java.math.BigDecimal
+    import java.time.LocalDateTime
     import java.util.*
 
     interface PaymentRepository : JpaRepository<Payment, Long> {
@@ -23,4 +26,7 @@ package com.example.backend.repositories
 
       /*  // Find a payment by its ID
         fun findById(paymentId: Long): Optional<Payment>*/
+
+        @Query("SELECT SUM(p.totalAmount) FROM Payment p WHERE p.paymentDate BETWEEN :startDate AND :endDate")
+        fun findTotalPaymentsBetweenDates(startDate: LocalDateTime?, endDate: LocalDateTime?): BigDecimal?
     }

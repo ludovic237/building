@@ -16,6 +16,10 @@ interface PaymentsViewRepository : JpaRepository<PaymentsView, Long> {
   // Find by payment method
   fun findByPaymentMethod(paymentMethod: String): List<PaymentsView>
 
+
+  // Find by payment method
+  fun findByPaymentId(paymentId: Long): List<PaymentsView>
+
   // Find by tenant ID
   fun findByTenantId(tenantId: Long): List<PaymentsView>
 

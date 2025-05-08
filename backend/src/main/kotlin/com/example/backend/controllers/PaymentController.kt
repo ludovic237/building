@@ -33,4 +33,12 @@ class PaymentController(
   }
 
 
+  @CrossOrigin(origins = ["http://localhost:4200"])
+  @PreAuthorize("isAuthenticated()")
+  @GetMapping("/{id}/payment_info")
+  fun getPaymentByPaymentId(@PathVariable id: Long): ResponseEntity<List<PaymentDTO>> {
+    val formattedData = paymentService!!.getPaymentByPaymentId(id)
+    return ResponseEntity.ok(formattedData)
+  }
+
 }

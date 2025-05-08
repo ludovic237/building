@@ -4,6 +4,7 @@ import com.example.backend.models.Subscription
 import com.example.backend.models.Tenant
 import com.example.backend.models.User
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Query
 import java.time.LocalDateTime
 
 interface SubscriptionRepository : JpaRepository<Subscription, Long> {
@@ -21,5 +22,14 @@ interface SubscriptionRepository : JpaRepository<Subscription, Long> {
 
   // Find active subscriptions (end date is null or in the future)
   fun findByEndDateIsNullOrEndDateAfter(date: LocalDateTime): List<Subscription>
+
+  @Query("SELECT COUNT(s) FROM Subscription s WHERE s.status = 'Active' AND s.startDate BETWEEN :startDate AND :endDate")
+  fun countActiveSubscriptionsBetweenDates(startDate: LocalDateTime?, endDate: LocalDateTime?): Int
+
+  @Query("SELECT COUNT(s) FROM Subscription s WHERE s.status = 'Expired' AND s.endDate BETWEEN :startDate AND :endDate")
+  fun countExpiredSubscriptionsBetweenDates(startDate: LocalDateTime?, endDate: LocalDateTime?): Int
+
+  @Query("SELECT COUNT(s) FROM Subscription s WHERE s.status = 'Canceled' AND s.endDate BETWEEN :startDate AND :endDate")
+  fun countCanceledSubscriptionsBetweenDates(startDate: LocalDateTime?, endDate: LocalDateTime?): Int
 
 }

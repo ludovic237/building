@@ -2,14 +2,21 @@ package com.example.backend.services
 
 import com.example.backend.dtos.DashboardDTO
 import com.example.backend.models.User
-import com.example.backend.repositories.UserRepository
+import com.example.backend.repositories.*
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
+import java.time.LocalDateTime
 import java.util.*
 
 @Service
 class DashboardService(
-  private val userRepository: UserRepository
+  private val userRepository: UserRepository,
+  private val housingUnitRepository: HoustingUnitRepository,
+  private val paymentRepository: PaymentRepository,
+  private val subscriptionRepository: SubscriptionRepository,
+  private val billingCycleRepository: BillingCycleRepository,
+  private val issueRepository: IssueRepository,
+  private val tenantRepository: TenantRepository
 ) {
 
   fun getDashboardData(): DashboardDTO {
@@ -55,4 +62,104 @@ class DashboardService(
     }
     userRepository.deleteById(id)
   }
+
+
+fun getAdminDashboardData(startDate: LocalDateTime?, endDate: LocalDateTime?): Map<String, Any> {
+  // Paiements
+  val totalPayments = paymentRepository.findTotalPaymentsBetweenDates(startDate, endDate) ?: BigDecimal.ZERO
+
+  val overduePayments = billingCycleRepository.findTotalOverduePaymentsBetweenDates(startDate, endDate) ?: BigDecimal.ZERO
+
+  val pendingPayments = billingCycleRepository.findTotalPendingPaymentsBetweenDates(startDate, endDate) ?: BigDecimal.ZERO
+
+  // Abonnements
+  val activeSubscriptions = subscriptionRepository.countActiveSubscriptionsBetweenDates(startDate, endDate)
+
+  val expiredSubscriptions = subscriptionRepository.countExpiredSubscriptionsBetweenDates(startDate, endDate)
+
+  val canceledSubscriptions = subscriptionRepository.countCanceledSubscriptionsBetweenDates(startDate, endDate)
+
+  // Cycles de facturation
+  val paidBillingCycles = billingCycleRepository.countPaidBillingCyclesBetweenDates(startDate, endDate)
+
+  val partiallyPaidBillingCycles = billingCycleRepository.countPartiallyPaidBillingCyclesBetweenDates(startDate, endDate)
+
+  val overdueBillingCycles = billingCycleRepository.countOverdueBillingCyclesBetweenDates(startDate, endDate)
+
+  // Problèmes signalés
+  val openIssues = issueRepository.countOpenIssuesBetweenDates(startDate, endDate)
+
+  val resolvedIssues = issueRepository.countResolvedIssuesBetweenDates(startDate, endDate)
+
+  val pendingIssues = issueRepository.countPendingIssuesBetweenDates(startDate, endDate)
+
+  // Locataires
+  val activeTenants = tenantRepository.countActiveTenantsBetweenDates(startDate, endDate)
+
+  val inactiveTenants = tenantRepository.countInactiveTenantsBetweenDates(startDate, endDate)
+
+  // Résumé financier
+  val totalRevenue = totalPayments
+
+  var housingUnitStatistics = getHousingUnitStatistics()
+
+  return mapOf(
+    "housingUnitStatistics" to housingUnitStatistics,
+    "payments" to mapOf(
+      "totalPayments" to totalPayments,
+      "overduePayments" to overduePayments,
+      "pendingPayments" to pendingPayments
+    ),
+    "subscriptions" to mapOf(
+      "activeSubscriptions" to activeSubscriptions,
+      "expiredSubscriptions" to expiredSubscriptions,
+      "canceledSubscriptions" to canceledSubscriptions
+    ),
+    "billingCycles" to mapOf(
+      "paidBillingCycles" to paidBillingCycles,
+      "partiallyPaidBillingCycles" to partiallyPaidBillingCycles,
+      "overdueBillingCycles" to overdueBillingCycles
+    ),
+    "issues" to mapOf(
+      "openIssues" to openIssues,
+      "resolvedIssues" to resolvedIssues,
+      "pendingIssues" to pendingIssues
+    ),
+    "tenants" to mapOf(
+      "activeTenants" to activeTenants,
+      "inactiveTenants" to inactiveTenants
+    ),
+    "financialSummary" to mapOf(
+      "totalRevenue" to totalRevenue
+    )
+  )
+}
+
+  fun getHousingUnitStatistics(): Map<String, Any> {
+      val totalHousingUnits = housingUnitRepository.count()
+      val occupiedHousingUnits = housingUnitRepository.findAll().count { it.tenant != null }
+      val activeLeases = housingUnitRepository.findAll().count {
+          it.tenant?.moveOutDate == null || it.tenant?.moveOutDate?.isAfter(LocalDateTime.now()) == true
+      }
+      val housingUnitsWithDebt = housingUnitRepository.findAll().count { housingUnit ->
+          val tenant = housingUnit.tenant
+          tenant != null && tenantRepository.findById(tenant.id!!).get().let { t ->
+              val subscriptions = subscriptionRepository.findByTenant(t)
+              val totalDue = subscriptions.sumOf { sub ->
+                  val billingCycles = billingCycleRepository.findBySubscription(sub)
+                  billingCycles.sumOf { it.amountDue ?: BigDecimal.ZERO }
+              }
+              val totalPaid = paymentRepository.findByTenant(t).sumOf { it.totalAmount ?: BigDecimal.ZERO }
+              totalPaid < totalDue
+          }
+      }
+
+      return mapOf(
+          "totalHousingUnits" to totalHousingUnits,
+          "occupiedHousingUnits" to occupiedHousingUnits,
+          "activeLeases" to activeLeases,
+          "housingUnitsWithDebt" to housingUnitsWithDebt
+      )
+  }
+
 }

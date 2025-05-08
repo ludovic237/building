@@ -1,9 +1,8 @@
 package com.example.backend.controllers
 
-import com.example.backend.models.BillingCycle
 import com.example.backend.models.HoustingUnit
-import com.example.backend.models.Subscription
 import com.example.backend.repositories.BillingCycleRepository
+import com.example.backend.repositories.PaymentLineRepository
 import com.example.backend.repositories.SubscriptionRepository
 import com.example.backend.services.HoustingUnitService
 import com.example.backend.services.SubscriptionService
@@ -20,6 +19,7 @@ class HoustingUnitController(
   private val subscriptionService: SubscriptionService,
   private val subscriptionRepository: SubscriptionRepository,
   private val billingCycleRepository: BillingCycleRepository,
+  private val paymentLineRepository: PaymentLineRepository,
 ) {
 
   @CrossOrigin(origins = ["http://localhost:4200"])
@@ -96,24 +96,37 @@ class HoustingUnitController(
         val subscriptions = subscriptionRepository.findByTenant(tenant!!).orEmpty()
           .filter { subscription -> subscription.service?.name == "loyer" }
 
+        var total = subscriptions.sumOf { it.price!!*it.subscriptNumber!!.toBigDecimal() }
+
         val billingCycles = subscriptions.flatMap { subscription ->
           billingCycleRepository.findBySubscription(subscription).orEmpty()
         }
 
         val unpaidBillingCycles = billingCycles.filter { billingCycle -> billingCycle.status != "Paid" }
-        val paidBillingCycles = billingCycles.filter { billingCycle -> billingCycle.status == "Paid" }
+        val paidBillingCyclesCompleted = billingCycles.filter { billingCycle ->
+          billingCycle.status == "Paid"
+        }
+        val paidBillingCyclesPartial = billingCycles.filter { billingCycle ->
+          billingCycle.status == "Partial Paid"
+        }
 
         totalPayments = billingCycles.size
-        completedPayments = paidBillingCycles.size
+        completedPayments = paidBillingCyclesCompleted.size
         remainingPayments = totalPayments - completedPayments
 
-        amountPaid = paidBillingCycles.sumOf { it.amountDue ?: BigDecimal.ZERO }
+        val paidBillingCyclesCompletedIds = paidBillingCyclesCompleted.map { it.id }
+        val paidBillingCyclesPartialIds = paidBillingCyclesPartial.map { it.id }
+
+        amountPaid =
+          paymentLineRepository.findAllByBillingCycleIdIn(paidBillingCyclesCompletedIds + paidBillingCyclesPartialIds)
+            .sumOf { it.amountPaid ?: BigDecimal.ZERO }
+//        amountPaid = paidBillingCycles.sumOf { it.amountDue ?: BigDecimal.ZERO }
         leaseStartDate = tenant.moveInDate
         leaseEndDate = tenant.moveOutDate
         billingMode = subscriptions.firstOrNull()?.service?.billingMode
 
         if (leaseStatus == "Active") {
-          remainingAmount = unpaidBillingCycles.sumOf { it.amountDue ?: BigDecimal.ZERO }
+          remainingAmount = total-amountPaid
           outstandingDebt = 0.0.toBigDecimal()
         } else {
           remainingAmount = 0.0.toBigDecimal()

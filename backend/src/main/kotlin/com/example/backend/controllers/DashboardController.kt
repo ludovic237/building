@@ -7,6 +7,7 @@ import com.example.backend.services.UserService
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
+import java.time.LocalDateTime
 
 @RestController
 @RequestMapping("/api/admin/dashboard")
@@ -23,6 +24,14 @@ class DashboardController(
   fun getDashboardData(): ResponseEntity<DashboardDTO> {
     val dashboardData: DashboardDTO = dashboardService!!.getDashboardData();
     return ResponseEntity.ok(dashboardData);
+  }
+
+  @GetMapping("/info")
+  fun getAdminDashboardData(
+    @RequestParam(required = false) startDate: LocalDateTime?,
+    @RequestParam(required = false) endDate: LocalDateTime?
+  ): Map<String, Any> {
+    return dashboardService!!.getAdminDashboardData(startDate, endDate)
   }
 
 }

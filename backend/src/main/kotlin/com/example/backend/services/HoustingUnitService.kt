@@ -6,7 +6,6 @@ import com.example.backend.repositories.*
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.util.*
-import kotlin.math.log
 
 @Service
 class HoustingUnitService(
@@ -16,7 +15,8 @@ class HoustingUnitService(
   private val issueRepository: IssueRepository,
   private val invoiceRepository: InvoiceRepository,
   private val billingCycleRepository: BillingCycleRepository,
-  private val tenantRepository: TenantRepository
+  private val tenantRepository: TenantRepository,
+  private val paymentLineRepository: PaymentLineRepository
 ) {
 
   fun getAllHoustingUnits(): List<HoustingUnit> {
@@ -79,17 +79,25 @@ class HoustingUnitService(
 
   fun getFinancialInformation(tenant: Tenant): Map<String, Any?> {
     val subscriptions = subscriptionRepository.findByTenant(tenant).orEmpty()
+    var total = subscriptions.sumOf { it.price!! * it.subscriptNumber!!.toBigDecimal() }
     val billingCycles = subscriptions.flatMap { subscription ->
       billingCycleRepository.findBySubscription(subscription).orEmpty()
     }
     val paidBillingCycles = billingCycles.filter { it.status == "Paid" }
     val unpaidBillingCycles = billingCycles.filter { it.status != "Paid" }
 
+    val paidBillingCyclesCompleted = billingCycles.filter { billingCycle ->
+      billingCycle.status == "Paid"
+    }
+    val paidBillingCyclesPartial = billingCycles.filter { billingCycle ->
+      billingCycle.status == "Partial Paid"
+    }
+
     return mapOf(
       "billingCycles" to billingCycles.map { cycle ->
         mapOf(
           "id" to cycle.id,
-          "amountDue" to cycle.amountDue,
+          "amountDue" to paymentLineRepository.findByBillingCycle(cycle).sumOf { it.amountPaid ?: BigDecimal.ZERO },
           "periodStart" to cycle.periodStart,
           "periodEnd" to cycle.periodEnd,
           "status" to cycle.status
@@ -106,7 +114,8 @@ class HoustingUnitService(
         )
       },
       "totalPayments" to billingCycles.size,
-      "completedPayments" to paidBillingCycles.size,
+      "completedPayments" to paidBillingCyclesCompleted.size,
+      "remainingPayments" to unpaidBillingCycles.size,
       "remainingPayments" to unpaidBillingCycles.size,
       "amountPaid" to paidBillingCycles.sumOf { it.amountDue ?: BigDecimal.ZERO },
       "outstandingDebt" to unpaidBillingCycles.sumOf { it.amountDue ?: BigDecimal.ZERO }
@@ -147,45 +156,45 @@ class HoustingUnitService(
     )
   }
 
-fun getHoustingUnitDetailsById(houstingUnitId: Long?, tenantId: String?): Map<String, Any?> {
-  val houstingUnit = houstingUnitRepository.findById(houstingUnitId!!)
-    .orElseThrow { IllegalArgumentException("HoustingUnit with ID $houstingUnitId not found") }
+  fun getHoustingUnitDetailsById(houstingUnitId: Long?, tenantId: String?): Map<String, Any?> {
+    val houstingUnit = houstingUnitRepository.findById(houstingUnitId!!)
+      .orElseThrow { IllegalArgumentException("HoustingUnit with ID $houstingUnitId not found") }
 
-  val tenantIdLong = tenantId?.toLongOrNull() // Safely convert tenantId to Long or null
-  val tenants = tenantRepository.findByHousingUnit(houstingUnit).orEmpty()
+    val tenantIdLong = tenantId?.toLongOrNull() // Safely convert tenantId to Long or null
+    val tenants = tenantRepository.findByHousingUnit(houstingUnit).orEmpty()
 
-  // Exclude the current tenant from the list of previous tenants
-  val previousTenants = tenants.filter { it.id != tenantIdLong }.map { tenant ->
-    mapOf(
-      "tenantInformation" to getTenantInformation(tenant),
-      "financialInformation" to getFinancialInformation(tenant),
-      "issueTracking" to getIssueTracking(tenant),
-      "additionalInformation" to getAdditionalInformation(tenant)
-    )
+    // Exclude the current tenant from the list of previous tenants
+    val previousTenants = tenants.filter { it.id != tenantIdLong }.map { tenant ->
+      mapOf(
+        "tenantInformation" to getTenantInformation(tenant),
+        "financialInformation" to getFinancialInformation(tenant),
+        "issueTracking" to getIssueTracking(tenant),
+        "additionalInformation" to getAdditionalInformation(tenant)
+      )
+    }
+
+    return if (tenantIdLong != null) {
+      val tenant = tenantRepository.findById(tenantIdLong)
+        .orElseThrow { IllegalArgumentException("Tenant with ID $tenantIdLong not found") }
+
+      mapOf(
+        "housingUnitDetails" to getHousingUnitDetails(houstingUnit),
+        "tenantInformation" to getTenantInformation(tenant),
+        "financialInformation" to getFinancialInformation(tenant),
+        "issueTracking" to getIssueTracking(tenant),
+        "additionalInformation" to getAdditionalInformation(tenant),
+        "previousTenants" to previousTenants
+      )
+    } else {
+      mapOf(
+        "housingUnitDetails" to getHousingUnitDetails(houstingUnit),
+        "previousTenants" to previousTenants
+      )
+    }
   }
-
-  return if (tenantIdLong != null) {
-    val tenant = tenantRepository.findById(tenantIdLong)
-      .orElseThrow { IllegalArgumentException("Tenant with ID $tenantIdLong not found") }
-
-    mapOf(
-      "housingUnitDetails" to getHousingUnitDetails(houstingUnit),
-      "tenantInformation" to getTenantInformation(tenant),
-      "financialInformation" to getFinancialInformation(tenant),
-      "issueTracking" to getIssueTracking(tenant),
-      "additionalInformation" to getAdditionalInformation(tenant),
-      "previousTenants" to previousTenants
-    )
-  } else {
-    mapOf(
-      "housingUnitDetails" to getHousingUnitDetails(houstingUnit),
-      "previousTenants" to previousTenants
-    )
-  }
-}
 
   fun getUnoccupiedHoustingUnits(): List<HoustingUnit?> {
-      return houstingUnitRepository.findUnoccupiedHoustingUnits() ?: emptyList()
+    return houstingUnitRepository.findUnoccupiedHoustingUnits() ?: emptyList()
   }
 
 

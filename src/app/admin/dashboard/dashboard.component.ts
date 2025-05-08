@@ -7,6 +7,7 @@ import { AnalyticsComponent } from './analytics/analytics.component';
 import { FlexLayoutModule } from '@ngbracket/ngx-layout';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import {DashboardService} from "@services/dashboard.service";
 
 @Component({
     selector: 'app-dashboard',
@@ -25,4 +26,23 @@ import { MatIconModule } from '@angular/material/icon';
 })
 export class DashboardComponent {
 
+  dashboardData: any;
+
+  constructor(private dashboardService: DashboardService) {}
+
+  ngOnInit(): void {
+    this.fetchDashboardData();
+  }
+
+  private fetchDashboardData(): void {
+    this.dashboardService.getDashboards().subscribe(
+      (data) => {
+        this.dashboardData = data;
+        console.log('Dashboard data:', this.dashboardData);
+      },
+      (error) => {
+        console.error('Error fetching dashboard data:', error);
+      }
+    );
+  }
 }
