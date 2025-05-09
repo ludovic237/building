@@ -40,4 +40,11 @@ interface BillingCycleRepository : JpaRepository<BillingCycle, Long> {
 
   @Query("SELECT COUNT(bc) FROM BillingCycle bc WHERE bc.status = 'Due' AND bc.periodEnd BETWEEN :startDate AND :endDate")
   fun countOverdueBillingCyclesBetweenDates(startDate: LocalDateTime?, endDate: LocalDateTime?): Int
+
+  @Query("""
+      SELECT COALESCE(SUM(pl.amountPaid), 0)
+      FROM PaymentLine pl
+      WHERE pl.billingCycle.id = :billingCycleId
+  """)
+  fun getTotalPaymentsForBillingCycle(billingCycleId: Long): BigDecimal
 }

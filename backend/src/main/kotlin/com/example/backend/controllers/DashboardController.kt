@@ -29,8 +29,10 @@ class DashboardController(
 
 @GetMapping("/info")
 fun getAdminDashboardData(
-    @RequestParam("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") startDate: LocalDateTime,
-    @RequestParam("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") endDate: LocalDateTime
+  @RequestParam(required = false) startDate: LocalDateTime?,
+  @RequestParam(required = false) endDate: LocalDateTime?
+//    @RequestParam("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") startDate: LocalDateTime,
+//    @RequestParam("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") endDate: LocalDateTime
   ): Map<String, Any> {
       val defaultStartDate = startDate
       val defaultEndDate = endDate
