@@ -9,13 +9,33 @@ import java.time.LocalDateTime
 import java.util.Optional
 
 interface TenantRepository : JpaRepository<Tenant, Long> {
-    fun findByUser(user: User): Optional<Tenant>
+  fun findByUser(user: User): Optional<Tenant>
 
-    fun findByHousingUnit(houstingUnit: HoustingUnit): List<Tenant>
+  fun findByHousingUnit(houstingUnit: HoustingUnit): List<Tenant>
 
-    @Query("SELECT COUNT(t) FROM Tenant t WHERE t.moveInDate BETWEEN :startDate AND :endDate AND t.moveOutDate IS NULL")
-    fun countActiveTenantsBetweenDates(startDate: LocalDateTime?, endDate: LocalDateTime?): Int
+  fun findByHousingUnitAndMoveInDateBetween(
+    houstingUnit: HoustingUnit,
+    startDate: LocalDateTime?,
+    endDate: LocalDateTime?
+  ): List<Tenant>
 
-    @Query("SELECT COUNT(t) FROM Tenant t WHERE t.moveOutDate BETWEEN :startDate AND :endDate")
-    fun countInactiveTenantsBetweenDates(startDate: LocalDateTime?, endDate: LocalDateTime?): Int
+  fun findAllByMoveInDateBetween(
+    startDate: LocalDateTime?,
+    endDate: LocalDateTime?
+  ): List<Tenant>
+
+  fun findAllByMoveInDateBetweenOrMoveOutDateBetweenOrMoveInDateLessThanEqualAndMoveOutDateGreaterThanEqual(
+    moveInDate: LocalDateTime?,
+    moveInDate2: LocalDateTime?,
+    moveOutDate: LocalDateTime?,
+    moveOutDate2: LocalDateTime?,
+    moveInDate3: LocalDateTime?,
+    moveOutDate3: LocalDateTime?
+  ): List<Tenant>
+
+  @Query("SELECT COUNT(t) FROM Tenant t WHERE t.moveInDate BETWEEN :startDate AND :endDate AND t.moveOutDate IS NULL")
+  fun countActiveTenantsBetweenDates(startDate: LocalDateTime?, endDate: LocalDateTime?): Int
+
+  @Query("SELECT COUNT(t) FROM Tenant t WHERE t.moveOutDate BETWEEN :startDate AND :endDate")
+  fun countInactiveTenantsBetweenDates(startDate: LocalDateTime?, endDate: LocalDateTime?): Int
 }

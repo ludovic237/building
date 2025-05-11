@@ -1,5 +1,6 @@
 package com.example.backend.repositories
 
+import com.example.backend.models.Payment
 import com.example.backend.models.PaymentsView
 import com.example.backend.models.Subscription
 import org.springframework.data.jpa.repository.JpaRepository
@@ -12,6 +13,7 @@ import java.time.LocalDateTime
 @Repository
 interface PaymentsViewRepository : JpaRepository<PaymentsView, Long> {
 
+  fun findAllByPaymentDateBetween(startDate: LocalDateTime?, endDate: LocalDateTime?):List<PaymentsView>
 
   // Find by payment method
   fun findByPaymentMethod(paymentMethod: String): List<PaymentsView>

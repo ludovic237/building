@@ -30,4 +30,6 @@ interface PaymentRepository : JpaRepository<Payment, Long> {
   @Query("SELECT SUM(p.totalAmount) FROM Payment p WHERE p.paymentDate BETWEEN :startDate AND :endDate")
   fun findTotalPaymentsBetweenDates(startDate: LocalDateTime?, endDate: LocalDateTime?): BigDecimal?
 
+  fun findAllByPaymentDateBetween(startDate: LocalDateTime?, endDate: LocalDateTime?):List<Payment>
+
 }

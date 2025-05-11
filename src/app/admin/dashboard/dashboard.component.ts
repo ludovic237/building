@@ -46,10 +46,17 @@ export class DashboardComponent {
     // const startDate = new Date(now.setHours(0, 0, 0, 0)).toISOString().slice(0, -1); // Remove 'Z'
     // const endDate = new Date(now.setHours(23, 59, 59, 999)).toISOString().slice(0, -1); // Remove 'Z'
 
-    const startDate = new Date(now.setHours(0, 0, 0, 0))
+    // const startDate = new Date(now.setHours(0, 0, 0, 0))
+    //   .toISOString()
+    //   .slice(0, 19); // Format as 'yyyy-MM-ddTHH:mm:ss'
+    // const endDate = new Date(now.setHours(23, 59, 59, 999))
+    //   .toISOString()
+    //   .slice(0, 19); // Format as 'yyyy-MM-ddTHH:mm:ss'
+
+    const startDate = new Date(now.getFullYear(), 0, 1)
       .toISOString()
       .slice(0, 19); // Format as 'yyyy-MM-ddTHH:mm:ss'
-    const endDate = new Date(now.setHours(23, 59, 59, 999))
+    const endDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999)
       .toISOString()
       .slice(0, 19); // Format as 'yyyy-MM-ddTHH:mm:ss'
 
