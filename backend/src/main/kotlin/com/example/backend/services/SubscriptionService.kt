@@ -1,5 +1,7 @@
 package com.example.backend.services
 
+import com.example.backend.constants.PaymentTypeConstants
+import com.example.backend.constants.StatusConstants
 import com.example.backend.dtos.SubscriptionDTO
 import com.example.backend.dtos.SubscriptionDetailsDTO
 import com.example.backend.models.*
@@ -160,7 +162,14 @@ class SubscriptionService(
       Payment().apply {
         this.tenant = tenant
         this.totalAmount = paymentAmount
-        this.paymentMethod = paymentMode
+        this.paymentMethod = when (paymentMode.uppercase()) {
+          PaymentTypeConstants.PAYMENT_METHOD_CASH -> PaymentTypeConstants.PAYMENT_METHOD_CASH
+          PaymentTypeConstants.PAYMENT_METHOD_CREDIT_CARD -> PaymentTypeConstants.PAYMENT_METHOD_CREDIT_CARD
+          PaymentTypeConstants.PAYMENT_METHOD_BANK_TRANSFER -> PaymentTypeConstants.PAYMENT_METHOD_BANK_TRANSFER
+          PaymentTypeConstants.PAYMENT_METHOD_CHECK -> PaymentTypeConstants.PAYMENT_METHOD_CHECK
+          PaymentTypeConstants.PAYMENT_METHOD_MOBILE_PAYMENT -> PaymentTypeConstants.PAYMENT_METHOD_MOBILE_PAYMENT
+          else -> "OTHER"
+        }
         this.paymentDate = LocalDateTime.now()
       }
     )
@@ -184,7 +193,7 @@ class SubscriptionService(
       )
 
       if (amountToPay == remainingDue) {
-        billingCycle.status = "Paid"
+        billingCycle.status = StatusConstants.BILLING_CYCLE_STATUS_PAID
         billingCycleRepository.save(billingCycle)
       }
 
@@ -212,7 +221,7 @@ class SubscriptionService(
         this.periodEnd = currentEndDate
         this.amountDue = billingPrice
         this.subscription = subscription
-        this.status = if (amountToPay == billingPrice) "Paid" else "Partial Paid"
+        this.status = if (amountToPay == billingPrice) StatusConstants.BILLING_CYCLE_STATUS_PAID else StatusConstants.BILLING_CYCLE_STATUS_PARTIAL_PAID
       }
       billingCycleRepository.save(billingCycle)
       billingCycles.add(billingCycle)

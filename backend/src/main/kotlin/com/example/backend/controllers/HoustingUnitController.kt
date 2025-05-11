@@ -1,5 +1,6 @@
 package com.example.backend.controllers
 
+import com.example.backend.constants.StatusConstants
 import com.example.backend.models.HoustingUnit
 import com.example.backend.repositories.BillingCycleRepository
 import com.example.backend.repositories.PaymentLineRepository
@@ -102,12 +103,12 @@ class HoustingUnitController(
           billingCycleRepository.findBySubscription(subscription).orEmpty()
         }
 
-        val unpaidBillingCycles = billingCycles.filter { billingCycle -> billingCycle.status != "Paid" }
+        val unpaidBillingCycles = billingCycles.filter { billingCycle -> billingCycle.status != StatusConstants.BILLING_CYCLE_STATUS_PAID }
         val paidBillingCyclesCompleted = billingCycles.filter { billingCycle ->
-          billingCycle.status == "Paid"
+          billingCycle.status == StatusConstants.BILLING_CYCLE_STATUS_PAID
         }
         val paidBillingCyclesPartial = billingCycles.filter { billingCycle ->
-          billingCycle.status == "Partial Paid"
+          billingCycle.status == StatusConstants.BILLING_CYCLE_STATUS_PARTIAL_PAID
         }
 
         totalPayments = billingCycles.size

@@ -28,6 +28,8 @@ import {DashboardService} from "@services/dashboard.service";
 export class DashboardComponent {
 
   dashboardData: any;
+  startDate: Date | null = null;
+  endDate: Date | null = null;
 
   constructor(private dashboardService: DashboardService) {}
 
@@ -35,7 +37,7 @@ export class DashboardComponent {
     this.fetchDashboardData();
   }
 
-  private fetchDashboardData(): void {
+  fetchDashboardData(): void {
     // const startDate = moment().startOf('day').format('YYYY-MM-DDTHH:mm:ss'); // Start of the day at 00:00
     // const endDate = moment().endOf('day').format('YYYY-MM-DDTHH:mm:ss'); // End of the day at 23:59
 
@@ -53,14 +55,21 @@ export class DashboardComponent {
     //   .toISOString()
     //   .slice(0, 19); // Format as 'yyyy-MM-ddTHH:mm:ss'
 
-    const startDate = new Date(now.getFullYear(), 0, 1)
-      .toISOString()
-      .slice(0, 19); // Format as 'yyyy-MM-ddTHH:mm:ss'
-    const endDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999)
-      .toISOString()
-      .slice(0, 19); // Format as 'yyyy-MM-ddTHH:mm:ss'
+    // const startDate = new Date(now.getFullYear(), 0, 1)
+    //   .toISOString()
+    //   .slice(0, 19); // Format as 'yyyy-MM-ddTHH:mm:ss'
+    // const endDate = new Date(now.getFullYear(), 11, 31, 23, 59, 59, 999)
+    //   .toISOString()
+    //   .slice(0, 19); // Format as 'yyyy-MM-ddTHH:mm:ss'
 
-    this.dashboardService.getDashboards(startDate, endDate).subscribe(
+    const start = this.startDate
+      ? new Date(this.startDate).toISOString().slice(0, 19)
+      : null;
+    const end = this.endDate
+      ? new Date(this.endDate).toISOString().slice(0, 19)
+      : null;
+
+    this.dashboardService.getDashboards(start, end).subscribe(
       (data) => {
         this.dashboardData = data;
         console.log('Dashboard data:', this.dashboardData);

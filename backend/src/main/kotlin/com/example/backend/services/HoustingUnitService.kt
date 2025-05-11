@@ -1,5 +1,6 @@
 package com.example.backend.services
 
+import com.example.backend.constants.StatusConstants
 import com.example.backend.models.HoustingUnit
 import com.example.backend.models.Tenant
 import com.example.backend.repositories.*
@@ -83,14 +84,14 @@ class HoustingUnitService(
     val billingCycles = subscriptions.flatMap { subscription ->
       billingCycleRepository.findBySubscription(subscription).orEmpty()
     }
-    val paidBillingCycles = billingCycles.filter { it.status == "Paid" }
-    val unpaidBillingCycles = billingCycles.filter { it.status != "Paid" }
+    val paidBillingCycles = billingCycles.filter { it.status == StatusConstants.BILLING_CYCLE_STATUS_PAID }
+    val unpaidBillingCycles = billingCycles.filter { it.status != StatusConstants.BILLING_CYCLE_STATUS_PAID }
 
     val paidBillingCyclesCompleted = billingCycles.filter { billingCycle ->
-      billingCycle.status == "Paid"
+      billingCycle.status == StatusConstants.BILLING_CYCLE_STATUS_PAID
     }
     val paidBillingCyclesPartial = billingCycles.filter { billingCycle ->
-      billingCycle.status == "Partial Paid"
+      billingCycle.status == StatusConstants.BILLING_CYCLE_STATUS_PARTIAL_PAID
     }
 
     return mapOf(

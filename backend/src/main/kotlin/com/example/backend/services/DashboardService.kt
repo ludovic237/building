@@ -1,5 +1,6 @@
 package com.example.backend.services
 
+import com.example.backend.constants.StatusConstants
 import com.example.backend.dtos.DashboardDTO
 import com.example.backend.models.HoustingUnit
 import com.example.backend.models.User
@@ -100,8 +101,8 @@ class DashboardService(
       (it.price ?: BigDecimal.ZERO) * (it.subscriptNumber?.toBigDecimal() ?: BigDecimal.ZERO)
     } - totalPayments
 
-    val totalPartialPaidPayments = payments.filter { it.billingCycleStatus == "Partial Paid" }.sumOf { it.amountPaid ?: BigDecimal.ZERO }
-    val totalPaidPayments = payments.filter { it.billingCycleStatus == "Paid" }.sumOf { it.amountPaid ?: BigDecimal.ZERO }
+    val totalPartialPaidPayments = payments.filter { it.billingCycleStatus == StatusConstants.BILLING_CYCLE_STATUS_PARTIAL_PAID }.sumOf { it.amountPaid ?: BigDecimal.ZERO }
+    val totalPaidPayments = payments.filter { it.billingCycleStatus == StatusConstants.BILLING_CYCLE_STATUS_PAID }.sumOf { it.amountPaid ?: BigDecimal.ZERO }
 
     val overduePayments =
       billingCycleRepository.findTotalOverduePaymentsBetweenDates(startDate, endDate) ?: BigDecimal.ZERO
@@ -135,13 +136,6 @@ class DashboardService(
     }
 
     // Tenants
-//    val activeTenants = tenantRepository.countActiveTenantsBetweenDates(startDate, endDate)
-//    val inactiveTenants = tenantRepository.countInactiveTenantsBetweenDates(startDate, endDate)
-
-//    val activeTenants = tenantRepository.findAllByMoveInDateBetween(startDate, endDate).count { it.housingUnit != null }
-//    val inactiveTenants = tenantRepository.findAllByMoveInDateBetween(startDate, endDate).count { it.housingUnit == null }
-
-//    val tenants = tenantRepository.findAllByMoveInDateBetween(startDate, endDate) ?: emptyList()
     val tenants =
       tenantRepository.findAllByMoveInDateBetweenOrMoveOutDateBetweenOrMoveInDateLessThanEqualAndMoveOutDateGreaterThanEqual(
         startDate,

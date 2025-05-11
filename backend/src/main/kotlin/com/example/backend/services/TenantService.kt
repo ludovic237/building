@@ -1,5 +1,7 @@
 package com.example.backend.services
 
+import com.example.backend.constants.PaymentTypeConstants
+import com.example.backend.constants.StatusConstants
 import com.example.backend.dtos.*
 import com.example.backend.models.*
 import com.example.backend.repositories.*
@@ -167,7 +169,7 @@ class TenantService(
       billingCycle.periodEnd = currentEndDate
       billingCycle.amountDue = logementBasePrice
       billingCycle.subscription = subscription
-      billingCycle.status = "Paid"
+      billingCycle.status = StatusConstants.BILLING_CYCLE_STATUS_PAID
       billingCycleRepository.save(billingCycle)
       billingCycles.add(billingCycle)
 
@@ -232,7 +234,14 @@ class TenantService(
     val payment = Payment()
     payment.tenant = tenant
     payment.totalAmount = depositAmount
-    payment.paymentMethod = paymentMode
+    payment.paymentMethod = when (paymentMode.uppercase()) {
+        PaymentTypeConstants.PAYMENT_METHOD_CASH -> PaymentTypeConstants.PAYMENT_METHOD_CASH
+        PaymentTypeConstants.PAYMENT_METHOD_CREDIT_CARD -> PaymentTypeConstants.PAYMENT_METHOD_CREDIT_CARD
+        PaymentTypeConstants.PAYMENT_METHOD_BANK_TRANSFER -> PaymentTypeConstants.PAYMENT_METHOD_BANK_TRANSFER
+        PaymentTypeConstants.PAYMENT_METHOD_CHECK -> PaymentTypeConstants.PAYMENT_METHOD_CHECK
+        PaymentTypeConstants.PAYMENT_METHOD_MOBILE_PAYMENT -> PaymentTypeConstants.PAYMENT_METHOD_MOBILE_PAYMENT
+        else -> "OTHER"
+    }
     payment.paymentDate = Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
     return paymentRepository.save(payment)
   }
@@ -292,8 +301,8 @@ class TenantService(
     val billingCycles = subscriptions.flatMap { subscription ->
       billingCycleRepository.findBySubscription(subscription).orEmpty()
     }
-    val paidBillingCycles = billingCycles.filter { it.status == "Paid" }
-    val unpaidBillingCycles = billingCycles.filter { it.status != "Paid" }
+    val paidBillingCycles = billingCycles.filter { it.status == StatusConstants.BILLING_CYCLE_STATUS_PAID }
+    val unpaidBillingCycles = billingCycles.filter { it.status != StatusConstants.BILLING_CYCLE_STATUS_PAID }
 
     return mapOf(
       "billingCycles" to billingCycles.map { cycle ->
@@ -381,7 +390,7 @@ class TenantService(
 
       val totalSubscriptions = subscription.subscriptNumber ?: 0
       val completedSubscriptions = billingCycleRepository.findBySubscription(subscription)
-        .count { it.status == "Paid" }
+        .count { it.status == StatusConstants.BILLING_CYCLE_STATUS_PAID }
       val remainingSubscriptions = totalSubscriptions - completedSubscriptions
       val remainingAmount = BigDecimal(remainingSubscriptions) * (subscription.price ?: BigDecimal.ZERO)
 
@@ -425,8 +434,8 @@ class TenantService(
 
     val totalPayments = subscriptionsData.sumOf { it.subscriptNumber ?: 0 }
 
-    val completedPayments = paymentLines.count { it.billingCycle?.status == "Paid" }
-    val partialPayments = paymentLines.count { it.billingCycle?.status == "Partial Paid" }
+    val completedPayments = paymentLines.count { it.billingCycle?.status == StatusConstants.BILLING_CYCLE_STATUS_PAID }
+    val partialPayments = paymentLines.count { it.billingCycle?.status == StatusConstants.BILLING_CYCLE_STATUS_PARTIAL_PAID }
     val donePayments = completedPayments + partialPayments
     val remainingPayments = totalPayments - completedPayments
 
@@ -458,10 +467,10 @@ class TenantService(
 
     val financialSummary = mapOf(
       "totalPayments" to billingCycles.size,
-      "completedPayments" to billingCycles.count { it["status"] == "Paid" },
-      "remainingPayments" to billingCycles.count { it["status"] != "Paid" },
-      "amountPaid" to billingCycles.filter { it["status"] == "Paid" }.sumOf { it["amountDue"] as BigDecimal },
-      "outstandingDebt" to billingCycles.filter { it["status"] != "Paid" }.sumOf { it["amountDue"] as BigDecimal }
+      "completedPayments" to billingCycles.count { it["status"] == StatusConstants.BILLING_CYCLE_STATUS_PAID },
+      "remainingPayments" to billingCycles.count { it["status"] != StatusConstants.BILLING_CYCLE_STATUS_PAID },
+      "amountPaid" to billingCycles.filter { it["status"] == StatusConstants.BILLING_CYCLE_STATUS_PAID }.sumOf { it["amountDue"] as BigDecimal },
+      "outstandingDebt" to billingCycles.filter { it["status"] != StatusConstants.BILLING_CYCLE_STATUS_PAID }.sumOf { it["amountDue"] as BigDecimal }
     )
 
     val issues = issueRepository.findByTenant(tenant).map { issue ->
