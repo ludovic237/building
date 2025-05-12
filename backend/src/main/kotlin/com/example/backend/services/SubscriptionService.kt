@@ -69,6 +69,17 @@ class SubscriptionService(
     subscriptionRepository.deleteById(id)
   }
 
+  fun canceledSubscription(id: Long): Subscription {
+    if (!subscriptionRepository.existsById(id)) {
+      throw IllegalArgumentException("Subscription with ID $id not found")
+    }
+    val subscription = subscriptionRepository.findById(id)
+      .orElseThrow { IllegalArgumentException("Subscription with ID $id not found") }
+    subscription.status = StatusConstants.SUBSCRIPTION_STATUS_CANCELED
+    return subscriptionRepository.save(subscription)
+
+  }
+
   fun getSubscriptionDetails(subscriptionId: Long): SubscriptionDetailsDTO {
     val subscription = subscriptionRepository.findById(subscriptionId)
       .orElseThrow { IllegalArgumentException("Subscription with ID $subscriptionId not found") }
@@ -221,7 +232,8 @@ class SubscriptionService(
         this.periodEnd = currentEndDate
         this.amountDue = billingPrice
         this.subscription = subscription
-        this.status = if (amountToPay == billingPrice) StatusConstants.BILLING_CYCLE_STATUS_PAID else StatusConstants.BILLING_CYCLE_STATUS_PARTIAL_PAID
+        this.status =
+          if (amountToPay == billingPrice) StatusConstants.BILLING_CYCLE_STATUS_PAID else StatusConstants.BILLING_CYCLE_STATUS_PARTIAL_PAID
       }
       billingCycleRepository.save(billingCycle)
       billingCycles.add(billingCycle)
@@ -356,6 +368,28 @@ class SubscriptionService(
       }
     )
     return formattedData
+  }
+
+  fun updateSubscriptionStatus(subscriptionId: Long, newStatus: String): Subscription {
+      val subscription = subscriptionRepository.findById(subscriptionId)
+          .orElseThrow { IllegalArgumentException("Subscription not found with ID $subscriptionId") }
+
+      subscription.status = newStatus
+      return validateAndSaveSubscription(subscription)
+  }
+
+  fun validateAndSaveSubscription(subscription: Subscription): Subscription {
+      val validStatuses = listOf(
+          StatusConstants.SUBSCRIPTION_STATUS_ACTIVE,
+          StatusConstants.SUBSCRIPTION_STATUS_EXPIRED,
+          StatusConstants.SUBSCRIPTION_STATUS_CANCELED
+      )
+
+      if (subscription.status !in validStatuses) {
+          throw IllegalArgumentException("Invalid subscription status: ${subscription.status}")
+      }
+
+      return subscriptionRepository.save(subscription)
   }
 
 }

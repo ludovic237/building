@@ -58,6 +58,13 @@ class SubscriptionController(
 
   @CrossOrigin(origins = ["http://localhost:4200"])
   @PreAuthorize("isAuthenticated()")
+  @PutMapping ("/canceled/{id}")
+  fun canceledSubscription(@PathVariable id: Long): ResponseEntity<Subscription> {
+    return ResponseEntity.ok(subscriptionService.canceledSubscription(id))
+  }
+
+  @CrossOrigin(origins = ["http://localhost:4200"])
+  @PreAuthorize("isAuthenticated()")
   @GetMapping("/{id}/details")
   fun getSubscriptionDetails(@PathVariable id: Long): ResponseEntity<SubscriptionDetailsDTO> {
     val subscriptionDetails = subscriptionService.getSubscriptionDetails(id)
@@ -111,4 +118,16 @@ class SubscriptionController(
       return ResponseEntity.ok(formattedData)
   }
 
+  @CrossOrigin(origins = ["http://localhost:4200"])
+  @PreAuthorize("isAuthenticated()")
+  @PutMapping("/{id}/status")
+  fun updateSubscriptionStatus(
+      @PathVariable id: Long,
+      @RequestBody statusRequest: Map<String, String>
+  ): ResponseEntity<Subscription> {
+      val newStatus = statusRequest["status"]
+          ?: throw IllegalArgumentException("Status is required in the request body")
+      val updatedSubscription = subscriptionService.updateSubscriptionStatus(id, newStatus)
+      return ResponseEntity.ok(updatedSubscription)
+  }
 }
