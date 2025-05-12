@@ -6,7 +6,7 @@ import {Observable, of} from 'rxjs';
   providedIn: 'root'
 })
 export class DashboardService {
-  private apiUrl = 'http://localhost:8080/api/admin/dashboard';
+  private apiUrl = '/api/admin/dashboard';
 
   constructor(private http: HttpClient) {
   }
@@ -18,15 +18,14 @@ export class DashboardService {
     });
   }
 
-getDashboards(startDate?: string, endDate?: string): Observable<any[]> {
+getDashboards(startDate?: string, endDate?: string): Observable<any> {
   const params: any = {};
   if (startDate) params.startDate = startDate;
   if (endDate) params.endDate = endDate;
 
-  return this.http.get<any[]>(this.apiUrl + '/info', {
-    headers: this.getHeaders(),
-    params: params
-  });
+  return this.http.get<any>(this.apiUrl + '/info?' +
+    'startDate='+startDate+'&' +
+    'endDate='+endDate, {headers:this.getHeaders()});
 }
 
 

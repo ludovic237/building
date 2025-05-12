@@ -201,7 +201,9 @@ export class HoustingUnitsComponent implements OnInit {
         data: data,
         panelClass: ['theme-dialog'],
         autoFocus: false,
-        direction: (this.settings.rtl) ? 'rtl' : 'ltr'
+        direction: (this.settings.rtl) ? 'rtl' : 'ltr',
+        width: '80%',
+        height: '90%'
       });
 
       dialogRef.afterClosed().subscribe(housingUnit => {

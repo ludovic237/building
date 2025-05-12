@@ -6,7 +6,9 @@ import com.example.backend.dtos.SubscriptionDTO
 import com.example.backend.dtos.SubscriptionDetailsDTO
 import com.example.backend.models.*
 import com.example.backend.repositories.*
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -390,6 +392,23 @@ class SubscriptionService(
       }
 
       return subscriptionRepository.save(subscription)
+  }
+
+  @Scheduled(fixedRate = 3600000) // Exécute toutes les heures (en millisecondes)
+  @Transactional
+  fun checkForExpiredSubscriptions() {
+    val now = LocalDateTime.now()
+
+    // Récupérer les souscriptions expirées
+    val expiredSubscriptions = subscriptionRepository.findByEndDateBeforeAndStatusNot(now, "EXPIRED")
+
+    // Mettre à jour leur statut
+    expiredSubscriptions.forEach { subscription ->
+      subscription.status = "EXPIRED"
+      subscriptionRepository.save(subscription)
+    }
+
+    println("Checked and updated expired subscriptions: ${expiredSubscriptions.size}")
   }
 
 }

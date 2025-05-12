@@ -8,6 +8,9 @@ import {MatTabsModule} from '@angular/material/tabs';
 import {FlexLayoutModule} from '@ngbracket/ngx-layout';
 import {MatTableModule} from "@angular/material/table";
 import {CommonModule} from "@angular/common";
+import {MatToolbarModule} from "@angular/material/toolbar";
+import {MatIconModule} from "@angular/material/icon";
+import {MatCardModule} from "@angular/material/card";
 
 @Component({
   selector: 'app-housting-detail-dialog',
@@ -20,6 +23,9 @@ import {CommonModule} from "@angular/common";
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
+    MatToolbarModule,
+    MatIconModule,
+    MatCardModule,
     MatDialogModule
   ],
   templateUrl: './housting-detail-dialog.component.html',

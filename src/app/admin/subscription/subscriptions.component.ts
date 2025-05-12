@@ -68,27 +68,7 @@ export class SubscriptionsComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe((result: any) => {
       console.log("subscription");
-      const subscription = {
-        id: result.id || this.subscriptions.length + 1, // Génère un nouvel ID si non défini
-        tenantId: result.tenantId,
-        serviceId: result.serviceId,
-        dateDebut: new Date(result.dateDebut).toISOString().split('T')[0], // Convert to YYYY-MM-DD
-        dateFin: new Date(result.dateFin).toISOString().split('T')[0],     // Convert to YYYY-MM-DD
-        status: result.status
-      };
-      console.log(subscription);
-
-      if (subscription) {
-        const index = this.subscriptions.findIndex(s => s.id === subscription.id);
-        if (index !== -1) {
-          this.subscriptions[index] = subscription; // Update existing subscription
-        } else {
-          subscription.id = this.subscriptions.length + 1; // Assign new ID
-          this.subscriptions.push(subscription); // Add new subscription
-        }
-      }
-      console.log("new this.subscriptions");
-      console.log(this.subscriptions);
+      this.getAllSubscription();
     });
 
   }
@@ -103,9 +83,10 @@ export class SubscriptionsComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(dialogResult => {
-      if (dialogResult) {
-        this.subscriptions = this.subscriptions.filter(s => s.id !== subscription.id);
-      }
+      this.getAllSubscription();
+      // if (dialogResult) {
+      //   this.subscriptions = this.subscriptions.filter(s => s.id !== subscription.id);
+      // }
     });
   }
 

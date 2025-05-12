@@ -51,8 +51,8 @@
       <mat-divider></mat-divider>
 
 
-      <div  fxFlex="100" fxFlex.gt-sm="50" class="px-2">
-        <mat-card  >
+      <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
+        <mat-card>
           <mat-card-header color="primary">
             <mat-card-title>Options</mat-card-title>
             <mat-card-subtitle>Select an option and specify the quantity</mat-card-subtitle>
@@ -62,7 +62,7 @@
               <!-- Option Selection -->
               <mat-form-field appearance="outline" class="w-100">
                 <mat-label>Select Option</mat-label>
-                <mat-select  formControlName="options"  [(ngModel)]="selectedOption"  [disabled]="!isReadonly">
+                <mat-select formControlName="options" [(ngModel)]="selectedOption" [disabled]="!isReadonly">
                   <mat-option *ngFor="let option of selectedServiceOptions" [value]="option">
                     {{ option.name }} - {{ option.price | currency }} (Max: {{ option.quantity }})
                   </mat-option>
@@ -85,8 +85,8 @@
           </mat-card-content>
         </mat-card>
       </div>
-      <div  fxFlex="100" fxFlex.gt-sm="50" class="px-2">
-        <mat-card >
+      <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
+        <mat-card>
           <mat-card-header color="primary">
             <mat-card-title>Added Options</mat-card-title>
           </mat-card-header>
@@ -107,13 +107,13 @@
 
 
       <!-- Total Price -->
-<!--      <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">-->
-<!--        <strong>Total Price: </strong> {{ totalPrice | currency }}-->
-<!--      </div>-->
+      <!--      <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">-->
+      <!--        <strong>Total Price: </strong> {{ totalPrice | currency }}-->
+      <!--      </div>-->
       <mat-divider></mat-divider>
 
       <div fxFlex="100" fxFlex.gt-sm="34" class="px-2" style="margin-top: 20px;">
-        <mat-form-field appearance="outline"  class="w-100">
+        <mat-form-field appearance="outline" class="w-100">
           <mat-label>Total price</mat-label>
           <input matInput [value]="totalPrice" [readonly]="true">
         </mat-form-field>
@@ -147,16 +147,18 @@
         </mat-form-field>
       </div>
 
-      <!-- Status -->
-     <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
-       <mat-checkbox formControlName="status"
-                     [checked]="form.get('status')?.value === 'actif'"
-                     (change)="form.get('status')?.setValue($event.checked ? 'actif' : 'inactif')"
-                     [disabled]="!isReadonly">
-         Status Actif
-       </mat-checkbox>
-       <mat-error *ngIf="form.controls.status.errors?.required">Status is required</mat-error>
-     </div>
+      <!-- Status --><!-- Status -->
+      <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
+        <ng-container *ngFor="let status of statuss">
+          <mat-checkbox
+            [checked]="form.get('status')?.value === status"
+            (change)="onStatusChange(status, $event.checked)"
+            [disabled]="!isReadonly || (disabledStatuses.includes(status))">
+            {{ status | titlecase }}
+          </mat-checkbox>
+        </ng-container>
+        <mat-error *ngIf="form.controls.status.errors?.required">Status is required</mat-error>
+      </div>
 
     </div>
   </div>

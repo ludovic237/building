@@ -46,6 +46,11 @@ export class SubscriptionService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`,{headers: this.getHeaders()});
   }
 
+
+  canceledSubscription(id: number): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/canceled/${id}`,{headers: this.getHeaders()});
+  }
+
   createSubscriptionWithDetails(data: any): Observable<Subscription> {
     return this.http.post<Subscription>(`${this.apiUrl}/add-subscription`,data,{headers: this.getHeaders()});
   }

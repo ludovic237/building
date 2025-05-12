@@ -34,9 +34,9 @@ fun getAdminDashboardData(
 //    @RequestParam("startDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") startDate: LocalDateTime,
 //    @RequestParam("endDate") @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss") endDate: LocalDateTime
   ): Map<String, Any> {
-      val defaultStartDate = startDate
-      val defaultEndDate = endDate
-      return dashboardService!!.getAdminDashboardData(defaultStartDate, defaultEndDate)
+    val defaultStartDate = startDate ?: LocalDateTime.now().minusMonths(1) // Par exemple, 1 mois avant aujourd'hui
+    val defaultEndDate = endDate ?: LocalDateTime.now() // Aujourd'hui comme date de fin par défaut
+    return dashboardService!!.getAdminDashboardData(defaultStartDate, defaultEndDate)
   }
 
 }

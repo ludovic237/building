@@ -15,7 +15,11 @@ interface SubscriptionRepository : JpaRepository<Subscription, Long> {
   fun findByTenant(tenant: Tenant): List<Subscription>
 
 
-  fun findByStatusAndStartDateBetween(status: String,startDate: LocalDateTime?,endDate: LocalDateTime?): List<Subscription>
+  fun findByStatusAndStartDateBetween(
+    status: String,
+    startDate: LocalDateTime?,
+    endDate: LocalDateTime?
+  ): List<Subscription>
 
   // Find subscriptions by start date
   fun findByStartDate(startDate: LocalDateTime): List<Subscription>
@@ -44,16 +48,20 @@ interface SubscriptionRepository : JpaRepository<Subscription, Long> {
   @Query("SELECT s FROM Subscription s WHERE s.status = 'Canceled' AND s.endDate BETWEEN :startDate AND :endDate")
   fun canceledSubscriptionsBetweenDates(startDate: LocalDateTime?, endDate: LocalDateTime?): List<Subscription>
 
-@Query("""
+  @Query(
+    """
     SELECT s
     FROM Subscription s
     WHERE (:status IS NULL OR :status = '' OR s.status = :status)
       AND (s.startDate BETWEEN :startDate AND :endDate OR :startDate IS NULL OR :endDate IS NULL)
-""")
-fun subscriptionsByStatusAndDates(
+"""
+  )
+  fun subscriptionsByStatusAndDates(
     status: String?,
     startDate: LocalDateTime?,
     endDate: LocalDateTime?
-): List<Subscription>
+  ): List<Subscription>
+
+  fun findByEndDateBeforeAndStatusNot(dateFin: LocalDateTime, status: String): List<Subscription>
 
 }

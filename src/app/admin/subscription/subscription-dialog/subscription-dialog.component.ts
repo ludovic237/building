@@ -1,7 +1,7 @@
 import {Component, Inject, OnInit} from '@angular/core';
 import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
-import {MAT_DIALOG_DATA, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
+import {MAT_DIALOG_DATA, MatDialog, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
 import {MatInputModule} from '@angular/material/input';
 import {MatSelectModule} from '@angular/material/select';
 import {MatTabsModule} from '@angular/material/tabs';
@@ -19,6 +19,7 @@ import {MatDividerModule} from "@angular/material/divider";
 import {MatCardModule} from "@angular/material/card";
 import {MatCheckboxModule} from "@angular/material/checkbox";
 import {SubscriptionService} from "@services/subscription.service";
+import {ConfirmationDialogComponent} from "./confirmation-dialog.component";
 
 @Component({
   selector: 'app-subscription-dialog',
@@ -51,11 +52,12 @@ export class SubscriptionDialogComponent implements OnInit {
   isReadonly: boolean = false;
   selectedQuantity: number | null = null;
   addedOptions: any[] = [];
+  disabledStatuses: string[] = [];
 
   public form: FormGroup;
   public locataires: any[] = [];
   public services: any[] = [];
-  public statuss: string[] = ['actif', 'inactif'];
+  public statuss: string[] = ['ACTIVE', 'PENDING', 'CANCELED','EXPIRED'];
 
   public validatedOptions: any[] = []; // List of validated options
   public selectedOptions: any[] = []; // List of validated options
@@ -69,6 +71,7 @@ export class SubscriptionDialogComponent implements OnInit {
               private serviceService: ServiceService,
               private subscriptionService: SubscriptionService,
               @Inject(MAT_DIALOG_DATA) public data: any,
+              private dialog: MatDialog,
               private fb: FormBuilder) {
     console.log("constructor ");
     console.log(this.data);
@@ -82,27 +85,26 @@ export class SubscriptionDialogComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {
-    if (this.data?.id) {
-      this.title = "Subscription detail"
+ngOnInit(): void {
+  if (this.data?.id) {
+    this.title = "Subscription detail";
 
-      Object.keys(this.form.controls).forEach(controlName => {
-        this.form.get(controlName)?.disable();
-      });
+    Object.keys(this.form.controls).forEach(controlName => {
+      this.form.get(controlName)?.disable();
+    });
 
-      // Object.keys(this.form.controls).forEach(controlName => {
-      //   const control = this.form.get(controlName);
-      //   control?.setValue(control.value); // Retain the current value
-      //   control?.disable({ onlySelf: true, emitEvent: false }); // Prevent modifications
-      // });
-
-      this.isReadonly = true;
+    this.isReadonly = true;
+    console.log("this.data")
+    console.log(this.data)
+    // Check if the status is 'canceled' or 'expired' and disable all statuses
+    if (this.data.paymentStatus?.toLowerCase() === 'canceled' || this.data.paymentStatus?.toLowerCase() === 'expired') {
+      this.disabledStatuses = [...this.statuss];
     }
-
-    // Initialize the form with data if available
-    this.fetchTenants();
-
   }
+
+  // Initialize the form with data if available
+  this.fetchTenants();
+}
 
   public onSubmit(): void {
     if (this.form.valid) {
@@ -270,6 +272,61 @@ export class SubscriptionDialogComponent implements OnInit {
       // Reset the selection
       this.selectedOption = null;
       this.selectedQuantity = null;
+    }
+  }
+
+  onStatusChange(selectedStatus: string, isChecked: boolean): void {
+    if (isChecked && (selectedStatus.toLowerCase() === 'Canceled'.toLowerCase() || selectedStatus.toLowerCase() === 'Expired'.toLowerCase())) {
+      const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+        data: {
+          message: `Are you sure you want to set the status to ${selectedStatus}?`,
+        },
+      });
+
+      dialogRef.afterClosed().subscribe((confirmed) => {
+        if (confirmed) {
+          this.disabledStatuses = this.statuss; // Disable all statuses
+          this.form.get('status')?.setValue(selectedStatus);
+
+          // Update the status in the database
+          this.subscriptionService.updateSubscriptionStatus(this.data.id, selectedStatus).subscribe({
+            next: () => {
+              this.snackBar.open('Status updated successfully!', 'Close', {
+                duration: 3000,
+                verticalPosition: 'top',
+              });
+            },
+            error: (err) => {
+              this.snackBar.open('Failed to update status. Please try again.', 'Close', {
+                duration: 3000,
+                verticalPosition: 'top',
+              });
+              console.error('Error updating status:', err);
+            },
+          });
+        } else {
+          this.form.get('status')?.setValue(null); // Reset the status if canceled
+        }
+      });
+    } else if (isChecked) {
+      this.form.get('status')?.setValue(selectedStatus);
+
+      // Update the status in the database
+      this.subscriptionService.updateSubscriptionStatus(this.data.id, selectedStatus).subscribe({
+        next: () => {
+          this.snackBar.open('Status updated successfully!', 'Close', {
+            duration: 3000,
+            verticalPosition: 'top',
+          });
+        },
+        error: (err) => {
+          this.snackBar.open('Failed to update status. Please try again.', 'Close', {
+            duration: 3000,
+            verticalPosition: 'top',
+          });
+          console.error('Error updating status:', err);
+        },
+      });
     }
   }
 

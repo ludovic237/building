@@ -1,7 +1,22 @@
-<h1 mat-dialog-title>Housing Unit Information</h1>
-<form [formGroup]="form" (ngSubmit)="onSubmit()" autocomplete="off">
-  <div mat-dialog-content>
-    <mat-tab-group class="tab-content-wrapped">
+
+<mat-toolbar color="primary" class="mat-toolbar mat-primary">
+  <div fxLayout="row" fxLayoutAlign="space-between center" class="w-100 p-3">
+    <h2 mat-dialog-title>Housing Unit Information</h2>
+    <!--    <button mat-icon-button (click)="onClose()">-->
+    <button mat-icon-button>
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+</mat-toolbar>
+<form [formGroup]="form" (ngSubmit)="onSubmit()" autocomplete="off" style="height: 100%;">
+  <mat-dialog-actions>
+    <div fxLayout="row" fxLayoutAlign="space-between center" class="w-100 p-3">
+      <button mat-raised-button color="warn" type="button" mat-dialog-close>Close</button>
+      <button mat-raised-button color="primary" type="submit">Save</button>
+    </div>
+  </mat-dialog-actions>
+  <mat-dialog-content fxLayout="column" style="height: 100%; max-height: 100%" >
+    <mat-tab-group class="tab-content-wrapped" fxFlex style="height: 100%;">
       <!-- Tenant Information -->
       <mat-tab label="Tenant Information">
         <div *ngIf="tenant; else noTenantInfo" fxLayout="row wrap"
@@ -44,7 +59,10 @@
           </div>
         </div>
         <ng-template #noTenantInfo>
-          <p class="text-center">No tenant information available.</p>
+         <mat-card class="no-info-card" fxLayout="column" fxLayoutAlign="center center">
+           <mat-icon color="warn" class="no-info-icon">info</mat-icon>
+           <p class="no-info-message">No tenant information available.</p>
+         </mat-card>
         </ng-template>
       </mat-tab>
 
@@ -71,7 +89,10 @@
           </table>
         </div>
         <ng-template #noFinancialInfo>
-          <p class="text-center">No financial information available.</p>
+          <mat-card class="no-info-card" fxLayout="column" fxLayoutAlign="center center">
+            <mat-icon color="warn" class="no-info-icon">info</mat-icon>
+            <p class="no-info-message">No financial information available.</p>
+          </mat-card>
         </ng-template>
       </mat-tab>
 
@@ -97,7 +118,11 @@
           </table>
         </div>
         <ng-template #noIssues>
-          <p class="text-center">No issues reported.</p>
+
+          <mat-card class="no-info-card" fxLayout="column" fxLayoutAlign="center center">
+            <mat-icon color="warn" class="no-info-icon">info</mat-icon>
+            <p class="no-info-message">No issues reported.</p>
+          </mat-card>
         </ng-template>
       </mat-tab>
 
@@ -124,7 +149,11 @@
           </table>
         </div>
         <ng-template #noAdditionalInfo>
-          <p class="text-center">No additional information available.</p>
+
+          <mat-card class="no-info-card" fxLayout="column" fxLayoutAlign="center center">
+            <mat-icon color="warn" class="no-info-icon">info</mat-icon>
+            <p class="no-info-message">No additional information available.</p>
+          </mat-card>
         </ng-template>
       </mat-tab>
 
@@ -151,15 +180,14 @@
           </table>
         </div>
         <ng-template #noPreviousTenants>
-          <p class="text-center">No previous tenants available.</p>
+          <mat-card class="no-info-card" fxLayout="column" fxLayoutAlign="center center">
+            <mat-icon color="warn" class="no-info-icon">info</mat-icon>
+            <p class="no-info-message">No previous tenants available.</p>
+          </mat-card>
         </ng-template>
       </mat-tab>
     </mat-tab-group>
-  </div>
-  <div mat-dialog-actions>
-    <div fxLayout="row" fxLayoutAlign="space-between center" class="w-100 p-3">
-      <button mat-raised-button color="warn" type="button" mat-dialog-close>Close</button>
-      <button mat-raised-button color="primary" type="submit">Save</button>
-    </div>
-  </div>
+  </mat-dialog-content>
+
 </form>
+
