@@ -3,6 +3,7 @@ package com.example.backend.services
 import com.example.backend.models.Invoice
 import com.example.backend.repositories.InvoiceRepository
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.*
 
 @Service
@@ -19,6 +20,7 @@ class InvoiceService(
     }
 
     fun createInvoice(invoice: Invoice): Invoice {
+      invoice.createdDate = LocalDateTime.now()
         return invoiceRepository.save(invoice)
     }
 
@@ -29,6 +31,7 @@ class InvoiceService(
         existingInvoice.amount = updatedInvoice.amount
         existingInvoice.status = updatedInvoice.status
         existingInvoice.tenant = updatedInvoice.tenant
+        existingInvoice.updatedDate = LocalDateTime.now()
         // Update other fields as necessary
 
         return invoiceRepository.save(existingInvoice)

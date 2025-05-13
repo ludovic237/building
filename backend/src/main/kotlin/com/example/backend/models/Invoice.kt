@@ -36,6 +36,12 @@ class Invoice {
   @Column(name = "status", nullable = false)
   var status: String? = null
 
+  @Column(name = "created_date")
+  var createdDate: LocalDateTime? = null
+
+  @Column(name = "updated_date")
+  var updatedDate: LocalDateTime? = null
+
   override fun toString(): String {
     return "Invoice(id=$id, tenant=${tenant?.id}, type='$type', month=$month, year=$year, amount=$amount, paymentDate=$paymentDate, status='$status')"
   }

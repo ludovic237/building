@@ -38,6 +38,12 @@ class AuditLog {
   @Column(name = "timestamp")
   val timestamp: LocalDateTime = LocalDateTime.now()
 
+  @Column(name = "created_date")
+  var createdDate: LocalDateTime? = null
+
+  @Column(name = "updated_date")
+  var updatedDate: LocalDateTime? = null
+
 //  override fun toString():String {
 //    return "AuditLog(id=$id, userId=$userId, action=$action, methodName=$methodName, arguments=$arguments, result=$result, exception=$exception, timestamp=$timestamp)"
 //  }

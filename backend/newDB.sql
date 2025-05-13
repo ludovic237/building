@@ -8,13 +8,15 @@ create table if not exists users
   password          varchar(255)            not null,
   phone             varchar(20)             null,
   role              tinytext                not null,
-  birthday          datetime                    null,
-  gender            enum ('male', 'female')  null,
+  birthday          datetime                null,
+  gender            enum ('male', 'female') null,
   image             varchar(255)            null,
   is_active         boolean                 not null default true,
   is_deleted        boolean                 not null default false,
   registration_date datetime                not null,
   joined_date       datetime                null,
+  created_date      datetime                null,
+  updated_date      datetime                null,
   username          varchar(255)            not null,
   unique (username),
   unique (email)
@@ -27,8 +29,10 @@ create table if not exists tenants
     primary key,
   user_id          bigint                      null,
   housing_unit_id  bigint                      null,
-  move_in_date     datetime                        not null,
-  move_out_date    datetime                        null,
+  move_in_date     datetime                    not null,
+  move_out_date    datetime                    null,
+  created_date     datetime                    null,
+  updated_date     datetime                    null,
   security_deposit decimal(10, 2) default 0.00 null,
   housting_price   decimal(10, 2) default 0.00 null
 );
@@ -36,15 +40,17 @@ create table if not exists tenants
 -- HOUSING UNITS
 create table if not exists housting_units
 (
-  id        bigint auto_increment
+  id           bigint auto_increment
     primary key,
-  number    varchar(20)      not null,
-  floor     int              null,
-  area      decimal(6, 2)    null,
-  address   tinytext         null,
-  type      varchar(50)      null,
-  tenant_id bigint           null,
-  price     double default 0 null
+  number       varchar(20)      not null,
+  floor        int              null,
+  area         decimal(6, 2)    null,
+  address      tinytext         null,
+  type         varchar(50)      null,
+  tenant_id    bigint           null,
+  created_date datetime         null,
+  updated_date datetime         null,
+  price        double default 0 null
 );
 
 create table if not exists invoices
@@ -56,7 +62,9 @@ create table if not exists invoices
   month        int            null,
   year         int            null,
   amount       decimal(10, 2) null,
-  payment_date datetime           null,
+  payment_date datetime       null,
+  created_date datetime       null,
+  updated_date datetime       null,
   status       tinytext       not null,
   check (`month` between 1 and 12)
 );
@@ -65,25 +73,29 @@ create table if not exists invoices
 CREATE TABLE services
 (
   id           BIGINT AUTO_INCREMENT PRIMARY KEY,
-  code         VARCHAR(50)                           NOT NULL UNIQUE,
-  name         VARCHAR(100)                          NOT NULL,
+  code         VARCHAR(50)  NOT NULL UNIQUE,
+  name         VARCHAR(100) NOT NULL,
   description  TEXT,
-  billing_mode ENUM ('MONTHLY', 'ONE_TIME', 'OTHER') NOT NULL,
+  billing_mode tinytext     NOT NULL,
+  created_date datetime     null,
+  updated_date datetime     null,
   is_active    BOOLEAN DEFAULT TRUE
 );
 
 -- SUBSCRIPTIONS
 create table if not exists subscriptions
 (
-  id         bigint auto_increment
+  id               bigint auto_increment
     primary key,
-  tenant_id  bigint         null,
-  service_id bigint         null,
-  price      decimal(10, 2) null,
-  start_date datetime           not null,
-  end_date   datetime           null,
-  subscript_number   int           null,
-  status     tinytext       not null
+  tenant_id        bigint         null,
+  service_id       bigint         null,
+  price            decimal(10, 2) null,
+  start_date       datetime       not null,
+  end_date         datetime       null,
+  subscript_number int            null,
+  created_date     datetime       null,
+  updated_date     datetime       null,
+  status           tinytext       not null
 
 );
 
@@ -94,8 +106,10 @@ create table if not exists billing_cycles
     primary key,
   subscription_id bigint         null,
   amount_due      decimal(10, 2) null,
-  period_start    datetime           not null,
-  period_end      datetime           not null,
+  period_start    datetime       not null,
+  period_end      datetime       not null,
+  created_date    datetime       null,
+  updated_date    datetime       null,
   status          tinytext       not null
 );
 
@@ -105,6 +119,8 @@ create table if not exists payment_lines
   id               bigint auto_increment primary key,
   payment_id       bigint         null,
   billing_cycle_id bigint         null,
+  created_date     datetime       null,
+  updated_date     datetime       null,
   amount_paid      decimal(10, 2) not null
 );
 
@@ -113,60 +129,72 @@ create table if not exists issues
 (
   id               bigint auto_increment
     primary key,
-  tenant_id        bigint                   null,
-  title            varchar(150)             not null,
-  description      tinytext                 null,
+  tenant_id        bigint                       null,
+  title            varchar(150)                 not null,
+  description      tinytext                     null,
   declaration_date datetime default (curdate()) null,
-  status           tinytext                 not null
+  created_date     datetime                     null,
+  updated_date     datetime                     null,
+  status           tinytext                     not null
 );
 
 -- payments
 create table if not exists payments
 (
   id             bigint auto_increment primary key,
-  tenant_id      bigint                   not null,
+  tenant_id      bigint                       not null,
   payment_date   datetime default (curdate()) null,
-  total_amount   decimal(10, 2)           not null,
+  total_amount   decimal(10, 2)               not null,
+  created_date   datetime                     null,
+  updated_date   datetime                     null,
   payment_method varchar(50)
 );
 
 CREATE TABLE service_options
 (
-  id         BIGINT PRIMARY KEY AUTO_INCREMENT,
-  service_id BIGINT         NOT NULL,
-  name       VARCHAR(255)   NOT NULL,
-  price      DECIMAL(10, 2) NOT NULL,
-  quantity   INT     DEFAULT 0,
-  is_active  BOOLEAN DEFAULT TRUE
+  id           BIGINT PRIMARY KEY AUTO_INCREMENT,
+  service_id   BIGINT         NOT NULL,
+  name         VARCHAR(255)   NOT NULL,
+  price        DECIMAL(10, 2) NOT NULL,
+  quantity     INT     DEFAULT 0,
+  is_active    BOOLEAN DEFAULT TRUE,
+  created_date datetime       null,
+  updated_date datetime       null
 );
 
 CREATE TABLE subscription_options
 (
   id              BIGINT PRIMARY KEY AUTO_INCREMENT,
-  subscription_id BIGINT NOT NULL,
-  option_id       BIGINT NOT NULL,
-  quantity        INT DEFAULT 1
+  subscription_id BIGINT   NOT NULL,
+  option_id       BIGINT   NOT NULL,
+  quantity        INT DEFAULT 1,
+  created_date    datetime null,
+  updated_date    datetime null
 );
 
 CREATE TABLE service_usage
 (
   id              BIGINT PRIMARY KEY AUTO_INCREMENT,
-  subscription_id BIGINT NOT NULL,
-  option_id       BIGINT NOT NULL,
-  quantity_used   INT    NOT NULL,
-  usage_date      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  subscription_id BIGINT   NOT NULL,
+  option_id       BIGINT   NOT NULL,
+  quantity_used   INT      NOT NULL,
+  usage_date      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  created_date    datetime null,
+  updated_date    datetime null
 );
 
 CREATE TABLE audit_logs
 (
-  id          BIGINT AUTO_INCREMENT PRIMARY KEY,
-  user_id     BIGINT        NULL,
-  action      VARCHAR(50)   NULL,
-  method_name VARCHAR(255)  NULL,
-  arguments   longtext,
-  result      LONGTEXT,
-  exception   longtext,
-  timestamp   DATETIME     DEFAULT CURRENT_TIMESTAMP
+  id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id      BIGINT       NULL,
+  action       VARCHAR(50)  NULL,
+  method_name  VARCHAR(255) NULL,
+  arguments    longtext,
+  result       LONGTEXT,
+  exception    longtext,
+  timestamp    DATETIME DEFAULT CURRENT_TIMESTAMP,
+  created_date datetime     null,
+  updated_date datetime     null
 );
 
 
@@ -345,43 +373,41 @@ FROM payments p
 
 CREATE DEFINER = root@localhost VIEW payments_simple_view AS
 SELECT *
-FROM (
-         SELECT ROW_NUMBER() OVER (PARTITION BY p.id ORDER BY p.payment_date DESC) AS row_num,
-                p.id                 AS id,
-                p.id                 AS payment_id,
-                p.payment_method     AS payment_method,
-                p.total_amount       AS payment_total_amount,
-                p.payment_date       AS payment_date,
-                pl.id                AS payment_line_id,
-                pl.amount_paid,
-                t.id                 AS tenant_id,
-                t.move_in_date       AS tenant_move_in_date,
-                t.move_out_date      AS tenant_move_out_date,
-                t.security_deposit   AS tenant_security_deposit,
-                us.id                AS user_id,
-                us.first_name        AS user_first_name,
-                us.last_name         AS user_last_name,
-                us.username          AS user_username,
-                hu.number            AS housing_unit_number,
-                hu.type              AS housing_unit_type,
-                bc.id                AS billing_cycle_id,
-                bc.amount_due        AS billing_cycle_amount_due,
-                bc.status            AS billing_cycle_status,
-                s.id                 AS subscription_id,
-                s.status             AS subscription_status,
-                srv.id               AS service_id,
-                srv.code             AS service_code,
-                srv.name             AS service_name,
-                srv.description      AS service_description,
-                srv.billing_mode     AS service_billing_mode,
-                srv.is_active        AS service_is_active
-         FROM payments p
-                  LEFT JOIN payment_lines pl ON pl.payment_id = p.id
-                  LEFT JOIN tenants t ON p.tenant_id = t.id
-                  LEFT JOIN users us ON t.user_id = us.id
-                  LEFT JOIN housting_units hu ON t.housing_unit_id = hu.id
-                  LEFT JOIN billing_cycles bc ON pl.billing_cycle_id = bc.id
-                  LEFT JOIN subscriptions s ON bc.subscription_id = s.id
-                  LEFT JOIN services srv ON s.service_id = srv.id
-     ) subquery
+FROM (SELECT ROW_NUMBER() OVER (PARTITION BY p.id ORDER BY p.payment_date DESC) AS row_num,
+             p.id                                                               AS id,
+             p.id                                                               AS payment_id,
+             p.payment_method                                                   AS payment_method,
+             p.total_amount                                                     AS payment_total_amount,
+             p.payment_date                                                     AS payment_date,
+             pl.id                                                              AS payment_line_id,
+             pl.amount_paid,
+             t.id                                                               AS tenant_id,
+             t.move_in_date                                                     AS tenant_move_in_date,
+             t.move_out_date                                                    AS tenant_move_out_date,
+             t.security_deposit                                                 AS tenant_security_deposit,
+             us.id                                                              AS user_id,
+             us.first_name                                                      AS user_first_name,
+             us.last_name                                                       AS user_last_name,
+             us.username                                                        AS user_username,
+             hu.number                                                          AS housing_unit_number,
+             hu.type                                                            AS housing_unit_type,
+             bc.id                                                              AS billing_cycle_id,
+             bc.amount_due                                                      AS billing_cycle_amount_due,
+             bc.status                                                          AS billing_cycle_status,
+             s.id                                                               AS subscription_id,
+             s.status                                                           AS subscription_status,
+             srv.id                                                             AS service_id,
+             srv.code                                                           AS service_code,
+             srv.name                                                           AS service_name,
+             srv.description                                                    AS service_description,
+             srv.billing_mode                                                   AS service_billing_mode,
+             srv.is_active                                                      AS service_is_active
+      FROM payments p
+             LEFT JOIN payment_lines pl ON pl.payment_id = p.id
+             LEFT JOIN tenants t ON p.tenant_id = t.id
+             LEFT JOIN users us ON t.user_id = us.id
+             LEFT JOIN housting_units hu ON t.housing_unit_id = hu.id
+             LEFT JOIN billing_cycles bc ON pl.billing_cycle_id = bc.id
+             LEFT JOIN subscriptions s ON bc.subscription_id = s.id
+             LEFT JOIN services srv ON s.service_id = srv.id) subquery
 WHERE row_num = 1;

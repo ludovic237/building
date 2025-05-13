@@ -5,6 +5,7 @@ import org.hibernate.annotations.ColumnDefault
 import org.hibernate.annotations.OnDelete
 import org.hibernate.annotations.OnDeleteAction
 import java.math.BigDecimal
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "service_options")
@@ -31,4 +32,10 @@ class ServiceOption {
   @ColumnDefault("1")
   @Column(name = "is_active")
   var isActive: Boolean? = null
+
+  @Column(name = "created_date")
+  var createdDate: LocalDateTime? = null
+
+  @Column(name = "updated_date")
+  var updatedDate: LocalDateTime? = null
 }

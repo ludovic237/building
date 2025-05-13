@@ -8,6 +8,7 @@ import com.example.backend.models.Services
 import com.example.backend.repositories.ServiceOptionRepository
 import com.example.backend.repositories.ServiceRepository
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.*
 
 @Service
@@ -39,6 +40,8 @@ class ServiceService(
     }
     println("services")
     println(services)
+    services.createdDate = LocalDateTime.now()
+    services.updatedDate = LocalDateTime.now()
     val savedServices = serviceRepository.save(services)
 
     // Create and save the ServiceOption entities
@@ -48,6 +51,8 @@ class ServiceService(
         isActive = optionDTO.isSelected
         price = optionDTO.price
         quantity = optionDTO.quantity
+        createdDate = LocalDateTime.now()
+        updatedDate = LocalDateTime.now()
         service = savedServices // Associate with the saved Services
       }
     }
@@ -128,6 +133,7 @@ fun getServiceAllWithOptions(): List<ServiceDataDTO> {
       description = updatedServiceDTO.description
       billingMode = updatedServiceDTO.billingMode
       isActive = updatedServiceDTO.isActive
+      updatedDate = LocalDateTime.now()
     }
     val updatedService = serviceRepository.save(existingService)
 
@@ -149,6 +155,7 @@ fun getServiceAllWithOptions(): List<ServiceDataDTO> {
         quantity = optionDTO.quantity
         isActive = optionDTO.isSelected
         service = updatedService
+        updatedDate = LocalDateTime.now()
       }
     }
     serviceOptionRepository.saveAll(updatedOptions)
@@ -161,6 +168,7 @@ fun getServiceAllWithOptions(): List<ServiceDataDTO> {
       .orElseThrow { IllegalArgumentException("Services with ID $id not found") }
 
     existingServices.name = updatedServices.name
+    existingServices.updatedDate = LocalDateTime.now()
     existingServices.description = updatedServices.description
     // Update other fields as necessary
 

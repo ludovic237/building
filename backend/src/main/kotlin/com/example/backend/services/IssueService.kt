@@ -3,6 +3,7 @@ package com.example.backend.services
     import com.example.backend.models.Issue
     import com.example.backend.repositories.IssueRepository
     import org.springframework.stereotype.Service
+    import java.time.LocalDateTime
     import java.util.*
 
     @Service
@@ -19,6 +20,7 @@ package com.example.backend.services
         }
 
         fun createIssue(issue: Issue): Issue {
+          issue.createdDate = LocalDateTime.now()
             return issueRepository.save(issue)
         }
 
@@ -31,6 +33,7 @@ package com.example.backend.services
             existingIssue.declarationDate = updatedIssue.declarationDate
             existingIssue.status = updatedIssue.status
             existingIssue.tenant = updatedIssue.tenant
+            existingIssue.updatedDate = LocalDateTime.now()
             // Update other fields as necessary
 
             return issueRepository.save(existingIssue)

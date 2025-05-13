@@ -6,6 +6,7 @@ import com.example.backend.models.PaymentsView
 import com.example.backend.repositories.*
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
+import java.time.LocalDateTime
 import java.util.*
 
 @Service
@@ -167,6 +168,7 @@ class PaymentService(
         if (paymentLine.amountPaid == BigDecimal.ZERO) {
           paymentLine.payment = null
         }
+        paymentLine.updatedDate = LocalDateTime.now()
         paymentLineRepository.save(paymentLine)
         println("Updated payment_lines for paymentLineId: $paymentLineId")
       }
@@ -186,6 +188,7 @@ class PaymentService(
           } else {
             "Due"
           }
+        billingCycle.updatedDate = LocalDateTime.now()
         billingCycleRepository.save(billingCycle)
         println("Updated billing_cycles for billingCycleId: $billingCycleId")
       }
