@@ -1,4 +1,4 @@
-import {Component, OnInit, inject} from '@angular/core';
+import {Component, OnInit, inject, ViewChild, AfterViewInit} from '@angular/core';
 import {MatDialog} from '@angular/material/dialog';
 import {AppService} from '@services/app.service';
 import {DomHandlerService} from '@services/dom-handler.service';
@@ -20,10 +20,18 @@ import {HoustingUnit} from "../../model/data";
 import {HoustingUnitService} from "@services/housting-unit.service";
 import {MatSnackBar} from "@angular/material/snack-bar";
 import {HoustingDetailDialogComponent} from "./housting-detail-dialog/housting-detail-dialog.component";
+import {MatTableDataSource, MatTableModule} from "@angular/material/table";
+import {MatSort, MatSortModule} from "@angular/material/sort";
+import {MatFormFieldModule, MatLabel} from "@angular/material/form-field";
+import {MatSelectModule} from "@angular/material/select";
+import {MatOptionModule} from "@angular/material/core";
+import {FormsModule} from "@angular/forms";
+import {MatPaginator, MatPaginatorModule} from "@angular/material/paginator";
 
 @Component({
   selector: 'app-housting-units',
   imports: [
+    MatPaginatorModule,
     CommonModule,
     FlexLayoutModule,
     MatCardModule,
@@ -32,11 +40,20 @@ import {HoustingDetailDialogComponent} from "./housting-detail-dialog/housting-d
     MatIconModule,
     MatTooltipModule,
     NgxPaginationModule,
+    FormsModule,
+    MatTableModule, // Add this
+    MatSortModule,  // Add this
+    MatSelectModule, // Add this
+    MatFormFieldModule, // Add this for form fields
+    MatOptionModule, // Add this for mat-option
     PipesModule
   ],
   templateUrl: './housting-units.component.html'
 })
-export class HoustingUnitsComponent implements OnInit {
+export class HoustingUnitsComponent implements OnInit, AfterViewInit {
+  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+
   public housingUnits: any[] = [];
   public selectedhousingUnit: HoustingUnit | null = null;
 
@@ -48,6 +65,25 @@ export class HoustingUnitsComponent implements OnInit {
   domHandlerService = inject(DomHandlerService);
   public settings: Settings;
 
+  public filteredHousingUnits = new MatTableDataSource<any>();
+  public tenantList: string[] = [];
+  public housingUnitTypes: string[] = [];
+  public filters = {
+    occupancyStatus: '',
+    tenant: '',
+    type: ''
+  };
+  public displayedColumns: string[] = [
+    'housingUnitNumber',
+    'remainingAmount',
+    'amountPaid',
+    'leaseDates',
+    'housingUnitType',
+    'tenants',
+    'status',
+    'actions'
+  ];
+
   constructor(
     public housingUnitService: HoustingUnitService,
     public snackBar: MatSnackBar,
@@ -56,6 +92,10 @@ export class HoustingUnitsComponent implements OnInit {
     public settingsService: SettingsService) {
     this.settings = this.settingsService.settings;
   }
+
+
+
+  public length: number = 0;
 
   ngOnInit(): void {
     this.housingUnits = [];
@@ -186,10 +226,36 @@ export class HoustingUnitsComponent implements OnInit {
         this.housingUnits = data;
         this.count = this.housingUnits.length;
         console.log('Get payment:', data);
+        this.tenantList = [...new Set(this.housingUnits.map(unit => unit.tenantName).filter(name => name))];
+        this.housingUnitTypes = [...new Set(this.housingUnits.map(unit => unit.housingUnitType))];
+
+        this.length = this.housingUnits.length; // Set the total number of items
+        this.filteredHousingUnits.data = this.housingUnits;
+        this.filteredHousingUnits.sort = this.sort;
       },
       error: (err) => {
         console.error('Error  payment:', err);
       }
+    });
+  }
+
+  ngAfterViewInit(): void {
+    this.filteredHousingUnits.sort = this.sort; // Connect MatSort
+    this.filteredHousingUnits.paginator = this.paginator; // Connect MatPaginator
+  }
+
+
+  applyFilters(): void {
+    this.filteredHousingUnits.data = this.housingUnits.filter(unit => {
+      const matchesOccupancy = this.filters.occupancyStatus === '' ||
+        (this.filters.occupancyStatus === 'occupied' && unit.tenantId) ||
+        (this.filters.occupancyStatus === 'vacant' && !unit.tenantId);
+
+      const matchesTenant = this.filters.tenant === '' || unit.tenantName === this.filters.tenant;
+
+      const matchesType = this.filters.type === '' || unit.housingUnitType === this.filters.type;
+
+      return matchesOccupancy && matchesTenant && matchesType;
     });
   }
 

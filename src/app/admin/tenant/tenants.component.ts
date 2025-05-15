@@ -1,4 +1,4 @@
-import {Component, OnInit, inject} from '@angular/core';
+import {Component, OnInit, inject, ViewChild} from '@angular/core';
 import {MatDialog} from '@angular/material/dialog';
 import {AppService} from '@services/app.service';
 import {DomHandlerService} from '@services/dom-handler.service';
@@ -22,6 +22,9 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {MatInputModule} from "@angular/material/input";
 import {TenantInfoDialogComponent} from "./tenant-info-info-dialog/tenant-info-dialog.component";
 import {MatChipsModule} from "@angular/material/chips";
+import {MatTableDataSource, MatTableModule} from "@angular/material/table";
+import {MatSort, MatSortModule} from "@angular/material/sort";
+import {MatPaginator, MatPaginatorModule} from "@angular/material/paginator";
 
 @Component({
   selector: 'app-tenants',
@@ -40,14 +43,18 @@ import {MatChipsModule} from "@angular/material/chips";
     CommonModule,
     FormsModule,
     MatInputModule,
+    MatTableModule,
+    MatSortModule,
+    MatPaginatorModule,
     PipesModule
   ],
   templateUrl: './tenants.component.html',
   styleUrl: './tenants.component.scss'
 })
 export class TenantsComponent implements OnInit {
+  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
-  filteredTenants: any[] = []; // Filtered list for display
   searchQuery: string = ''; // Search query
   public customers: any[] = [];
   public stores = [
@@ -63,6 +70,17 @@ export class TenantsComponent implements OnInit {
   domHandlerService = inject(DomHandlerService);
   public settings: Settings;
 
+  public filteredTenants = new MatTableDataSource<any>();
+  public displayedColumns: string[] = [
+    'userName',
+    'housingUnitName',
+    'moveInDate',
+    'securityDeposit',
+    'paymentStatus',
+    'status',
+    'actions'
+  ];
+
   constructor(
     public appService: AppService,
     public tenantService: TenantService,
@@ -77,28 +95,19 @@ export class TenantsComponent implements OnInit {
   }
 
   ngOnChanges(): void {
-    this.filterTenants();
+
   }
 
-filterTenants(): void {
-  if (!this.searchQuery.trim()) {
-    // Reset to the full list if the search query is empty
-    this.filteredTenants = [...this.tenants];
-    return;
+  filterTenants(): void {
+    this.filteredTenants.filter = this.searchQuery.trim().toLowerCase();
   }
-
-  // Filter tenants based on the search query
-  this.filteredTenants = this.tenants.filter(tenant =>
-    tenant.userName?.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
-    tenant.housingUnitName?.toLowerCase().includes(this.searchQuery.toLowerCase())
-  );
-}
 
   private getTenantData() {
     this.tenantService.getTenants().subscribe({
       next: (tenants) => {
         this.tenants = tenants;
-        this.filteredTenants = this.tenants;
+        // this.filteredTenants = this.tenants;
+        this.filteredTenants.data = this.tenants;
       },
       error: (err) => {
         console.error('Failed to load tenants:', err);
@@ -219,4 +228,7 @@ filterTenants(): void {
     });
   }
 
+  public downloadTenantData(tenant:any){
+
+  }
 }
