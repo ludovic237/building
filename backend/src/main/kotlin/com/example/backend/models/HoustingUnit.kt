@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import jakarta.persistence.*
 import org.hibernate.annotations.ColumnDefault
 import java.math.BigDecimal
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "housting_units")
@@ -41,6 +42,12 @@ class HoustingUnit {
   @ColumnDefault("0.00")
   @Column(name = "price", precision = 38, scale = 2)
   var price: BigDecimal? = null
+
+  @Column(name = "created_date")
+  var createdDate: LocalDateTime? = null
+
+  @Column(name = "updated_date")
+  var updatedDate: LocalDateTime? = null
 
   override fun toString(): String {
     return "HoustingUnit(id=$id, number=$number, floor=$floor, area=$area, address=$address, type=$type, tenant=${tenant?.id}, price=$price)"

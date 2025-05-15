@@ -49,6 +49,8 @@ class SubscriptionService(
   }
 
   fun createSubscription(subscription: Subscription): Subscription {
+    subscription.createdDate = LocalDateTime.now()
+    subscription.updatedDate = LocalDateTime.now()
     return subscriptionRepository.save(subscription)
   }
 
@@ -58,6 +60,7 @@ class SubscriptionService(
 
     existingSubscription.startDate = updatedSubscription.startDate
     existingSubscription.endDate = updatedSubscription.endDate
+    existingSubscription.updatedDate = LocalDateTime.now()
     existingSubscription.status = updatedSubscription.status
     // Update other fields as necessary
 
@@ -184,6 +187,8 @@ class SubscriptionService(
           else -> "OTHER"
         }
         this.paymentDate = LocalDateTime.now()
+        this.createdDate = LocalDateTime.now()
+        this.updatedDate = LocalDateTime.now()
       }
     )
 
@@ -200,6 +205,8 @@ class SubscriptionService(
       paymentLineRepository.save(
         PaymentLine().apply {
           this.payment = payment
+          this.createdDate = LocalDateTime.now()
+          this.updatedDate = LocalDateTime.now()
           this.billingCycle = billingCycle
           this.amountPaid = amountToPay
         }
@@ -207,6 +214,8 @@ class SubscriptionService(
 
       if (amountToPay == remainingDue) {
         billingCycle.status = StatusConstants.BILLING_CYCLE_STATUS_PAID
+        billingCycle.createdDate = LocalDateTime.now()
+        billingCycle.updatedDate = LocalDateTime.now()
         billingCycleRepository.save(billingCycle)
       }
 
@@ -234,6 +243,8 @@ class SubscriptionService(
         this.periodEnd = currentEndDate
         this.amountDue = billingPrice
         this.subscription = subscription
+        this.createdDate = LocalDateTime.now()
+        this.updatedDate = LocalDateTime.now()
         this.status =
           if (amountToPay == billingPrice) StatusConstants.BILLING_CYCLE_STATUS_PAID else StatusConstants.BILLING_CYCLE_STATUS_PARTIAL_PAID
       }
@@ -245,6 +256,8 @@ class SubscriptionService(
           this.payment = payment
           this.billingCycle = billingCycle
           this.amountPaid = amountToPay
+          this.createdDate = LocalDateTime.now()
+          this.updatedDate = LocalDateTime.now()
         }
       )
 
@@ -324,6 +337,8 @@ class SubscriptionService(
       this.startDate = LocalDateTime.parse(dateDebut, formatter) // Extract only the date part
       this.endDate = LocalDateTime.parse(dateFin, formatter) // Extract only the date part
       this.status = status
+      this.createdDate = LocalDateTime.now()
+      this.updatedDate = LocalDateTime.now()
     }
 
     // Save the subscription
@@ -340,6 +355,8 @@ class SubscriptionService(
           this.subscription = savedSubscription
           this.quantity = quantity
           this.option = serviceOption
+          this.createdDate = LocalDateTime.now()
+          this.updatedDate = LocalDateTime.now()
         }
       )
     }
@@ -372,15 +389,16 @@ class SubscriptionService(
     return formattedData
   }
 
-  fun updateSubscriptionStatus(subscriptionId: Long, newStatus: String): Subscription {
-      val subscription = subscriptionRepository.findById(subscriptionId)
+  fun updateSubscriptionStatus(subscriptionId: Long, newStatus: String): Map<String,Any?>  {
+      var subscription = subscriptionRepository.findById(subscriptionId)
           .orElseThrow { IllegalArgumentException("Subscription not found with ID $subscriptionId") }
 
       subscription.status = newStatus
+      subscription.updatedDate = LocalDateTime.now()
       return validateAndSaveSubscription(subscription)
   }
 
-  fun validateAndSaveSubscription(subscription: Subscription): Subscription {
+  fun validateAndSaveSubscription(subscription: Subscription):Map<String, Any?> {
       val validStatuses = listOf(
           StatusConstants.SUBSCRIPTION_STATUS_ACTIVE,
           StatusConstants.SUBSCRIPTION_STATUS_EXPIRED,
@@ -391,7 +409,11 @@ class SubscriptionService(
           throw IllegalArgumentException("Invalid subscription status: ${subscription.status}")
       }
 
-      return subscriptionRepository.save(subscription)
+    val subscriptionData = subscriptionRepository.save(subscription)
+    return mapOf(
+      "message" to "Payment processed successfully",
+      "subscriptionId" to subscriptionData.id
+    )
   }
 
   @Scheduled(fixedRate = 3600000) // Exécute toutes les heures (en millisecondes)

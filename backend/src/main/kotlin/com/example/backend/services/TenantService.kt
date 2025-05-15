@@ -8,6 +8,7 @@ import com.example.backend.repositories.*
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
+import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
 
@@ -124,11 +125,13 @@ class TenantService(
     tenant.user = userRepository.findById(tenantData.userId).get()
     tenant.moveInDate = tenantData.startDate
     tenant.securityDeposit = tenantData.securityDeposit
+    tenant.createdDate = LocalDateTime.now()
     tenant = tenantRepository.save(tenant)
 
     val housingUnit = housingUnitRepository.findById(tenantData.housingUnitId)
       .orElseThrow { IllegalArgumentException("Housing Unit not found with ID: ${tenantData.housingUnitId}") }
     housingUnit.tenant = tenant
+    housingUnit.createdDate = LocalDateTime.now()
     housingUnitRepository.save(housingUnit)
 
     // Step 2: Create Subscription
@@ -139,6 +142,7 @@ class TenantService(
     subscription.tenant = tenant
     subscription.subscriptNumber = tenantData.numberOfSubscription
     subscription.status = "Active"
+    subscription.createdDate = LocalDateTime.now()
     subscriptionRepository.save(subscription)
 
     // Step 3: Calculate billing cycles
@@ -169,6 +173,7 @@ class TenantService(
       billingCycle.periodEnd = currentEndDate
       billingCycle.amountDue = logementBasePrice
       billingCycle.subscription = subscription
+      billingCycle.createdDate = LocalDateTime.now()
       billingCycle.status = StatusConstants.BILLING_CYCLE_STATUS_PAID
       billingCycleRepository.save(billingCycle)
       billingCycles.add(billingCycle)
@@ -232,6 +237,7 @@ class TenantService(
 
   fun createPayment(tenant: Tenant?, depositAmount: BigDecimal, paymentMode: String): Payment {
     val payment = Payment()
+    payment.createdDate = LocalDateTime.now()
     payment.tenant = tenant
     payment.totalAmount = depositAmount
     payment.paymentMethod = when (paymentMode.uppercase()) {
@@ -251,6 +257,7 @@ class TenantService(
     paymentLine.payment = paymentRepository.findById(paymentId!!).get()
     paymentLine.billingCycle = billingCycleRepository.findById(billingCycleId).get()
     paymentLine.amountPaid = remainingAmount
+    paymentLine.createdDate = LocalDateTime.now()
     return paymentLineRepository.save(paymentLine)
   }
 
@@ -261,6 +268,7 @@ class TenantService(
     existingTenant.user!!.firstName = updatedTenant.user!!.lastName
     existingTenant.user!!.lastName = updatedTenant.user!!.firstName
     existingTenant.user!!.email = updatedTenant.user!!.email
+    existingTenant.updatedDate = LocalDateTime.now()
     // Update other fields as necessary
 
     return tenantRepository.save(existingTenant)

@@ -61,4 +61,10 @@ class User {
 
   @Column(name = "username", nullable = false)
   var username: String? = null
+
+  @Column(name = "created_date")
+  var createdDate: LocalDateTime? = null
+
+  @Column(name = "updated_date")
+  var updatedDate: LocalDateTime? = null
 }

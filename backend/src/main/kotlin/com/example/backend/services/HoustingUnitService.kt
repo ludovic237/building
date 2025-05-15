@@ -6,6 +6,7 @@ import com.example.backend.models.Tenant
 import com.example.backend.repositories.*
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
+import java.time.LocalDateTime
 import java.util.*
 
 @Service
@@ -29,6 +30,7 @@ class HoustingUnitService(
   }
 
   fun createHoustingUnit(housingUnit: HoustingUnit): HoustingUnit {
+    housingUnit.createdDate  =  LocalDateTime.now()
     return housingUnitRepository.save(housingUnit)
   }
 
@@ -42,7 +44,8 @@ class HoustingUnitService(
     existingHoustingUnit.address = updatedHoustingUnit.address
     existingHoustingUnit.type = updatedHoustingUnit.type
     existingHoustingUnit.price = updatedHoustingUnit.price
-    // Update other fields as necessary
+    existingHoustingUnit.updatedDate =  LocalDateTime.now()
+      // Update other fields as necessary
 
     return housingUnitRepository.save(existingHoustingUnit)
   }

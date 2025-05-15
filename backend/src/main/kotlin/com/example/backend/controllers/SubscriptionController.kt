@@ -124,7 +124,7 @@ class SubscriptionController(
   fun updateSubscriptionStatus(
       @PathVariable id: Long,
       @RequestBody statusRequest: Map<String, String>
-  ): ResponseEntity<Subscription> {
+  ): ResponseEntity<Map<String,Any?> > {
       val newStatus = statusRequest["status"]
           ?: throw IllegalArgumentException("Status is required in the request body")
       val updatedSubscription = subscriptionService.updateSubscriptionStatus(id, newStatus)

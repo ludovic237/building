@@ -34,4 +34,10 @@ class Tenant {
   @ColumnDefault("0.00")
   @Column(name = "housting_price", precision = 10, scale = 2)
   var houstingPrice: BigDecimal? = null
+
+  @Column(name = "created_date")
+  var createdDate: LocalDateTime? = null
+
+  @Column(name = "updated_date")
+  var updatedDate: LocalDateTime? = null
 }

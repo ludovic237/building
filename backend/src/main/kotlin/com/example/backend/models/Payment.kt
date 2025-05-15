@@ -26,4 +26,10 @@ class Payment {
 
   @Column(name = "payment_method", length = 50)
   var paymentMethod: String? = null
+
+  @Column(name = "created_date")
+  var createdDate: LocalDateTime? = null
+
+  @Column(name = "updated_date")
+  var updatedDate: LocalDateTime? = null
 }

@@ -4,6 +4,7 @@ import jakarta.persistence.*
 import org.hibernate.annotations.ColumnDefault
 import org.hibernate.annotations.OnDelete
 import org.hibernate.annotations.OnDeleteAction
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "subscription_options")
@@ -26,4 +27,10 @@ class SubscriptionOption {
   @ColumnDefault("1")
   @Column(name = "quantity")
   var quantity: Int? = null
+
+  @Column(name = "created_date")
+  var createdDate: LocalDateTime? = null
+
+  @Column(name = "updated_date")
+  var updatedDate: LocalDateTime? = null
 }

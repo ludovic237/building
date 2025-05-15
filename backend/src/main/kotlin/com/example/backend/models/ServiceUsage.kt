@@ -5,6 +5,7 @@ import org.hibernate.annotations.ColumnDefault
 import org.hibernate.annotations.OnDelete
 import org.hibernate.annotations.OnDeleteAction
 import java.time.Instant
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "service_usage")
@@ -30,4 +31,10 @@ class ServiceUsage {
   @ColumnDefault("CURRENT_TIMESTAMP")
   @Column(name = "usage_date")
   var usageDate: Instant? = null
+
+  @Column(name = "created_date")
+  var createdDate: LocalDateTime? = null
+
+  @Column(name = "updated_date")
+  var updatedDate: LocalDateTime? = null
 }

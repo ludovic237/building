@@ -36,4 +36,10 @@ class Subscription {
   @Lob
   @Column(name = "subscript_number", nullable = false)
   var subscriptNumber: Int? = null
+
+  @Column(name = "created_date")
+  var createdDate: LocalDateTime? = null
+
+  @Column(name = "updated_date")
+  var updatedDate: LocalDateTime? = null
 }

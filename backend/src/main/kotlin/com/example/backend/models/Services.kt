@@ -2,6 +2,7 @@ package com.example.backend.models
 
 import jakarta.persistence.*
 import org.hibernate.annotations.ColumnDefault
+import java.time.LocalDateTime
 
 
 @Entity
@@ -29,5 +30,11 @@ class Services {
   @ColumnDefault("1")
   @Column(name = "is_active")
   var isActive: Boolean? = null
+
+  @Column(name = "created_date")
+  var createdDate: LocalDateTime? = null
+
+  @Column(name = "updated_date")
+  var updatedDate: LocalDateTime? = null
 
 }

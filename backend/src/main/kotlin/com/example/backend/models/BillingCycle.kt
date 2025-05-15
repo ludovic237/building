@@ -29,6 +29,12 @@ class BillingCycle {
   @Column(name = "status", nullable = false)
   var status: String? = null
 
+  @Column(name = "created_date")
+  var createdDate: LocalDateTime? = null
+
+  @Column(name = "updated_date")
+  var updatedDate: LocalDateTime? = null
+
   override fun toString(): String {
     return "BillingCycle(id=$id, subscription=${subscription?.id}, amountDue=$amountDue, periodStart=$periodStart, periodEnd=$periodEnd, status='$status')"
   }

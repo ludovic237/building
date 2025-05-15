@@ -3,6 +3,7 @@ package com.example.backend.services
 import com.example.backend.models.User
 import com.example.backend.repositories.UserRepository
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.*
 
 @Service
@@ -19,6 +20,7 @@ class UserService(
   }
 
   fun createUser(user: User): User {
+    user.createdDate = LocalDateTime.now()
     return userRepository.save(user)
   }
 
@@ -34,6 +36,7 @@ class UserService(
     // Update other fields as necessary
 
     updatedUser.joinedDate = Date().toInstant();
+    updatedUser.updatedDate = LocalDateTime.now();
 
     return userRepository.save(updatedUser)
   }
