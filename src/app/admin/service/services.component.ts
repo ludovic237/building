@@ -17,6 +17,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import {CommonModule} from "@angular/common";
 import {Service} from "../../model/data";
 import {ServiceService} from "@services/service.service";
+import {Router} from "@angular/router";
 
 @Component({
     selector: 'app-services',
@@ -44,6 +45,7 @@ export class ServicesComponent implements OnInit {
   public count: number = 5;
 
   constructor(
+    private router:Router,
     private serviceService:ServiceService,
     public dialog: MatDialog
   ) {}
@@ -60,6 +62,9 @@ export class ServicesComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error fetching services:', err);
+        if (err.status=="403"){
+          this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+        }
       }
     });
   }

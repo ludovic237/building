@@ -14,6 +14,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import {CommonModule} from "@angular/common";
 import {Subscription} from "../../model/data";
 import {SubscriptionService} from "@services/subscription.service";
+import {Router} from "@angular/router";
 
 @Component({
     selector: 'app-subscriptions',
@@ -40,6 +41,7 @@ export class SubscriptionsComponent implements OnInit {
   public count: number = 5;
 
   constructor(public dialog: MatDialog,
+              public router:Router,
               public subscriptionService:SubscriptionService) {}
 
   ngOnInit(): void {
@@ -55,6 +57,9 @@ export class SubscriptionsComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error  subscription:', err);
+        if (err.status=="403"){
+          this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+        }
       }
     });
   }

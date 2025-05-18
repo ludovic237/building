@@ -14,11 +14,15 @@ class Invoice {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "tenant_id")
-  var tenant: com.example.backend.models.Tenant? = null
+  var tenant: Tenant? = null
 
   @Lob
   @Column(name = "type", nullable = false)
   var type: String? = null
+
+  @Lob
+  @Column(name = "number", nullable = false)
+  var number: String? = null
 
   @Column(name = "month")
   var month: Int? = null
@@ -41,6 +45,10 @@ class Invoice {
 
   @Column(name = "updated_date")
   var updatedDate: LocalDateTime? = null
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "modify_id")
+  var modify: User? = null
 
   override fun toString(): String {
     return "Invoice(id=$id, tenant=${tenant?.id}, type='$type', month=$month, year=$year, amount=$amount, paymentDate=$paymentDate, status='$status')"

@@ -10,6 +10,7 @@ import {MatDatepickerModule} from "@angular/material/datepicker";
 import {MatNativeDateModule} from "@angular/material/core";
 import {HoustingUnitService} from "@services/housting-unit.service";
 import {MatSnackBar} from "@angular/material/snack-bar";
+import {Router} from "@angular/router";
 
 @Component({
   selector: 'app-housting-unit-dialog',
@@ -34,6 +35,7 @@ export class HoustingUnitDialogComponent implements OnInit {
 
 
   constructor(public dialogRef: MatDialogRef<HoustingUnitDialogComponent>,
+              private router: Router,
               private snackBar: MatSnackBar,
               private housingUnitService: HoustingUnitService,
               @Inject(MAT_DIALOG_DATA) public data: any,
@@ -74,6 +76,9 @@ export class HoustingUnitDialogComponent implements OnInit {
           },
           error: (err) => {
             console.error('Error creating housing unit:', err);
+            if (err.status=="403"){
+              this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+            }
           }
         });
       }
@@ -95,6 +100,9 @@ export class HoustingUnitDialogComponent implements OnInit {
               verticalPosition: 'top',
               duration: 3000
             });
+            if (err.status=="403"){
+              this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+            }
           }
         });
       }

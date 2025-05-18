@@ -6,17 +6,22 @@ import com.example.backend.dtos.*
 import com.example.backend.models.*
 import com.example.backend.repositories.*
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.Year
 import java.time.ZoneId
 import java.util.*
 
 @Service
 class TenantService(
+  private var authenticationManager: AuthenticationManager? = null,
   private val paymentsViewRepository: PaymentsViewRepository,
   private val serviceOptionRepository: ServiceOptionRepository,
   private val subscriptionOptionRepository: SubscriptionOptionRepository,
+  private val invoiceService: InvoiceService,
   private val tenantRepository: TenantRepository,
   private val paymentRepository: PaymentRepository,
   private val billingCycleRepository: BillingCycleRepository,
@@ -28,6 +33,7 @@ class TenantService(
   private val housingUnitRepository: HoustingUnitRepository,
   val issueRepository: IssueRepository,
   val invoiceRepository: InvoiceRepository,
+  private val userService: UserService,
 ) {
 
   fun getListTenantDetails(): List<TenantDetailsDTO> {
@@ -119,6 +125,30 @@ class TenantService(
     val service = serviceRepository.findById(tenantData.serviceId)
       .orElseThrow { IllegalArgumentException("Service not found with ID: ${tenantData.serviceId}") }
 
+    var email = userService.getCurrentUser()
+    var currentUser = userRepository.findByEmail(email.toString())
+
+    val currentYear = Year.now().value
+    val today = LocalDate.now()
+    val currentMonth = String.format("%02d", today.monthValue)
+    val currentDay = String.format("%02d", today.dayOfMonth)
+
+    var amountTotal = tenantData.logementBasePrice * tenantData.numberOfSubscription.toBigDecimal()
+
+    var invoice = Invoice().apply {
+      tenant
+      type = "subscription"
+      month = currentMonth.toInt()
+      year = currentYear
+      amount = amountTotal
+      paymentDate = LocalDateTime.now()
+      createdDate = LocalDateTime.now()
+      status = if (tenantData.securityDeposit == amountTotal) StatusConstants.INVOICE_STATUS_PAID
+      else StatusConstants.INVOICE_STATUS_PENDING
+      number = invoiceService.generateInvoiceNumber()
+    }
+    invoice = invoiceRepository.save(invoice)
+
     // Step 1: Create Tenant
     var tenant = Tenant()
     tenant.housingUnit = housingUnitRepository.findById(tenantData.housingUnitId).get()
@@ -140,6 +170,8 @@ class TenantService(
     subscription.price = tenantData.logementBasePrice
     subscription.startDate = tenantData.startDate
     subscription.tenant = tenant
+    subscription.modifyBy = currentUser
+    subscription.invoice = invoice
     subscription.subscriptNumber = tenantData.numberOfSubscription
     subscription.status = "Active"
     subscription.createdDate = LocalDateTime.now()
@@ -156,9 +188,7 @@ class TenantService(
     var remainingDeposit = tenantData.securityDeposit
 
     val payment = createPayment(
-      tenant = tenant,
-      depositAmount = tenantData.securityDeposit,
-      paymentMode = tenantData.paymentMode
+      tenant = tenant, depositAmount = tenantData.securityDeposit, paymentMode = tenantData.paymentMode
     )
 
     for (i in 1..fullCycles) {
@@ -181,9 +211,7 @@ class TenantService(
       // Create PaymentLine
 
       createPaymentLine(
-        paymentId = payment.id!!,
-        billingCycleId = billingCycle.id!!,
-        remainingAmount = logementBasePrice
+        paymentId = payment.id!!, billingCycleId = billingCycle.id!!, remainingAmount = logementBasePrice
       )
 
       // Update remaining deposit and start date
@@ -212,9 +240,7 @@ class TenantService(
 
       // Create PaymentLine for partial cycle
       createPaymentLine(
-        paymentId = payment.id!!,
-        billingCycleId = billingCycle.id!!,
-        remainingAmount = partialCycleAmount
+        paymentId = payment.id!!, billingCycleId = billingCycle.id!!, remainingAmount = partialCycleAmount
       )
     }
 
@@ -241,12 +267,12 @@ class TenantService(
     payment.tenant = tenant
     payment.totalAmount = depositAmount
     payment.paymentMethod = when (paymentMode.uppercase()) {
-        PaymentTypeConstants.PAYMENT_METHOD_CASH -> PaymentTypeConstants.PAYMENT_METHOD_CASH
-        PaymentTypeConstants.PAYMENT_METHOD_CREDIT_CARD -> PaymentTypeConstants.PAYMENT_METHOD_CREDIT_CARD
-        PaymentTypeConstants.PAYMENT_METHOD_BANK_TRANSFER -> PaymentTypeConstants.PAYMENT_METHOD_BANK_TRANSFER
-        PaymentTypeConstants.PAYMENT_METHOD_CHECK -> PaymentTypeConstants.PAYMENT_METHOD_CHECK
-        PaymentTypeConstants.PAYMENT_METHOD_MOBILE_PAYMENT -> PaymentTypeConstants.PAYMENT_METHOD_MOBILE_PAYMENT
-        else -> "OTHER"
+      PaymentTypeConstants.PAYMENT_METHOD_CASH -> PaymentTypeConstants.PAYMENT_METHOD_CASH
+      PaymentTypeConstants.PAYMENT_METHOD_CREDIT_CARD -> PaymentTypeConstants.PAYMENT_METHOD_CREDIT_CARD
+      PaymentTypeConstants.PAYMENT_METHOD_BANK_TRANSFER -> PaymentTypeConstants.PAYMENT_METHOD_BANK_TRANSFER
+      PaymentTypeConstants.PAYMENT_METHOD_CHECK -> PaymentTypeConstants.PAYMENT_METHOD_CHECK
+      PaymentTypeConstants.PAYMENT_METHOD_MOBILE_PAYMENT -> PaymentTypeConstants.PAYMENT_METHOD_MOBILE_PAYMENT
+      else -> "OTHER"
     }
     payment.paymentDate = Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()
     return paymentRepository.save(payment)
@@ -262,8 +288,8 @@ class TenantService(
   }
 
   fun updateTenant(id: Long, updatedTenant: Tenant): Tenant {
-    val existingTenant = tenantRepository.findById(id)
-      .orElseThrow { IllegalArgumentException("Tenant with ID $id not found") }
+    val existingTenant =
+      tenantRepository.findById(id).orElseThrow { IllegalArgumentException("Tenant with ID $id not found") }
 
     existingTenant.user!!.firstName = updatedTenant.user!!.lastName
     existingTenant.user!!.lastName = updatedTenant.user!!.firstName
@@ -312,16 +338,15 @@ class TenantService(
     val paidBillingCycles = billingCycles.filter { it.status == StatusConstants.BILLING_CYCLE_STATUS_PAID }
     val unpaidBillingCycles = billingCycles.filter { it.status != StatusConstants.BILLING_CYCLE_STATUS_PAID }
 
-    return mapOf(
-      "billingCycles" to billingCycles.map { cycle ->
-        mapOf(
-          "id" to cycle.id,
-          "amountDue" to cycle.amountDue,
-          "periodStart" to cycle.periodStart,
-          "periodEnd" to cycle.periodEnd,
-          "status" to cycle.status
-        )
-      },
+    return mapOf("billingCycles" to billingCycles.map { cycle ->
+      mapOf(
+        "id" to cycle.id,
+        "amountDue" to cycle.amountDue,
+        "periodStart" to cycle.periodStart,
+        "periodEnd" to cycle.periodEnd,
+        "status" to cycle.status
+      )
+    },
       "subscriptions" to subscriptions.map { subscription ->
         mapOf(
           "id" to subscription.id,
@@ -336,8 +361,7 @@ class TenantService(
       "completedPayments" to paidBillingCycles.size,
       "remainingPayments" to unpaidBillingCycles.size,
       "amountPaid" to paidBillingCycles.sumOf { it.amountDue ?: BigDecimal.ZERO },
-      "outstandingDebt" to unpaidBillingCycles.sumOf { it.amountDue ?: BigDecimal.ZERO }
-    )
+      "outstandingDebt" to unpaidBillingCycles.sumOf { it.amountDue ?: BigDecimal.ZERO })
   }
 
   fun getIssueTracking(tenant: Tenant): List<Map<String, Any?>> {
@@ -366,8 +390,7 @@ class TenantService(
           "paymentDate" to invoice.paymentDate,
           "status" to invoice.status
         )
-      },
-      "userActivity" to mapOf(
+      }, "userActivity" to mapOf(
         "registrationDate" to tenant.user?.registrationDate,
         "accountStatus" to if (tenant.user?.isActive == true) "Active" else "Inactive"
       )
@@ -384,15 +407,12 @@ class TenantService(
   }
 
   fun getTenantDetailsAsMap(tenantId: Long): Map<String, Any?> {
-    val tenant = tenantRepository.findById(tenantId)
-      .orElseThrow { IllegalArgumentException("Tenant not found") }
+    val tenant = tenantRepository.findById(tenantId).orElseThrow { IllegalArgumentException("Tenant not found") }
 
     val subscriptions = subscriptionRepository.findByTenant(tenant).map { subscription ->
       val subscribedOptions = subscriptionOptionRepository.findBySubscription(subscription).map { option ->
         mapOf(
-          "id" to option.id,
-          "name" to option.option!!.name,
-          "price" to option.option!!.price
+          "id" to option.id, "name" to option.option!!.name, "price" to option.option!!.price
         )
       }
 
@@ -443,7 +463,8 @@ class TenantService(
     val totalPayments = subscriptionsData.sumOf { it.subscriptNumber ?: 0 }
 
     val completedPayments = paymentLines.count { it.billingCycle?.status == StatusConstants.BILLING_CYCLE_STATUS_PAID }
-    val partialPayments = paymentLines.count { it.billingCycle?.status == StatusConstants.BILLING_CYCLE_STATUS_PARTIAL_PAID }
+    val partialPayments =
+      paymentLines.count { it.billingCycle?.status == StatusConstants.BILLING_CYCLE_STATUS_PARTIAL_PAID }
     val donePayments = completedPayments + partialPayments
     val remainingPayments = totalPayments - completedPayments
 
@@ -473,13 +494,13 @@ class TenantService(
       }
     }
 
-    val financialSummary = mapOf(
-      "totalPayments" to billingCycles.size,
+    val financialSummary = mapOf("totalPayments" to billingCycles.size,
       "completedPayments" to billingCycles.count { it["status"] == StatusConstants.BILLING_CYCLE_STATUS_PAID },
       "remainingPayments" to billingCycles.count { it["status"] != StatusConstants.BILLING_CYCLE_STATUS_PAID },
-      "amountPaid" to billingCycles.filter { it["status"] == StatusConstants.BILLING_CYCLE_STATUS_PAID }.sumOf { it["amountDue"] as BigDecimal },
-      "outstandingDebt" to billingCycles.filter { it["status"] != StatusConstants.BILLING_CYCLE_STATUS_PAID }.sumOf { it["amountDue"] as BigDecimal }
-    )
+      "amountPaid" to billingCycles.filter { it["status"] == StatusConstants.BILLING_CYCLE_STATUS_PAID }
+        .sumOf { it["amountDue"] as BigDecimal },
+      "outstandingDebt" to billingCycles.filter { it["status"] != StatusConstants.BILLING_CYCLE_STATUS_PAID }
+        .sumOf { it["amountDue"] as BigDecimal })
 
     val issues = issueRepository.findByTenant(tenant).map { issue ->
       mapOf(
@@ -510,8 +531,7 @@ class TenantService(
 
     val subscribedServices = subscriptionRepository.findByTenant(tenant).map { it.service?.id }
     val subscribedOptions = subscriptionRepository.findByTenant(tenant)
-      .flatMap { subscription -> subscriptionOptionRepository.findBySubscription(subscription) }
-      .map { it.option?.id }
+      .flatMap { subscription -> subscriptionOptionRepository.findBySubscription(subscription) }.map { it.option?.id }
 
     val services = serviceRepository.findAll().map { service ->
       val serviceOptions = serviceOptionRepository.findByService(service).map { option ->

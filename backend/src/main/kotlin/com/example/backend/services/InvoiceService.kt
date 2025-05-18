@@ -1,14 +1,21 @@
 package com.example.backend.services
 
 import com.example.backend.models.Invoice
+import com.example.backend.models.InvoiceCounter
+import com.example.backend.repositories.InvoiceCounterRepository
 import com.example.backend.repositories.InvoiceRepository
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.Month
+import java.time.Year
 import java.util.*
 
 @Service
 class InvoiceService(
-    private val invoiceRepository: InvoiceRepository
+    private val invoiceRepository: InvoiceRepository,
+    private val invoiceCounterRepository: InvoiceCounterRepository,
 ) {
 
     fun getAllInvoices(): List<Invoice> {
@@ -19,8 +26,10 @@ class InvoiceService(
         return invoiceRepository.findById(id)
     }
 
+  @Transactional
     fun createInvoice(invoice: Invoice): Invoice {
       invoice.createdDate = LocalDateTime.now()
+      invoice.number = generateInvoiceNumber()
         return invoiceRepository.save(invoice)
     }
 
@@ -43,4 +52,19 @@ class InvoiceService(
         }
         invoiceRepository.deleteById(id)
     }
+
+  @Transactional
+  fun generateInvoiceNumber(): String {
+    val currentYear = Year.now().value
+    val today = LocalDate.now()
+    val currentMonth = String.format("%02d",today.monthValue)
+    val currentDay = String.format("%02d",today.dayOfMonth)
+    val counter = invoiceCounterRepository.findByYear(currentYear)
+      ?: invoiceCounterRepository.save(InvoiceCounter(year = currentYear, counter = 0))
+
+    counter.counter += 1
+    invoiceCounterRepository.save(counter)
+
+    return "INV-${currentYear}-${currentMonth}-${String.format("%05d", counter.counter)}"
+  }
 }

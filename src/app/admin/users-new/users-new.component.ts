@@ -23,6 +23,7 @@ import {UserNewDialogComponent} from "./user-new-dialog/user-new-dialog.componen
 import {UserNew} from "../../model/data";
 import {UserService} from "@services/user.service";
 import {MatSnackBar} from "@angular/material/snack-bar";
+import {Router} from "@angular/router";
 
 @Component({
   selector: 'app-users-new',
@@ -55,6 +56,7 @@ export class UsersNewComponent implements OnInit {
   domHandlerService = inject(DomHandlerService);
 
   constructor(public settingsService: SettingsService,
+              public router: Router,
               public dialog: MatDialog,
               public snackBar: MatSnackBar,
               public userService: UserService,
@@ -76,9 +78,11 @@ export class UsersNewComponent implements OnInit {
           image: user.image || 'images/profile/ashley.jpg' // Set default image
         }));
       },
-      error: () => {
+      error: (err) => {
         this.users = [];
-        // this.ngxSpinnerService.hide()
+        if (err.status=="403"){
+          this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+        }
       }
     });
   }

@@ -20,6 +20,7 @@ import {UsersService} from "@services/users.service";
 import {UserService} from "@services/user.service";
 import {MatSelectModule} from "@angular/material/select";
 import {HoustingUnitService} from "@services/housting-unit.service";
+import {Router} from "@angular/router";
 
 @Component({
   selector: 'app-user-new-dialog',
@@ -48,6 +49,7 @@ export class UserNewDialogComponent implements OnInit {
   public passwordHide: boolean = true;
 
  constructor(
+   public router: Router,
    public snackBar: MatSnackBar,
    public dialogRef: MatDialogRef<UserNewDialogComponent>,
    public housingUnitService: HoustingUnitService,
@@ -179,6 +181,9 @@ export class UserNewDialogComponent implements OnInit {
               verticalPosition: 'top',
               duration: 3000
             });
+            if (err.status=="403"){
+              this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+            }
           }
         });
       }
@@ -201,6 +206,9 @@ export class UserNewDialogComponent implements OnInit {
               verticalPosition: 'top',
               duration: 3000
             });
+            if (err.status=="403"){
+              this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+            }
           }
         });
       }

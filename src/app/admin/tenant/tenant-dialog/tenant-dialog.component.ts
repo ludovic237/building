@@ -23,6 +23,7 @@ import {MatSnackBar} from "@angular/material/snack-bar";
 import {MatStepperModule} from "@angular/material/stepper";
 import {ServiceService} from "@services/service.service";
 import {CommonModule} from "@angular/common";
+import {Router} from "@angular/router";
 
 @Component({
   selector: 'app-tenant-dialog',
@@ -62,6 +63,7 @@ export class TenantDialogComponent implements OnInit {
   constructor(public dialogRef: MatDialogRef<TenantDialogComponent>,
               private housingUnitService: HoustingUnitService,
               private tenantService: TenantService,
+              private router: Router,
               private serviceService: ServiceService,
               private snackBar: MatSnackBar,
               private usersService: UserService,
@@ -237,6 +239,9 @@ export class TenantDialogComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error fetching users:', err);
+        if (err.status=="403"){
+          this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+        }
       }
     });
   }
@@ -248,6 +253,9 @@ export class TenantDialogComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error fetching housing units:', err);
+        if (err.status=="403"){
+          this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+        }
       }
     });
   }

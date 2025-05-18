@@ -4,6 +4,7 @@ import com.example.backend.models.Rent
 import com.example.backend.services.DocumentService
 import com.example.backend.services.PdfService
 import com.example.backend.services.RentService
+import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -38,6 +39,19 @@ class PdfController(
     } else {
       ResponseEntity.badRequest().body("Duplicate PDF. Not saved.")
     }
+  }
+
+  @GetMapping("/tenant/{tenantId}")
+  fun listDocuments(@PathVariable tenantId: Long): List<Map<String, Any?>> {
+    return pdfService.getDocumentsByTenant(tenantId)
+  }
+
+  @GetMapping("/{documentId}/download")
+  fun downloadDocument(@PathVariable documentId: Long, response: HttpServletResponse) {
+    val document = pdfService.downloadDocument(documentId)
+    response.contentType = "application/pdf"
+    response.setHeader("Content-Disposition", "attachment; filename=document_$documentId.pdf")
+    response.outputStream.write(document!!)
   }
 
 }

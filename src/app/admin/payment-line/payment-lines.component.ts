@@ -14,6 +14,7 @@ import {CommonModule} from "@angular/common";
 import {Subscription} from "../../model/data";
 import {PaymentLineService} from "@services/payment-line.service";
 import {PaymentLineDialogComponent} from "./payment-line-dialog/payment-line-dialog.component";
+import {Router} from "@angular/router";
 
 @Component({
     selector: 'app-payment-lines',
@@ -40,6 +41,7 @@ export class PaymentLinesComponent implements OnInit {
   public count: number = 0;
 
   constructor(public dialog: MatDialog,
+              public router:Router,
               public paymentLineService:PaymentLineService) {}
 
   ngOnInit(): void {
@@ -56,6 +58,9 @@ export class PaymentLinesComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error  payment:', err);
+        if (err.status=="403"){
+          this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+        }
       }
     });
   }

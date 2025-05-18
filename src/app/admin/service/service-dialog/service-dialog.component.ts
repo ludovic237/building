@@ -16,6 +16,7 @@ import {CommonModule} from "@angular/common";
 import {MatIconModule} from "@angular/material/icon";
 import {MatChipsModule} from "@angular/material/chips";
 import {MatToolbarModule} from "@angular/material/toolbar";
+import {Router} from "@angular/router";
 
 @Component({
   selector: 'app-service-dialog',
@@ -48,6 +49,7 @@ export class ServiceDialogComponent implements OnInit {
 
   constructor(
     public dialogRef: MatDialogRef<ServiceDialogComponent>,
+    private router: Router,
     private snackBar: MatSnackBar,
     private serviceService: ServiceService,
     @Inject(MAT_DIALOG_DATA) public data: any,
@@ -78,6 +80,9 @@ export class ServiceDialogComponent implements OnInit {
             duration: 3000,
             panelClass: ['error-snackbar']
           });
+          if (err.status=="403"){
+            this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+          }
           console.error('Error loading service:', err);
         }
       });
@@ -191,6 +196,9 @@ export class ServiceDialogComponent implements OnInit {
               duration: 3000,
               panelClass: ['error-snackbar']
             });
+            if (err.status=="403"){
+              this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+            }
             console.error('Error updating service:', err);
           }
         });
@@ -221,6 +229,9 @@ export class ServiceDialogComponent implements OnInit {
           duration: 3000,
           panelClass: ['error-snackbar']
         });
+        if (err.status=="403"){
+          this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+        }
         console.error('Error saving service:', err);
       }
     });

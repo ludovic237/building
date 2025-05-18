@@ -14,6 +14,7 @@ import {Subscription} from "../../model/data";
 import {PaymentService} from "@services/payment.service";
 import {PaymentDialogComponent} from "./payment-dialog/payment-dialog.component";
 import {PaymentInfoDialogComponent} from "./payment-info-info-dialog/payment-info-dialog.component";
+import {Router} from "@angular/router";
 
 @Component({
     selector: 'app-payments',
@@ -40,6 +41,7 @@ export class PaymentsComponent implements OnInit {
   public count: number = 5;
 
   constructor(public dialog: MatDialog,
+              public router:Router,
               public paymentService:PaymentService) {}
 
   ngOnInit(): void {
@@ -56,6 +58,9 @@ export class PaymentsComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error  payment:', err);
+        if (err.status=="403"){
+          this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+        }
       }
     });
   }

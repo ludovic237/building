@@ -20,6 +20,14 @@ class Subscription {
   @JoinColumn(name = "service_id")
   var service: Services? = null
 
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "invoice_id")
+  var invoice: Invoice? = null
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "modify_by")
+  var modifyBy: User? = null
+
   @Column(name = "price", precision = 10, scale = 2)
   var price: BigDecimal? = null
 

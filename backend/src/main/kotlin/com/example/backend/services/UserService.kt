@@ -2,6 +2,8 @@ package com.example.backend.services
 
 import com.example.backend.models.User
 import com.example.backend.repositories.UserRepository
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.*
@@ -46,5 +48,15 @@ class UserService(
       throw IllegalArgumentException("User with ID $id not found")
     }
     userRepository.deleteById(id)
+  }
+
+  fun getCurrentUser(): User? {
+    val auth = SecurityContextHolder.getContext().authentication
+    val username = when (val principal = auth?.principal) {
+      is UserDetails -> principal.username
+      is String -> principal
+      else -> null
+    }
+    return username?.let { userRepository.findByUsername(it).orElse(null) }
   }
 }

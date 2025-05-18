@@ -6,6 +6,7 @@ import {PaymentService} from "@services/payment.service";
 import {MatSnackBar} from "@angular/material/snack-bar";
 import {ServiceService} from "@services/service.service";
 import {SubscriptionService} from "@services/subscription.service";
+import {Router} from "@angular/router";
 
 @Component({
     selector: 'app-confirm-dialog',
@@ -19,6 +20,7 @@ import {SubscriptionService} from "@services/subscription.service";
 export class ConfirmDialogComponent {
 
   constructor(
+    public router: Router,
     public paymentService: PaymentService,
     public serviceService: ServiceService,
     public subscriptionService: SubscriptionService,
@@ -37,6 +39,9 @@ export class ConfirmDialogComponent {
       },
       error: (err) => {
         console.error('Error deleting payment:', err);
+        if (err.status=="403"){
+          this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+        }
       }
     });
   }

@@ -9,13 +9,19 @@ import com.example.backend.repositories.*
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.math.BigDecimal
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 
+import java.math.BigDecimal
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.Year
+
 @Service
 class SubscriptionService(
+  private val documentRepository: DocumentRepository,
+  private val invoiceRepository: InvoiceRepository,
+  private val invoiceService: InvoiceService,
   private val serviceRepository: ServiceRepository,
   private val serviceOptionRepository: ServiceOptionRepository,
   private val subscriptionRepository: SubscriptionRepository,
@@ -24,7 +30,8 @@ class SubscriptionService(
   private val tenantRepository: TenantRepository,
   private val billingCycleRepository: BillingCycleRepository,
   private val paymentRepository: PaymentRepository,
-  private val paymentLineRepository: PaymentLineRepository
+  private val paymentLineRepository: PaymentLineRepository,
+  private val userService: UserService
 ) {
 
   fun getAllSubscriptions(): List<SubscriptionDTO> {
@@ -49,6 +56,23 @@ class SubscriptionService(
   }
 
   fun createSubscription(subscription: Subscription): Subscription {
+    var user = userService.getCurrentUser()
+    val currentYear = Year.now().value
+    val today = LocalDate.now()
+    val currentMonth = String.format("%02d", today.monthValue)
+    val currentDay = String.format("%02d", today.dayOfMonth)
+    var invoice = Invoice().apply {
+      tenant = subscription.tenant
+      type = "subscription"
+      month = currentMonth.toInt()
+      year = currentYear
+      amount = subscription.price?.multiply(subscription.subscriptNumber?.toBigDecimal() ?: BigDecimal.ZERO)
+      paymentDate = LocalDateTime.now()
+      createdDate = LocalDateTime.now()
+      status = "PENDING"
+      number = invoiceService.generateInvoiceNumber()
+    }
+    invoiceRepository.save(invoice)
     subscription.createdDate = LocalDateTime.now()
     subscription.updatedDate = LocalDateTime.now()
     return subscriptionRepository.save(subscription)
@@ -173,6 +197,20 @@ class SubscriptionService(
 
     val billingPrice = subscription.price ?: BigDecimal.ZERO
 
+    // Create a new invoice
+    val invoice = Invoice().apply {
+      this.tenant = tenant
+      this.type = "payment"
+      this.month = LocalDate.now().monthValue
+      this.year = LocalDate.now().year
+      this.amount = paymentAmount
+      this.paymentDate = LocalDateTime.now()
+      this.createdDate = LocalDateTime.now()
+      this.status = "PENDING"
+      this.number = invoiceService.generateInvoiceNumber()
+    }
+    invoiceRepository.save(invoice)
+
     // Create a new payment record
     val payment = paymentRepository.save(
       Payment().apply {
@@ -268,6 +306,7 @@ class SubscriptionService(
     return mapOf(
       "message" to "Payment processed successfully",
       "paymentId" to payment.id,
+      "invoiceId" to invoice.id
     )
   }
 
@@ -334,8 +373,8 @@ class SubscriptionService(
     val subscription = Subscription().apply {
       this.tenant = tenant
       this.service = service
-      this.startDate = LocalDateTime.parse(dateDebut, formatter) // Extract only the date part
-      this.endDate = LocalDateTime.parse(dateFin, formatter) // Extract only the date part
+      this.startDate = LocalDateTime.parse(dateDebut, formatter)
+      this.endDate = LocalDateTime.parse(dateFin, formatter)
       this.status = status
       this.createdDate = LocalDateTime.now()
       this.updatedDate = LocalDateTime.now()
@@ -360,6 +399,25 @@ class SubscriptionService(
         }
       )
     }
+
+    // Create an invoice
+    val invoice = Invoice().apply {
+      this.tenant = tenant
+      this.type = "subscription"
+      this.month = LocalDate.now().monthValue
+      this.year = LocalDate.now().year
+      this.amount = options.sumOf { option ->
+        val quantity = (option["quantity"] as Number).toInt()
+        val serviceOption = serviceOptionRepository.findById((option["id"] as Number).toLong())
+          .orElseThrow { IllegalArgumentException("Service option not found with ID ${option["id"]}") }
+        serviceOption.price?.multiply(quantity.toBigDecimal()) ?: BigDecimal.ZERO
+      }
+      this.paymentDate = null
+      this.createdDate = LocalDateTime.now()
+      this.status = "PENDING"
+      this.number = invoiceService.generateInvoiceNumber()
+    }
+    invoiceRepository.save(invoice)
 
     return savedSubscription
   }
@@ -389,25 +447,25 @@ class SubscriptionService(
     return formattedData
   }
 
-  fun updateSubscriptionStatus(subscriptionId: Long, newStatus: String): Map<String,Any?>  {
-      var subscription = subscriptionRepository.findById(subscriptionId)
-          .orElseThrow { IllegalArgumentException("Subscription not found with ID $subscriptionId") }
+  fun updateSubscriptionStatus(subscriptionId: Long, newStatus: String): Map<String, Any?> {
+    var subscription = subscriptionRepository.findById(subscriptionId)
+      .orElseThrow { IllegalArgumentException("Subscription not found with ID $subscriptionId") }
 
-      subscription.status = newStatus
-      subscription.updatedDate = LocalDateTime.now()
-      return validateAndSaveSubscription(subscription)
+    subscription.status = newStatus
+    subscription.updatedDate = LocalDateTime.now()
+    return validateAndSaveSubscription(subscription)
   }
 
-  fun validateAndSaveSubscription(subscription: Subscription):Map<String, Any?> {
-      val validStatuses = listOf(
-          StatusConstants.SUBSCRIPTION_STATUS_ACTIVE,
-          StatusConstants.SUBSCRIPTION_STATUS_EXPIRED,
-          StatusConstants.SUBSCRIPTION_STATUS_CANCELED
-      )
+  fun validateAndSaveSubscription(subscription: Subscription): Map<String, Any?> {
+    val validStatuses = listOf(
+      StatusConstants.SUBSCRIPTION_STATUS_ACTIVE,
+      StatusConstants.SUBSCRIPTION_STATUS_EXPIRED,
+      StatusConstants.SUBSCRIPTION_STATUS_CANCELED
+    )
 
-      if (subscription.status !in validStatuses) {
-          throw IllegalArgumentException("Invalid subscription status: ${subscription.status}")
-      }
+    if (subscription.status !in validStatuses) {
+      throw IllegalArgumentException("Invalid subscription status: ${subscription.status}")
+    }
 
     val subscriptionData = subscriptionRepository.save(subscription)
     return mapOf(
@@ -432,5 +490,6 @@ class SubscriptionService(
 
     println("Checked and updated expired subscriptions: ${expiredSubscriptions.size}")
   }
+
 
 }

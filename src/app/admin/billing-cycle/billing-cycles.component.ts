@@ -14,6 +14,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import {CommonModule} from "@angular/common";
 import {Subscription} from "../../model/data";
 import {BillingCycleService} from "@services/billing-cycle.service";
+import {Router} from "@angular/router";
 
 @Component({
     selector: 'app-billing-cycles',
@@ -41,6 +42,7 @@ export class BillingCyclesComponent implements OnInit {
   public count: number = 5;
 
   constructor(public dialog: MatDialog,
+              public router:Router,
               public billinCycleService:BillingCycleService) {}
 
   ngOnInit(): void {
@@ -57,6 +59,9 @@ export class BillingCyclesComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error  payment:', err);
+        if (err.status=="403"){
+          this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+        }
       }
     });
   }

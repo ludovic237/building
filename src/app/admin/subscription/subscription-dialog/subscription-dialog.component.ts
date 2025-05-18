@@ -20,6 +20,7 @@ import {MatCardModule} from "@angular/material/card";
 import {MatCheckboxModule} from "@angular/material/checkbox";
 import {SubscriptionService} from "@services/subscription.service";
 import {ConfirmationDialogComponent} from "./confirmation-dialog.component";
+import {Router} from "@angular/router";
 
 @Component({
   selector: 'app-subscription-dialog',
@@ -67,6 +68,7 @@ export class SubscriptionDialogComponent implements OnInit {
 
   constructor(public dialogRef: MatDialogRef<SubscriptionDialogComponent>,
               private snackBar: MatSnackBar,
+              private router: Router,
               private tenantService: TenantService,
               private serviceService: ServiceService,
               private subscriptionService: SubscriptionService,
@@ -135,6 +137,9 @@ ngOnInit(): void {
             duration: 3000,
             verticalPosition: 'top'
           });
+          if (err.status=="403"){
+            this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+          }
           console.error('Error creating subscription:', err);
         }
       });
@@ -187,6 +192,9 @@ ngOnInit(): void {
                 duration: 3000,
                 panelClass: ['error-snackbar']
               });
+              if (err.status=="403"){
+                this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+              }
               console.error('Error loading service:', err);
             }
           });
@@ -194,6 +202,9 @@ ngOnInit(): void {
       },
       error: (err) => {
         console.error('Error fetching housing units:', err);
+        if (err.status=="403"){
+          this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+        }
       }
     });
   }
@@ -206,6 +217,9 @@ ngOnInit(): void {
       },
       error: (err) => {
         console.error('Error fetching users:', err);
+        if (err.status=="403"){
+          this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+        }
       }
     });
   }
@@ -301,6 +315,9 @@ ngOnInit(): void {
                 duration: 3000,
                 verticalPosition: 'top',
               });
+              if (err.status=="403"){
+                this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+              }
               console.error('Error updating status:', err);
             },
           });
@@ -324,6 +341,9 @@ ngOnInit(): void {
             duration: 3000,
             verticalPosition: 'top',
           });
+          if (err.status=="403"){
+            this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+          }
           console.error('Error updating status:', err);
         },
       });

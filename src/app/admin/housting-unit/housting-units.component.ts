@@ -27,6 +27,7 @@ import {MatSelectModule} from "@angular/material/select";
 import {MatOptionModule} from "@angular/material/core";
 import {FormsModule} from "@angular/forms";
 import {MatPaginator, MatPaginatorModule} from "@angular/material/paginator";
+import {Router} from "@angular/router";
 
 @Component({
   selector: 'app-housting-units',
@@ -86,6 +87,7 @@ export class HoustingUnitsComponent implements OnInit, AfterViewInit {
 
   constructor(
     public housingUnitService: HoustingUnitService,
+    public router: Router,
     public snackBar: MatSnackBar,
     public appService: AppService,
     public dialog: MatDialog,
@@ -155,6 +157,9 @@ export class HoustingUnitsComponent implements OnInit, AfterViewInit {
               verticalPosition: 'top',
               duration: 3000
             });
+            if (err.status=="403"){
+              this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+            }
           }
         });
       }
@@ -191,6 +196,9 @@ export class HoustingUnitsComponent implements OnInit, AfterViewInit {
               verticalPosition: 'top',
               duration: 3000
             });
+            if (err.status=="403"){
+              this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+            }
           }
         });
       }
@@ -235,6 +243,9 @@ export class HoustingUnitsComponent implements OnInit, AfterViewInit {
       },
       error: (err) => {
         console.error('Error  payment:', err);
+        if (err.status=="403"){
+          this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+        }
       }
     });
   }

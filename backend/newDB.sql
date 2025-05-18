@@ -58,7 +58,9 @@ create table if not exists invoices
   id           bigint auto_increment
     primary key,
   tenant_id    bigint         null,
+  modify_id    bigint         null,
   type         tinytext       not null,
+  number       tinytext       null,
   month        int            null,
   year         int            null,
   amount       decimal(10, 2) null,
@@ -88,6 +90,8 @@ create table if not exists subscriptions
   id               bigint auto_increment
     primary key,
   tenant_id        bigint         null,
+  update_by        bigint         null,
+  invoice_id        bigint         null,
   service_id       bigint         null,
   price            decimal(10, 2) null,
   start_date       datetime       not null,
@@ -198,9 +202,31 @@ CREATE TABLE audit_logs
 );
 
 
+CREATE TABLE documents
+(
+  id           BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id      bigint       null,
+  name         VARCHAR(255) NULL,
+  type         VARCHAR(100) NULL,
+  size         int          NULL,
+  content      BLOB,
+  created_date datetime     null,
+  updated_date datetime     null
+);
+
+CREATE TABLE invoice_counter
+(
+  id      BIGINT AUTO_INCREMENT PRIMARY KEY,
+  year    int NULL,
+  counter int NULL
+);
+
+
 -- foreign key constraints
 alter table subscriptions
   add foreign key (tenant_id) references tenants (id),
+  add foreign key (update_by) references users (id),
+  add foreign key (invoice_id) references invoices (id),
   add foreign key (service_id) references services (id);
 
 alter table tenants
@@ -221,6 +247,7 @@ alter table payment_lines
   add foreign key (billing_cycle_id) references billing_cycles (id);
 
 alter table invoices
+  add foreign key (modify_id) references users (id),
   add foreign key (tenant_id) references tenants (id);
 
 alter table issues
@@ -236,6 +263,11 @@ alter table subscription_options
 alter table service_usage
   add FOREIGN KEY (subscription_id) REFERENCES subscriptions (id) ON DELETE CASCADE,
   add FOREIGN KEY (option_id) REFERENCES subscription_options (option_id) ON DELETE CASCADE;
+
+alter table documents
+  add user_id bigint null,
+  add hash    blob   null,
+  add foreign key (user_id) references users (id);
 
 ALTER TABLE service_options
   ADD COLUMN quantity INT DEFAULT NULL;
