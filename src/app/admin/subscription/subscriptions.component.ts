@@ -1,35 +1,36 @@
-import { Component, OnInit, inject } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
-import { customers } from '../../common/data/customers';
-import { SubscriptionDialogComponent } from './subscription-dialog/subscription-dialog.component';
-import { ConfirmDialogComponent } from '@shared-components/confirm-dialog/confirm-dialog.component';
-import { MatCardModule } from '@angular/material/card';
-import { FlexLayoutModule } from '@ngbracket/ngx-layout';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { NgxPaginationModule } from 'ngx-pagination';
-import { MatDividerModule } from '@angular/material/divider';
-import { PipesModule } from '../../theme/pipes/pipes.module';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import {Component, OnInit, inject} from '@angular/core';
+import {MatDialog} from '@angular/material/dialog';
+import {customers} from '../../common/data/customers';
+import {SubscriptionDialogComponent} from './subscription-dialog/subscription-dialog.component';
+import {ConfirmDialogComponent} from '@shared-components/confirm-dialog/confirm-dialog.component';
+import {MatCardModule} from '@angular/material/card';
+import {FlexLayoutModule} from '@ngbracket/ngx-layout';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule} from '@angular/material/icon';
+import {NgxPaginationModule} from 'ngx-pagination';
+import {MatDividerModule} from '@angular/material/divider';
+import {PipesModule} from '../../theme/pipes/pipes.module';
+import {MatTooltipModule} from '@angular/material/tooltip';
 import {CommonModule} from "@angular/common";
 import {Subscription} from "../../model/data";
 import {SubscriptionService} from "@services/subscription.service";
 import {Router} from "@angular/router";
+import {Settings, SettingsService} from "@services/settings.service";
 
 @Component({
-    selector: 'app-subscriptions',
-    imports: [
-      CommonModule,
-        FlexLayoutModule,
-        MatCardModule,
-        MatButtonModule,
-        MatDividerModule,
-        MatIconModule,
-        MatTooltipModule,
-        NgxPaginationModule,
-        PipesModule
-    ],
-    templateUrl: './subscriptions.component.html'
+  selector: 'app-subscriptions',
+  imports: [
+    CommonModule,
+    FlexLayoutModule,
+    MatCardModule,
+    MatButtonModule,
+    MatDividerModule,
+    MatIconModule,
+    MatTooltipModule,
+    NgxPaginationModule,
+    PipesModule
+  ],
+  templateUrl: './subscriptions.component.html'
 })
 export class SubscriptionsComponent implements OnInit {
 
@@ -39,10 +40,14 @@ export class SubscriptionsComponent implements OnInit {
   public services: any[] = [];
   public page: number = 1;
   public count: number = 5;
+  public settings: Settings;
 
   constructor(public dialog: MatDialog,
-              public router:Router,
-              public subscriptionService:SubscriptionService) {}
+              public router: Router,
+              public settingsService: SettingsService,
+              public subscriptionService: SubscriptionService) {
+    this.settings = this.settingsService.settings;
+  }
 
   ngOnInit(): void {
     this.getAllSubscription();
@@ -57,7 +62,7 @@ export class SubscriptionsComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error  subscription:', err);
-        if (err.status=="403"){
+        if (err.status == "403") {
           this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
         }
       }
@@ -68,7 +73,10 @@ export class SubscriptionsComponent implements OnInit {
     const dialogRef = this.dialog.open(SubscriptionDialogComponent, {
       data: data,
       panelClass: ['theme-dialog'],
-      autoFocus: false
+      autoFocus: false,
+      direction: (this.settings.rtl) ? 'rtl' : 'ltr',
+      width: '80%',
+      height: '90%'
     });
 
     dialogRef.afterClosed().subscribe((result: any) => {

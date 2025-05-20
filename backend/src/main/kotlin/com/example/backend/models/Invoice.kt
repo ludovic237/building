@@ -13,8 +13,8 @@ class Invoice {
   var id: Long? = null
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "tenant_id")
-  var tenant: Tenant? = null
+  @JoinColumn(name = "user_id")
+  var user: User? = null
 
   @Lob
   @Column(name = "type", nullable = false)
@@ -51,6 +51,6 @@ class Invoice {
   var modify: User? = null
 
   override fun toString(): String {
-    return "Invoice(id=$id, tenant=${tenant?.id}, type='$type', month=$month, year=$year, amount=$amount, paymentDate=$paymentDate, status='$status')"
+    return "Invoice(id=$id, tenant=${user?.id}, type='$type', month=$month, year=$year, amount=$amount, paymentDate=$paymentDate, status='$status')"
   }
 }

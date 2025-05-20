@@ -80,16 +80,16 @@ class DashboardService(
       "totalExpiredSubscriptions" to expiredSubscriptions.size,
       "totalCanceledSubscriptions" to canceledSubscriptions.size,
       "totalAmountSubscriptions" to subscriptions.sumOf {
-        (it.price ?: BigDecimal.ZERO) * (it.subscriptNumber?.toBigDecimal() ?: BigDecimal.ZERO)
+        (it.totalPrice ?: BigDecimal.ZERO) * (it.subscriptNumber?.toBigDecimal() ?: BigDecimal.ZERO)
       },
       "totalAmountActiveSubscriptions" to activeSubscriptions.sumOf {
-        (it.price ?: BigDecimal.ZERO) * (it.subscriptNumber?.toBigDecimal() ?: BigDecimal.ZERO)
+        (it.totalPrice ?: BigDecimal.ZERO) * (it.subscriptNumber?.toBigDecimal() ?: BigDecimal.ZERO)
       },
       "totalAmountExpiredSubscriptions" to expiredSubscriptions.sumOf {
-        (it.price ?: BigDecimal.ZERO) * (it.subscriptNumber?.toBigDecimal() ?: BigDecimal.ZERO)
+        (it.totalPrice ?: BigDecimal.ZERO) * (it.subscriptNumber?.toBigDecimal() ?: BigDecimal.ZERO)
       },
       "totalAmountCanceledSubscriptions" to canceledSubscriptions.sumOf {
-        (it.price ?: BigDecimal.ZERO) * (it.subscriptNumber?.toBigDecimal() ?: BigDecimal.ZERO)
+        (it.totalPrice ?: BigDecimal.ZERO) * (it.subscriptNumber?.toBigDecimal() ?: BigDecimal.ZERO)
       },
     )
 
@@ -98,7 +98,7 @@ class DashboardService(
 
     val totalPayments = payments.sumOf { it.amountPaid ?: BigDecimal.ZERO }
     val totalPendingPayments = subscriptions.sumOf {
-      (it.price ?: BigDecimal.ZERO) * (it.subscriptNumber?.toBigDecimal() ?: BigDecimal.ZERO)
+      (it.totalPrice ?: BigDecimal.ZERO) * (it.subscriptNumber?.toBigDecimal() ?: BigDecimal.ZERO)
     } - totalPayments
 
     val totalPartialPaidPayments = payments.filter { it.billingCycleStatus == StatusConstants.BILLING_CYCLE_STATUS_PARTIAL_PAID }.sumOf { it.amountPaid ?: BigDecimal.ZERO }
@@ -203,7 +203,7 @@ class DashboardService(
       tenant != null && tenantRepository.findById(tenant.id!!).get().let { t ->
         val subscriptions = subscriptionRepository.findByTenant(t)
         val totalDue = subscriptions.sumOf {
-          (it.price ?: BigDecimal.ZERO) * (it.subscriptNumber?.toBigDecimal() ?: BigDecimal.ZERO)
+          (it.totalPrice ?: BigDecimal.ZERO) * (it.subscriptNumber?.toBigDecimal() ?: BigDecimal.ZERO)
         }
         val totalPaid = paymentRepository.findByTenant(t).sumOf { it.totalAmount ?: BigDecimal.ZERO }
         totalAmountToPay += totalDue

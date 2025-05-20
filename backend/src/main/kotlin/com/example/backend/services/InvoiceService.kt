@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.Month
 import java.time.Year
 import java.util.*
 
@@ -39,7 +38,7 @@ class InvoiceService(
 
         existingInvoice.amount = updatedInvoice.amount
         existingInvoice.status = updatedInvoice.status
-        existingInvoice.tenant = updatedInvoice.tenant
+        existingInvoice.user = updatedInvoice.user
         existingInvoice.updatedDate = LocalDateTime.now()
         // Update other fields as necessary
 

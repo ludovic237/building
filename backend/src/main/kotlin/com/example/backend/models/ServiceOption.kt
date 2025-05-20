@@ -26,8 +26,8 @@ class ServiceOption {
   @Column(name = "price", nullable = false, precision = 10, scale = 2)
   var price: BigDecimal? = null
 
-  @Column(name = "quantity", nullable = false, precision = 10, scale = 2)
-  var quantity: Int? = null
+  @Column(name = "max_quantity", nullable = false, precision = 10, scale = 2)
+  var maxQuantity: Int? = null
 
   @ColumnDefault("1")
   @Column(name = "is_active")

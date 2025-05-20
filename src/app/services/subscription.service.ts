@@ -55,6 +55,10 @@ export class SubscriptionService {
     return this.http.post<Subscription>(`${this.apiUrl}/add-subscription`,data,{headers: this.getHeaders()});
   }
 
+  saveSubscriptionsTenantWithInvoice(data: any): Observable<Subscription> {
+    return this.http.post<Subscription>(`${this.apiUrl}/tenant/save-subscriptions`,data,{headers: this.getHeaders()});
+  }
+
   getSubscriptionFormattedData(id: number): Observable<any> {
     return this.http.get<Subscription>(`${this.apiUrl}/${id}/get-subscription`,{headers: this.getHeaders()});
   }

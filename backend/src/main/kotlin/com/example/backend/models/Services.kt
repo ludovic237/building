@@ -2,6 +2,7 @@ package com.example.backend.models
 
 import jakarta.persistence.*
 import org.hibernate.annotations.ColumnDefault
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 
@@ -19,12 +20,15 @@ class Services {
   @Column(name = "name", nullable = false, length = 100)
   var name: String? = null
 
+  @Column(name = "type", nullable = false, length = 100)
+  var type: String? = null
+
   @Lob
   @Column(name = "description")
   var description: String? = null
 
   @Lob
-  @Column(name = "billing_mode", nullable = false)
+  @Column(name = "billing_mode", nullable = true)
   var billingMode: String? = null
 
   @ColumnDefault("1")
@@ -36,5 +40,9 @@ class Services {
 
   @Column(name = "updated_date")
   var updatedDate: LocalDateTime? = null
+
+  @ColumnDefault("0.00")
+  @Column(name = "price", precision = 38, scale = 2)
+  var price: BigDecimal? = null
 
 }

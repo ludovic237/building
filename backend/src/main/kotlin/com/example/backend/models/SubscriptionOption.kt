@@ -4,6 +4,7 @@ import jakarta.persistence.*
 import org.hibernate.annotations.ColumnDefault
 import org.hibernate.annotations.OnDelete
 import org.hibernate.annotations.OnDeleteAction
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @Entity
@@ -33,4 +34,8 @@ class SubscriptionOption {
 
   @Column(name = "updated_date")
   var updatedDate: LocalDateTime? = null
+
+  @ColumnDefault("0.00")
+  @Column(name = "price", precision = 38, scale = 2)
+  var price: BigDecimal? = null
 }

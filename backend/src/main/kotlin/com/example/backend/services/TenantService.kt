@@ -136,7 +136,7 @@ class TenantService(
     var amountTotal = tenantData.logementBasePrice * tenantData.numberOfSubscription.toBigDecimal()
 
     var invoice = Invoice().apply {
-      tenant
+      user
       type = "subscription"
       month = currentMonth.toInt()
       year = currentYear
@@ -167,7 +167,7 @@ class TenantService(
     // Step 2: Create Subscription
     val subscription = Subscription()
     subscription.service = service
-    subscription.price = tenantData.logementBasePrice
+    subscription.totalPrice = tenantData.logementBasePrice
     subscription.startDate = tenantData.startDate
     subscription.tenant = tenant
     subscription.modifyBy = currentUser
@@ -351,7 +351,7 @@ class TenantService(
         mapOf(
           "id" to subscription.id,
           "serviceName" to subscription.service?.name,
-          "price" to subscription.price,
+          "price" to subscription.totalPrice,
           "startDate" to subscription.startDate,
           "endDate" to subscription.endDate,
           "status" to subscription.status
@@ -378,7 +378,7 @@ class TenantService(
   }
 
   fun getAdditionalInformation(tenant: Tenant): Map<String, Any?> {
-    val invoices = invoiceRepository.findByTenant(tenant).orEmpty()
+    val invoices = invoiceRepository.findByUser(tenant.user!!).orEmpty()
     return mapOf(
       "invoices" to invoices.map { invoice ->
         mapOf(
@@ -420,12 +420,12 @@ class TenantService(
       val completedSubscriptions = billingCycleRepository.findBySubscription(subscription)
         .count { it.status == StatusConstants.BILLING_CYCLE_STATUS_PAID }
       val remainingSubscriptions = totalSubscriptions - completedSubscriptions
-      val remainingAmount = BigDecimal(remainingSubscriptions) * (subscription.price ?: BigDecimal.ZERO)
+      val remainingAmount = BigDecimal(remainingSubscriptions) * (subscription.totalPrice ?: BigDecimal.ZERO)
 
       mapOf(
         "id" to subscription.id,
         "serviceName" to subscription.service?.name,
-        "price" to subscription.price,
+        "price" to subscription.totalPrice,
         "startDate" to subscription.startDate,
         "endDate" to subscription.endDate,
         "status" to subscription.status,
@@ -456,7 +456,7 @@ class TenantService(
 
     val subscriptionsData = subscriptionRepository.findByTenant(tenantRepository.findByIdOrNull(tenantId)!!)
     val totalSubscription =
-      subscriptionsData.sumOf { BigDecimal(it.subscriptNumber ?: 0) * (it.price ?: BigDecimal.ZERO) }
+      subscriptionsData.sumOf { BigDecimal(it.subscriptNumber ?: 0) * (it.totalPrice ?: BigDecimal.ZERO) }
 
     val totalRemaining = totalSubscription - totalAlreadyPaid
 
@@ -512,7 +512,7 @@ class TenantService(
       )
     }
 
-    val invoices = invoiceRepository.findByTenant(tenant).map { invoice ->
+    val invoices = invoiceRepository.findByUser(tenant.user!!).map { invoice ->
       mapOf(
         "id" to invoice.id,
         "type" to invoice.type,

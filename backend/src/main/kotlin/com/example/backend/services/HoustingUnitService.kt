@@ -83,7 +83,7 @@ class HoustingUnitService(
 
   fun getFinancialInformation(tenant: Tenant): Map<String, Any?> {
     val subscriptions = subscriptionRepository.findByTenant(tenant).orEmpty()
-    var total = subscriptions.sumOf { it.price!! * it.subscriptNumber!!.toBigDecimal() }
+    var total = subscriptions.sumOf { it.totalPrice!! * it.subscriptNumber!!.toBigDecimal() }
     val billingCycles = subscriptions.flatMap { subscription ->
       billingCycleRepository.findBySubscription(subscription).orEmpty()
     }
@@ -111,7 +111,7 @@ class HoustingUnitService(
         mapOf(
           "id" to subscription.id,
           "serviceName" to subscription.service?.name,
-          "price" to subscription.price,
+          "price" to subscription.totalPrice,
           "startDate" to subscription.startDate,
           "endDate" to subscription.endDate,
           "status" to subscription.status
@@ -140,7 +140,7 @@ class HoustingUnitService(
   }
 
   fun getAdditionalInformation(tenant: Tenant): Map<String, Any?> {
-    val invoices = invoiceRepository.findByTenant(tenant).orEmpty()
+    val invoices = invoiceRepository.findByUser(tenant.user!!).orEmpty()
     return mapOf(
       "invoices" to invoices.map { invoice ->
         mapOf(

@@ -28,8 +28,8 @@ class Subscription {
   @JoinColumn(name = "modify_by")
   var modifyBy: User? = null
 
-  @Column(name = "price", precision = 10, scale = 2)
-  var price: BigDecimal? = null
+  @Column(name = "total_price", precision = 10, scale = 2)
+  var totalPrice: BigDecimal? = null
 
   @Column(name = "start_date", nullable = false)
   var startDate: LocalDateTime? = null

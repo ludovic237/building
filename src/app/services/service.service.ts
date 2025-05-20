@@ -31,7 +31,7 @@ import { Injectable } from '@angular/core';
       }
 
       createServiceData(service: any): Observable<Service> {
-        return this.http.post<Service>(this.apiUrl+'/create', service,{headers: this.getHeaders()});
+        return this.http.post<Service>(this.apiUrl+'/new', service,{headers: this.getHeaders()});
       }
 
       updateService(id: number, service: Service): Observable<Service> {
@@ -48,7 +48,7 @@ import { Injectable } from '@angular/core';
       }
 
       updateServiceWithOptions(id: number, updatedServiceDTO: any): Observable<any> {
-        return this.http.put<any>(`${this.apiUrl}/${id}/with-options`, updatedServiceDTO, { headers: this.getHeaders() });
+        return this.http.put<any>(`${this.apiUrl}/update/new/${id}`, updatedServiceDTO, { headers: this.getHeaders() });
       }
 
 

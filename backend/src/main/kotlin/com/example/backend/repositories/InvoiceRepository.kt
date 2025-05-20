@@ -2,15 +2,15 @@ package com.example.backend.repositories
 
 import com.example.backend.models.Invoice
 import com.example.backend.models.Tenant
+import com.example.backend.models.User
 import org.springframework.data.jpa.repository.JpaRepository
 import java.math.BigDecimal
 import java.time.LocalDateTime
-import java.util.*
 
 interface InvoiceRepository : JpaRepository<Invoice, Long> {
 
     // Find invoices by tenant
-    fun findByTenant(tenant: Tenant): List<Invoice>
+    fun findByUser(user: User): List<Invoice>
 
     // Find invoices by type
     fun findByType(type: String): List<Invoice>
@@ -28,5 +28,5 @@ interface InvoiceRepository : JpaRepository<Invoice, Long> {
     fun findByPaymentDate(paymentDate: LocalDateTime): List<Invoice>
 
     // Check if an invoice exists by tenant and month/year
-    fun existsByTenantAndMonthAndYear(tenant: Tenant, month: Int, year: Int): Boolean
+    fun existsByUserAndMonthAndYear(user: User, month: Int, year: Int): Boolean
 }

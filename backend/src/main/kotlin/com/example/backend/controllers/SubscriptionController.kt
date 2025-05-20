@@ -2,13 +2,11 @@ package com.example.backend.controllers
 
 import com.example.backend.dtos.SubscriptionDTO
 import com.example.backend.dtos.SubscriptionDetailsDTO
-import com.example.backend.models.Payment
 import com.example.backend.models.Subscription
 import com.example.backend.services.SubscriptionService
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
-import java.math.BigDecimal
 
 @RestController
 @RequestMapping("/api/subscriptions")
@@ -129,5 +127,11 @@ class SubscriptionController(
           ?: throw IllegalArgumentException("Status is required in the request body")
       val updatedSubscription = subscriptionService.updateSubscriptionStatus(id, newStatus)
       return ResponseEntity.ok(updatedSubscription)
+  }
+
+  @PostMapping("/tenant/save-subscriptions")
+  fun saveSubscriptionsTenantWithInvoice(@RequestBody data: Map<String, Any>): ResponseEntity<String> {
+      subscriptionService.saveSubscriptionsTenantWithInvoice(data)
+      return ResponseEntity.ok("Subscriptions and invoice saved successfully.")
   }
 }

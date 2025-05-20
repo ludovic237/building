@@ -1,4 +1,4 @@
-import {Component, Inject, OnInit} from '@angular/core';
+import {ChangeDetectorRef, Component, Inject, OnInit} from '@angular/core';
 import {FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
 import {MAT_DIALOG_DATA, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
@@ -17,11 +17,13 @@ import {MatIconModule} from "@angular/material/icon";
 import {MatChipsModule} from "@angular/material/chips";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {Router} from "@angular/router";
+import {MatCardModule} from "@angular/material/card";
 
 @Component({
   selector: 'app-service-dialog',
   imports: [
     CommonModule,
+    MatCardModule,
     ReactiveFormsModule,
     FlexLayoutModule,
     MatTabsModule,
@@ -41,11 +43,11 @@ import {Router} from "@angular/router";
 })
 
 export class ServiceDialogComponent implements OnInit {
-
   public form: FormGroup;
+  public optionForm: FormGroup;
   public billingModes: string[] = ['Monthly', 'Yearly', 'One-Time'];
-  public validatedOptions: any[] = []; // List of validated options
-  public selectedOptions: any[] = []; // List of validated options
+  public validatedOptions: any[] = [];
+  public selectedOptions: any[] = [];
 
   constructor(
     public dialogRef: MatDialogRef<ServiceDialogComponent>,
@@ -53,187 +55,178 @@ export class ServiceDialogComponent implements OnInit {
     private snackBar: MatSnackBar,
     private serviceService: ServiceService,
     @Inject(MAT_DIALOG_DATA) public data: any,
+    private cdr: ChangeDetectorRef,
     private fb: FormBuilder
   ) {
-    this.form = this.fb.group({
-      code: [data?.code || '', Validators.required],
-      name: [data?.name || '', Validators.required],
-      // price: [data?.price || '', Validators.required],
-      description: [data?.description || '', Validators.required],
-      isActive: [data?.isActive || true, Validators.required],
-      billingMode: [data?.billingMode || '', Validators.required],
-      options: this.fb.array([]),
-      validatedOptions: [[]] // Form control for validated options
-    });
   }
 
   ngOnInit(): void {
+    this.form = this.fb.group({
+      code: [this.data?.code || '', Validators.required],
+      name: [this.data?.name || '', Validators.required],
+      description: [this.data?.description || '', Validators.required],
+      isActive: [this.data?.isActive || true],
+      type: [this.data?.type || 'PERIODIC', Validators.required],
+      billingMode: [this.data?.billingMode || '', this.isBillingModeRequired() ? Validators.required : null],
+      addPrice: [false],
+      price: [null],
+      options: this.fb.array([])
+    });
+
+
+    this.optionForm = this.fb.group({
+      name: ['', Validators.required],
+      price: [null, [Validators.required, Validators.min(0)]],
+      quantity: [null, Validators.min(1)]
+    });
+
+    this.form.get('type')?.valueChanges.subscribe(() => {
+      this.updateValidators();
+      this.clearOptions();
+    });
+    this.form.get('addPrice')?.valueChanges.subscribe((addPrice) => {
+      if (addPrice) {
+        this.form.get('price')?.setValidators([Validators.required, Validators.min(0)]);
+      } else {
+        this.form.get('price')?.clearValidators();
+        this.form.get('price')?.setValue(null);
+      }
+      this.form.get('price')?.updateValueAndValidity();
+    });
+
     if (this.data?.id) {
-      // Fetch the service details for update
       this.serviceService.getServiceWithOptions(this.data.id).subscribe({
         next: (service) => {
           this.form.patchValue(service);
           service.activeOptions.forEach((option: any) => this.validatedOptions.push(option));
         },
-        error: (err) => {
-          this.snackBar.open('Failed to load service details.', 'Close', {
-            duration: 3000,
-            panelClass: ['error-snackbar']
-          });
-          if (err.status=="403"){
-            this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
-          }
-          console.error('Error loading service:', err);
-        }
+        error: (err) => this.handleError(err, 'Failed to load service details.')
       });
     }
-    else if (this.data?.options) {
-      this.data.options.forEach((option: any) => this.addOption(option));
+  }
+
+  private updateValidators(): void {
+    const type = this.form.get('type')?.value;
+
+    if (type === 'PERIODIC' || type === 'PERIODIC_WITH_OPTIONS') {
+      this.form.get('billingMode')?.setValidators(Validators.required);
+    } else {
+      this.form.get('billingMode')?.clearValidators();
+      this.form.get('billingMode')?.setValue(null);
     }
+
+    if (type === 'OPTIONS' || type === 'PERIODIC_WITH_OPTIONS') {
+      this.form.get('options')?.setValidators(Validators.required);
+    } else {
+      this.form.get('options')?.clearValidators();
+    }
+
+    this.form.get('billingMode')?.updateValueAndValidity();
+    this.form.get('options')?.updateValueAndValidity();
+  }
+
+  private isBillingModeRequired(): boolean {
+    const typeControl = this.form?.get('type');
+    if (!typeControl) {
+      return false;
+    }
+    const type = typeControl.value;
+    return type === 'PERIODIC' || type === 'PERIODIC_WITH_OPTIONS';
   }
 
   get options(): FormArray {
     return this.form.get('options') as FormArray;
   }
 
-  addOption(optionData: any = {name: '', price: null}): void {
-    const optionGroup = this.fb.group({
-      name: [optionData.name, Validators.required],
-      price: [optionData.price, [Validators.required, Validators.min(0)]],
-      quantity: [optionData.quantity, Validators.min(0)] // Optional quantity
-    });
-    this.options.push(optionGroup);
-  }
+addOption(): void {
+  const option = this.optionForm.value;
+  const existingOptionIndex = this.validatedOptions.findIndex(
+    (validatedOption) => validatedOption.name.toLowerCase() === option.name.toLowerCase()
+  );
 
-  removeOption(index: number): void {
-    this.options.removeAt(index);
-  }
+  if (existingOptionIndex !== -1) {
+    const confirmUpdate = confirm(
+      `An option with the name "${option.name}" already exists. Do you want to update it?`
+    );
 
-  toggleSelection(index: number): void {
-    const item = this.validatedOptions[index];
-
-    if (item.isSelected) {
-      // Désactiver l'option : la retirer de selectedOptions
-      item.isSelected = false;
-      this.selectedOptions = this.selectedOptions.filter(option => option !== item);
-    } else {
-      // Activer l'option : l'ajouter à selectedOptions
-      item.isSelected = true;
-      this.selectedOptions.push(item);
+    if (confirmUpdate) {
+      this.validatedOptions[existingOptionIndex] = { ...option };
+      (this.options.at(existingOptionIndex) as FormGroup).patchValue(option);
+      this.snackBar.open('Option updated successfully!', 'Close', { duration: 2000 });
     }
-
-    console.log('Option toggled:', item);
-    console.log('Selected options:', this.selectedOptions);
+  } else {
+    this.validatedOptions.push(option);
+    this.options.push(this.fb.group(option));
+    this.snackBar.open('Option added successfully!', 'Close', { duration: 2000 });
   }
 
-  get isSaveDisabled(): boolean {
-    const isFormInvalid = this.form.invalid;
-    const noSelectedOptions = !this.validatedOptions.some(option => option.isSelected);
-    // console.log('Form invalid:', isFormInvalid, 'No selected options:', noSelectedOptions);
-    return isFormInvalid || noSelectedOptions;
+  this.optionForm.reset();
+  this.cdr.detectChanges(); // Trigger change detection
+}
+
+removeValidatedOption(index: number): void {
+  if (index >= 0 && index < this.validatedOptions.length) {
+    this.validatedOptions.splice(index, 1);
+    this.options.removeAt(index); // Remove the corresponding FormGroup from the FormArray
+    this.snackBar.open('Option removed successfully!', 'Close', { duration: 2000 });
+    this.cdr.detectChanges(); // Trigger change detection
   }
+}
 
-  validateOption(index: number): void {
-    const option = this.options.at(index).value;
-    console.log('Validating option:', option);
-    if (option.name && option.price > 0) {
-      option.isSelected = false; // Mark as selected
-      this.validatedOptions.push(option); // Add to validated options
-      this.snackBar.open('Option validated successfully!', 'Close', {
-        duration: 2000,
-        panelClass: ['success-snackbar']
-      });
-      this.removeOption(index);
-    } else {
-      this.snackBar.open('Invalid option. Please fill in all fields.', 'Close', {
-        duration: 2000,
-        panelClass: ['error-snackbar']
-      });
-    }
-  }
+get isSaveDisabled(): boolean {
+  const isFormInvalid = this.form.invalid;
+  const type = this.form.get('type')?.value;
+  const isOptionsType = type === 'OPTIONS';
+  const isPeriodicWithOptionsType = type === 'PERIODIC_WITH_OPTIONS';
+  const hasOptions = this.options.length > 0;
 
+  return isFormInvalid || (isOptionsType && !hasOptions) || (isPeriodicWithOptionsType && !hasOptions);
+}
 
-  removeValidatedOption(index: number): void {
-    console.log("index");
-    console.log(index);
-    console.log("this.selectedOptions");
-    console.log(this.selectedOptions);
-    if (index >= 0 && index < this.selectedOptions.length) {
-      this.selectedOptions.splice(index, 0);
-      this.snackBar.open('Option removed successfully!', 'Close', {
-        duration: 2000,
-        panelClass: ['success-snackbar']
-      });
-    } else {
-      this.snackBar.open('Invalid option index.', 'Close', {
-        duration: 2000,
-        panelClass: ['error-snackbar']
+onSubmit(): void {
+  if (this.form.valid) {
+    const serviceData = {
+      ...this.form.value,
+      activeOptions: this.validatedOptions // Utilise validatedOptions pour les options actives
+    };
+
+    console.log('Service Data:', serviceData);
+    console.log("this.data :",this.data);
+    if (this.data?.id) {
+      // Mise à jour du service existant
+      this.serviceService.updateServiceWithOptions(this.data.id, serviceData).subscribe({
+        next: (response) => this.handleSuccess('Service updated successfully!', response),
+        error: (err) => this.handleError(err, 'Failed to update the service.')
       });
     }
-  }
-
-
-  onSubmit(): void {
-    if (this.form.valid) {
-      const activeOptions = this.validatedOptions;
-      const serviceData = {
-        ...this.form.value,
-        activeOptions // Include active options in the submitted data
-      };
-
-      if (this.data?.id) {
-        // Update existing service
-        this.serviceService.updateServiceWithOptions(this.data.id, serviceData).subscribe({
-          next: (response) => {
-            this.snackBar.open('Service updated successfully!', 'Close', {
-              duration: 3000,
-              panelClass: ['success-snackbar']
-            });
-            this.dialogRef.close(response);
-          },
-          error: (err) => {
-            this.snackBar.open('Failed to update the service. Please try again.', 'Close', {
-              duration: 3000,
-              panelClass: ['error-snackbar']
-            });
-            if (err.status=="403"){
-              this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
-            }
-            console.error('Error updating service:', err);
-          }
-        });
-      } else {
-        // Create new service
-        this.saveService(serviceData);
-      }
-    } else {
-      this.snackBar.open('Please fill in all required fields.', 'Close', {
-        duration: 3000,
-        panelClass: ['error-snackbar']
+    else {
+      // Création d'un nouveau service
+      this.serviceService.createServiceData(serviceData).subscribe({
+        next: (response) => this.handleSuccess('Service saved successfully!', response),
+        error: (err) => this.handleError(err, 'Failed to save the service.')
       });
     }
+  } else {
+    this.snackBar.open('Please fill in all required fields.', 'Close', { duration: 3000 });
+  }
+}
+
+  private handleSuccess(message: string, response: any): void {
+    this.snackBar.open(message, 'Close', {duration: 3000});
+    this.dialogRef.close(response);
   }
 
-  private saveService(serviceData: Service): void {
-    console.log('Service data to save:', serviceData);
-    this.serviceService.createServiceData(serviceData).subscribe({
-      next: (response) => {
-        this.snackBar.open('Service saved successfully!', 'Close', {
-          duration: 3000,
-          panelClass: ['success-snackbar']
-        });
-        this.dialogRef.close(response);
-      },
-      error: (err) => {
-        this.snackBar.open('Failed to save the service. Please try again.', 'Close', {
-          duration: 3000,
-          panelClass: ['error-snackbar']
-        });
-        if (err.status=="403"){
-          this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
-        }
-        console.error('Error saving service:', err);
-      }
-    });
+  private handleError(err: any, message: string): void {
+    this.snackBar.open(message, 'Close', {duration: 3000});
+    if (err.status === 403) {
+      this.router.navigate(['/sign-in']);
+    }
+    console.error(message, err);
+  }
+
+  private clearOptions(): void {
+    this.validatedOptions = [];
+    this.options.clear();
+    this.cdr.detectChanges(); // Assurer la détection des changements
   }
 }

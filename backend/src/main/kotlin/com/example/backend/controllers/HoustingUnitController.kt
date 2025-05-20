@@ -97,7 +97,7 @@ class HoustingUnitController(
         val subscriptions = subscriptionRepository.findByTenant(tenant!!).orEmpty()
           .filter { subscription -> subscription.service?.name == "loyer" }
 
-        var total = subscriptions.sumOf { it.price!!*it.subscriptNumber!!.toBigDecimal() }
+        var total = subscriptions.sumOf { it.totalPrice!!*it.subscriptNumber!!.toBigDecimal() }
 
         val billingCycles = subscriptions.flatMap { subscription ->
           billingCycleRepository.findBySubscription(subscription).orEmpty()
@@ -187,7 +187,7 @@ class HoustingUnitController(
         "serviceName" to subscription.service?.name,
         "serviceDescription" to subscription.service?.description,
         "billingMode" to subscription.service?.billingMode,
-        "price" to subscription.price,
+        "price" to subscription.totalPrice,
         "startDate" to subscription.startDate,
         "endDate" to subscription.endDate,
         "status" to subscription.status

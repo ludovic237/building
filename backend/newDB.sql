@@ -57,7 +57,7 @@ create table if not exists invoices
 (
   id           bigint auto_increment
     primary key,
-  tenant_id    bigint         null,
+  user_id    bigint         null,
   modify_id    bigint         null,
   type         tinytext       not null,
   number       tinytext       null,
@@ -75,13 +75,28 @@ create table if not exists invoices
 CREATE TABLE services
 (
   id           BIGINT AUTO_INCREMENT PRIMARY KEY,
-  code         VARCHAR(50)  NOT NULL UNIQUE,
+  code         VARCHAR(50) NULL UNIQUE,
   name         VARCHAR(100) NOT NULL,
+  type         VARCHAR(100) NOT NULL,
   description  TEXT,
-  billing_mode tinytext     NOT NULL,
+  billing_mode tinytext     NULL,
+  price            decimal(10, 2) null,
   created_date datetime     null,
   updated_date datetime     null,
   is_active    BOOLEAN DEFAULT TRUE
+);
+
+-- OPTIONS
+CREATE TABLE service_options
+(
+  id           BIGINT PRIMARY KEY AUTO_INCREMENT,
+  service_id   BIGINT         NOT NULL,
+  name         VARCHAR(255)   NOT NULL,
+  price        DECIMAL(10, 2) NOT NULL,
+  max_quantity     INT     DEFAULT 0,
+  is_active    BOOLEAN DEFAULT TRUE,
+  created_date datetime       null,
+  updated_date datetime       null
 );
 
 -- SUBSCRIPTIONS
@@ -93,7 +108,7 @@ create table if not exists subscriptions
   update_by        bigint         null,
   invoice_id        bigint         null,
   service_id       bigint         null,
-  price            decimal(10, 2) null,
+  total_price            decimal(10, 2) null,
   start_date       datetime       not null,
   end_date         datetime       null,
   subscript_number int            null,
@@ -101,6 +116,18 @@ create table if not exists subscriptions
   updated_date     datetime       null,
   status           tinytext       not null
 
+);
+
+-- SUBSCRIPTION OPTIONS
+CREATE TABLE subscription_options
+(
+  id              BIGINT PRIMARY KEY AUTO_INCREMENT,
+  subscription_id BIGINT   NOT NULL,
+  option_id       BIGINT   NOT NULL,
+  quantity        INT DEFAULT 1,
+  price DECIMAL(10, 2) NOT NULL, -- Prix total pour cette option (quantity * option.price)
+  created_date    datetime null,
+  updated_date    datetime null
 );
 
 -- BILLING CYCLES
@@ -152,28 +179,6 @@ create table if not exists payments
   created_date   datetime                     null,
   updated_date   datetime                     null,
   payment_method varchar(50)
-);
-
-CREATE TABLE service_options
-(
-  id           BIGINT PRIMARY KEY AUTO_INCREMENT,
-  service_id   BIGINT         NOT NULL,
-  name         VARCHAR(255)   NOT NULL,
-  price        DECIMAL(10, 2) NOT NULL,
-  quantity     INT     DEFAULT 0,
-  is_active    BOOLEAN DEFAULT TRUE,
-  created_date datetime       null,
-  updated_date datetime       null
-);
-
-CREATE TABLE subscription_options
-(
-  id              BIGINT PRIMARY KEY AUTO_INCREMENT,
-  subscription_id BIGINT   NOT NULL,
-  option_id       BIGINT   NOT NULL,
-  quantity        INT DEFAULT 1,
-  created_date    datetime null,
-  updated_date    datetime null
 );
 
 CREATE TABLE service_usage
@@ -248,7 +253,7 @@ alter table payment_lines
 
 alter table invoices
   add foreign key (modify_id) references users (id),
-  add foreign key (tenant_id) references tenants (id);
+  add foreign key (user_id) references users (id);
 
 alter table issues
   add foreign key (tenant_id) references tenants (id);

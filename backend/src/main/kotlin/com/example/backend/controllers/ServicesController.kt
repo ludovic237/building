@@ -1,6 +1,7 @@
 package com.example.backend.controllers
 
 import com.example.backend.dtos.ServiceDataDTO
+import com.example.backend.dtos.ServiceDataNewDTO
 import com.example.backend.models.Services
 import com.example.backend.services.ServiceService
 import org.springframework.http.ResponseEntity
@@ -37,7 +38,21 @@ class ServicesController(
 
   @CrossOrigin(origins = ["http://localhost:4200"])
   @PreAuthorize("isAuthenticated()")
-  @PutMapping("/{id}")
+  @PostMapping("/new")
+  fun createServiceNew(@RequestBody services: ServiceDataNewDTO): ResponseEntity<Services> {
+    return ResponseEntity.ok(serviceService.createServiceData(services))
+  }
+
+  @CrossOrigin(origins = ["http://localhost:4200"])
+  @PreAuthorize("isAuthenticated()")
+  @PutMapping("/update/new/{id}")
+  fun updateServiceNew(@PathVariable id: Long, @RequestBody updatedServices: ServiceDataNewDTO): ResponseEntity<Services> {
+    return ResponseEntity.ok(serviceService.updateServiceWithOptions(id, updatedServices))
+  }
+
+  @CrossOrigin(origins = ["http://localhost:4200"])
+  @PreAuthorize("isAuthenticated()")
+  @PutMapping("/update/{id}")
   fun updateService(@PathVariable id: Long, @RequestBody updatedServices: Services): ResponseEntity<Services> {
     return ResponseEntity.ok(serviceService.updateService(id, updatedServices))
   }
@@ -60,7 +75,7 @@ class ServicesController(
   @CrossOrigin(origins = ["http://localhost:4200"])
   @PreAuthorize("isAuthenticated()")
   @GetMapping("/{id}/with-options")
-  fun getServiceWithOptions(@PathVariable id: Long): ResponseEntity<ServiceDataDTO> {
+  fun getServiceWithOptions(@PathVariable id: Long): ResponseEntity<ServiceDataNewDTO> {
     val serviceData = serviceService.getServiceWithOptions(id)
     return ResponseEntity.ok(serviceData)
   }
@@ -68,7 +83,7 @@ class ServicesController(
   @CrossOrigin(origins = ["http://localhost:4200"])
   @PreAuthorize("isAuthenticated()")
   @GetMapping("/with-options")
-  fun getServiceAllWithOptions(): ResponseEntity<List<ServiceDataDTO>> {
+  fun getServiceAllWithOptions(): ResponseEntity<List<ServiceDataNewDTO>> {
     val serviceData = serviceService.getServiceAllWithOptions()
     return ResponseEntity.ok(serviceData)
   }
@@ -79,7 +94,7 @@ class ServicesController(
   fun updateServiceWithOptions(
     @PathVariable id: Long,
     @RequestBody updatedServiceDTO: ServiceDataDTO
-  ): ResponseEntity<ServiceDataDTO> {
+  ): ResponseEntity<ServiceDataNewDTO> {
     val updatedService = serviceService.updateServiceWithOptions(id, updatedServiceDTO)
     val updatedServiceData = serviceService.getServiceWithOptions(updatedService.id!!)
     return ResponseEntity.ok(updatedServiceData)

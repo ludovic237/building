@@ -1,38 +1,38 @@
-<mat-toolbar color="primary" class="mat-elevation-z4">
-  <mat-toolbar-row>
-    <span>Service</span>
-    <span fxLayoutAlign="space-between center"></span>
-    <button mat-icon-button>
+<mat-toolbar color="primary" class="mat-elevation-z4 mat-toolbar mat-primary">
+  <div fxLayout="row" fxLayoutAlign="space-between center" class="w-100 p-3">
+    <h2>Service</h2>
+    <button mat-icon-button mat-dialog-close>
       <mat-icon>close</mat-icon>
     </button>
-  </mat-toolbar-row>
+  </div>
 </mat-toolbar>
 <form [formGroup]="form" (ngSubmit)="onSubmit()" autocomplete="off">
+  <div mat-dialog-actions align="end" class="mat-toolbar ">
+    <div fxLayout="row" fxLayoutAlign="space-between center" class="w-100 p-3">
+      <button mat-raised-button color="warn" type="button" mat-dialog-close>Close</button>
+      <!--              <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Save</button>-->
+      <button mat-raised-button color="primary" type="submit" [disabled]="isSaveDisabled">Save</button>
+    </div>
+  </div>
   <div mat-dialog-content>
     <div fxLayout="row wrap" class="mt-3">
 
       <!-- Code -->
-      <div fxFlex="100" class="px-2">
+      <div fxFlex="50" class="px-2">
         <mat-form-field appearance="outline" class="w-100">
           <mat-label>Code</mat-label>
           <input matInput formControlName="code" required maxlength="50">
-          @if (form.controls.code.errors?.required) {
-            <mat-error>Code is required</mat-error>
-          }
-          @if (form.controls.code.errors?.maxlength) {
-            <mat-error>Code must be at most 50 characters</mat-error>
-          }
+          <mat-error *ngIf="form.controls.code.errors?.required">Code is required</mat-error>
+          <mat-error *ngIf="form.controls.code.errors?.maxlength">Code must be at most 50 characters</mat-error>
         </mat-form-field>
       </div>
 
       <!-- Name -->
-      <div fxFlex="100" class="px-2">
+      <div fxFlex="50" class="px-2">
         <mat-form-field appearance="outline" class="w-100">
           <mat-label>Name</mat-label>
           <input matInput formControlName="name" required>
-          @if (form.controls.name.errors?.required) {
-            <mat-error>Name is required</mat-error>
-          }
+          <mat-error *ngIf="form.controls.name.errors?.required">Name is required</mat-error>
         </mat-form-field>
       </div>
 
@@ -41,24 +41,37 @@
         <mat-form-field appearance="outline" class="w-100">
           <mat-label>Description</mat-label>
           <textarea matInput formControlName="description" rows="4" required></textarea>
-          @if (form.controls.description.errors?.required) {
-            <mat-error>Description is required</mat-error>
-          }
+          <mat-error *ngIf="form.controls.description.errors?.required">Description is required</mat-error>
         </mat-form-field>
       </div>
 
+      <!-- Service Type -->
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Service Type</mat-label>
+        <mat-select formControlName="type" required>
+          <mat-option value="PERIODIC">Periodic</mat-option>
+          <mat-option value="OPTIONS">Options</mat-option>
+          <mat-option value="PERIODIC_WITH_OPTIONS">Periodic with Options</mat-option>
+        </mat-select>
+      </mat-form-field>
+
       <!-- Billing Mode -->
-      <div fxFlex="100" class="px-2">
+      <div
+        *ngIf="form.get('type')?.value === 'PERIODIC' || form.get('type')?.value === 'PERIODIC_WITH_OPTIONS'">
         <mat-form-field appearance="outline" class="w-100">
           <mat-label>Billing Mode</mat-label>
           <mat-select formControlName="billingMode" required>
-            @for (mode of billingModes; track mode) {
-              <mat-option [value]="mode">{{ mode }}</mat-option>
-            }
+            <mat-option *ngFor="let mode of billingModes" [value]="mode">{{ mode }}</mat-option>
           </mat-select>
-          @if (form.controls.billingMode.errors?.required) {
-            <mat-error>Billing Mode is required</mat-error>
-          }
+        </mat-form-field>
+      </div>
+
+      <!-- Add Price -->
+      <mat-checkbox formControlName="addPrice">Add Price</mat-checkbox>
+      <div *ngIf="form.get('addPrice')?.value">
+        <mat-form-field appearance="outline" class="w-100">
+          <mat-label>Price</mat-label>
+          <input matInput type="number" formControlName="price">
         </mat-form-field>
       </div>
 
@@ -66,85 +79,66 @@
       <div fxFlex="100" class="px-2">
         <mat-checkbox formControlName="isActive">Is Active</mat-checkbox>
       </div>
-
-      <!-- Options -->
-      <div fxFlex="100" class="px-2 mt-3">
-        <h3>Options</h3>
-        <div formArrayName="options">
-          @for (option of options.controls; let i = $index; track option) {
-            <div [formGroupName]="i" class="option-group">
-              <div fxLayout="row wrap" class="mt-2">
-                <div fxFlex="30" class="px-2">
-                  <mat-form-field appearance="outline" class="w-100">
-                    <mat-label>Option Name</mat-label>
-                    <input matInput formControlName="name" required>
-                    @if (option.get('name')?.errors?.required) {
-                      <mat-error>Option Name is required</mat-error>
-                    }
-                  </mat-form-field>
-                </div>
-                <div fxFlex="20" class="px-2">
-                  <mat-form-field appearance="outline" class="w-100">
-                    <mat-label>Price</mat-label>
-                    <input matInput type="number" formControlName="price" required>
-                    @if (option.get('price')?.errors?.required) {
-                      <mat-error>Price is required</mat-error>
-                    }
-                  </mat-form-field>
-                </div>
-                <div fxFlex="20" class="px-2">
-                  <mat-form-field appearance="outline" class="w-100">
-                    <mat-label>Quantity</mat-label>
-                    <input matInput type="number" formControlName="quantity" required>
-                    @if (option.get('quantity')?.errors?.required) {
-                      <mat-error>Quantity is required</mat-error>
-                    }
-                  </mat-form-field>
-                </div>
-                <div fxFlex="10" class="px-2">
-                  <button mat-raised-button color="primary" (click)="validateOption(i)" type="button">
-                    Validate
-                  </button>
-                </div>
-                <div fxFlex="10" class="px-2">
-                  <button mat-icon-button color="warn" (click)="removeOption(i)" type="button">
-                    <mat-icon>delete</mat-icon>
-                  </button>
-                </div>
-              </div>
+    </div>
+    <!-- Options -->
+    <div
+      *ngIf="form.get('type')?.value === 'OPTIONS' || form.get('type')?.value === 'PERIODIC_WITH_OPTIONS'">
+      <div fxLayout="row wrap" class="mt-3">
+        <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
+          <mat-toolbar color="primary" class="mat-toolbar mat-primary">
+            <div fxLayout="row" fxLayoutAlign="space-between center" class="w-100 p-3">
+              <h2>Service Options</h2>
             </div>
-          }
+          </mat-toolbar>
+          <mat-card>
+            <mat-card-content>
+              <form [formGroup]="optionForm" (ngSubmit)="addOption()" autocomplete="off">
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Option Name</mat-label>
+                  <input matInput formControlName="name" required>
+                  <mat-error *ngIf="optionForm.controls.name.errors?.required">Name is required</mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Price</mat-label>
+                  <input matInput type="number" formControlName="price" required>
+                  <mat-error *ngIf="optionForm.controls.price.errors?.required">Price is required</mat-error>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-100">
+                  <mat-label>Quantity</mat-label>
+                  <input matInput type="number" formControlName="quantity" required>
+                  <mat-error *ngIf="optionForm.controls.quantity.errors?.required">Quantity is required</mat-error>
+                </mat-form-field>
+
+                <button mat-raised-button color="primary" type="submit" [disabled]="optionForm.invalid">Add Option
+                </button>
+              </form>
+            </mat-card-content>
+          </mat-card>
         </div>
-        <button mat-raised-button color="primary" (click)="addOption()" type="button" class="mt-2">
-          Add Option
-        </button>
-      </div>
-
-      <mat-chip-listbox multiple class="w-100">
-        @for (option of validatedOptions; track option; let i = $index) {
-          <mat-chip-option
-            (click)="toggleSelection(i)"
-            [value]="option"
-            [selected]="option.isSelected">
-            <div fxLayout="row" fxLayoutAlign="space-between center" class="w-100">
-              <span>{{ option.name }} - ({{ option.price }})</span>
-              <button mat-icon-button (click)="removeValidatedOption(i)">
-                <mat-icon>close</mat-icon>
-              </button>
+        <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
+          <mat-toolbar color="primary" class="mat-toolbar mat-primary">
+            <div fxLayout="row" fxLayoutAlign="space-between center" class="w-100 p-3">
+              <h2>Add Option</h2>
             </div>
-          </mat-chip-option>
-        }
-      </mat-chip-listbox>
-
+          </mat-toolbar>
+          <mat-card>
+            <mat-card-content>
+              <mat-chip-listbox>
+                <mat-chip-option
+                  *ngFor="let option of validatedOptions; let i = index"
+                  removable
+                  (removed)="removeValidatedOption(i)">
+                  {{ option.name }} - {{ option.price | currency }} ({{ option.quantity }})
+                  <mat-icon matChipRemove>cancel</mat-icon>
+                </mat-chip-option>
+              </mat-chip-listbox>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </div>
     </div>
   </div>
-  <mat-toolbar align="end">
-    <mat-dialog-actions>
-      <div fxLayout="row" fxLayoutAlign="space-between center" class="w-100 p-3">
-        <button mat-raised-button color="warn" type="button" mat-dialog-close>Close</button>
-        <!--      <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid">Save</button>-->
-        <button mat-raised-button color="primary" type="submit" [disabled]="isSaveDisabled">Save</button>
-      </div>
-    </mat-dialog-actions>
-  </mat-toolbar>
+
 </form>
