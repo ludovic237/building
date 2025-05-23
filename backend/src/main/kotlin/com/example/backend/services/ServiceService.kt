@@ -1,17 +1,19 @@
 package com.example.backend.services
 
 import com.example.backend.dtos.*
-import com.example.backend.models.ServiceOption
-import com.example.backend.models.Services
-import com.example.backend.repositories.ServiceOptionRepository
-import com.example.backend.repositories.ServiceRepository
+import com.example.backend.models.*
+import com.example.backend.repositories.*
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.*
 
 @Service
 class ServiceService(
+  private val subscriptionServiceRepository: SubscriptionServiceRepository,
+  private val subscriptionOptionRepository: SubscriptionOptionRepository,
+  private val paymentLineRepository: PaymentLineRepository,
   private val serviceRepository: ServiceRepository,
   private val serviceOptionRepository: ServiceOptionRepository,
 ) {
@@ -273,4 +275,7 @@ class ServiceService(
 
     return updatedService
   }
+
+
+
 }

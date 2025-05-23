@@ -23,7 +23,7 @@ class ServiceUsage {
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @OnDelete(action = OnDeleteAction.CASCADE)
   @JoinColumn(name = "option_id", nullable = false, referencedColumnName = "option_id")
-  var option: com.example.backend.models.SubscriptionOption? = null
+  var option: com.example.backend.models.SubscriptionOptions? = null
 
   @Column(name = "quantity_used", nullable = false)
   var quantityUsed: Int? = null

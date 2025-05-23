@@ -54,7 +54,7 @@ class BillingCycleService(
         amountDue = cycle.amountDue!!,
         amountPaid = paymentLine.amountPaid,
         status = cycle.status!!,
-        subscriptionName = cycle.subscription!!.service!!.name!!,
+        subscriptionName = "cycle.subscription!!.service!!.name!!",
         tenantName = cycle.subscription!!.tenant!!.user!!.firstName!! + " " + cycle.subscription!!.tenant!!.user!!.lastName!!,
         userName = cycle.subscription!!.tenant!!.user!!.username!!,
         payment = payment

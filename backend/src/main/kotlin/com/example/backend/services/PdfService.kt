@@ -1,11 +1,9 @@
 package com.example.backend.services
 
 import com.example.backend.models.Payment
+import com.example.backend.models.SubscriptionOptions
 import com.example.backend.models.Tenant
-import com.example.backend.repositories.DocumentRepository
-import com.example.backend.repositories.InvoiceCounterRepository
-import com.example.backend.repositories.InvoiceRepository
-import com.example.backend.repositories.UserRepository
+import com.example.backend.repositories.*
 import com.itextpdf.kernel.pdf.PdfWriter
 import com.itextpdf.kernel.pdf.PdfDocument
 import com.itextpdf.layout.Document
@@ -19,9 +17,12 @@ import java.util.*
 
 @Service
 class PdfService(
+  private val subscriptionRepository: SubscriptionRepository,
+  private val subscriptionServiceRepository: SubscriptionServiceRepository,
+  private val subscriptionOptionRepository: SubscriptionOptionRepository,
   private val invoiceRepository: InvoiceRepository,
   private val invoiceCounterRepository: InvoiceCounterRepository,
-  private val documentRepository:DocumentRepository,
+  private val documentRepository: DocumentRepository,
   private val userRepository: UserRepository,
 ) {
 
@@ -89,9 +90,9 @@ class PdfService(
   }
 
   fun downloadDocument(documentId: Long): ByteArray? {
-      val document = documentRepository.findById(documentId)
-          .orElseThrow { IllegalArgumentException("Document not found with ID $documentId") }
-      return document.content
+    val document = documentRepository.findById(documentId)
+      .orElseThrow { IllegalArgumentException("Document not found with ID $documentId") }
+    return document.content
   }
 
   fun generateReceiptAndSave(
@@ -222,5 +223,67 @@ class PdfService(
     // Save the receipt in the database
     val receiptData = outputStream.toByteArray()
     return receiptData
+  }
+
+
+  fun downloadInvoiced(subscriptionId: Long): ByteArray {
+    val subscription = subscriptionRepository.findById(subscriptionId)
+      .orElseThrow { IllegalArgumentException("Subscription not found with ID $subscriptionId") }
+
+    val tenant = subscription.tenant
+      ?: throw IllegalArgumentException("Tenant not found for subscription ID $subscriptionId")
+
+    val subscriptionServices = subscriptionServiceRepository.findBySubscription(subscription)
+    val subscriptionOptions = subscriptionServices.flatMap { subscriptionService ->
+      subscriptionOptionRepository.findBySubscriptionService(subscriptionService)
+    }
+
+    val outputStream = com.itextpdf.io.source.ByteArrayOutputStream()
+
+    PdfWriter(outputStream).use { writer ->
+      val pdfDocument = PdfDocument(writer)
+      val document = com.itextpdf.layout.Document(pdfDocument)
+
+      // Add receipt header
+      document.add(Paragraph("Payment Receipt").setFontSize(18f))
+      document.add(Paragraph("Date: ${subscription.createdDate}"))
+      document.add(Paragraph("Subscription ID: ${subscription.id}"))
+
+      // Add tenant details
+      document.add(Paragraph("\nTenant Details:"))
+      document.add(Paragraph("Name: ${tenant.user?.firstName} ${tenant.user?.lastName}"))
+      document.add(Paragraph("Email: ${tenant.user?.email}"))
+
+      // Add subscription and options
+      document.add(Paragraph("\nSubscription Details:"))
+      val columnWidths = floatArrayOf(4f, 2f, 2f)
+      val table = Table(columnWidths)
+      table.addCell("Subscription/Option")
+      table.addCell("Quantity")
+      table.addCell("Price")
+
+      var totalAmount = subscription.totalPrice ?: BigDecimal.ZERO
+      subscriptionServices.forEach { subscriptionService ->
+        table.addCell(subscriptionService.service!!.name)
+        table.addCell(subscriptionService.quantity.toString())
+        table.addCell(subscriptionService.price.toString())
+        totalAmount += subscriptionService.price!!
+      }
+      subscriptionOptions.forEach { option: SubscriptionOptions ->
+        table.addCell("  - ${option.option?.name}")
+        table.addCell(option.quantity.toString())
+        table.addCell(option.price.toString())
+        totalAmount += option.price!!
+      }
+      document.add(table)
+
+      // Add total amount
+      document.add(Paragraph("\nTotal Amount: $${totalAmount}"))
+      document.add(Paragraph("Status: ${subscription.status}"))
+
+      document.close()
+    }
+
+    return outputStream.toByteArray()
   }
 }

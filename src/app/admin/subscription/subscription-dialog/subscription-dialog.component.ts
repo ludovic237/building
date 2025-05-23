@@ -72,7 +72,7 @@ export class SubscriptionDialogComponent implements OnInit {
 
   public validatedOptions: any[] = []; // List of validated options
   public selectedOptions: any[] = []; // List of validated options
-
+  isServiceValidated: boolean = false;
   public selectedServiceOptions: any[] = [];
   public totalPrice: number = 0;
   public finalTotal: number = 0;
@@ -93,8 +93,8 @@ export class SubscriptionDialogComponent implements OnInit {
       serviceId: [data?.serviceId || '', Validators.required],
       options: [[]],
       serviceType: [''],
-      numberOfSubscriptions: [],
-      startDate: [],
+      numberOfSubscriptions: [1, [Validators.min(1)]], // Default value is 1, minimum is 1
+      startDate: [null], // Initially not required
       endDate: [],
     });
   }
@@ -477,6 +477,16 @@ export class SubscriptionDialogComponent implements OnInit {
     const service = this.services.find(s => s.id === serviceId);
 
     if (service) {
+      this.isServiceValidated = true;
+
+      // Remove validators for numberOfSubscriptions and startDate
+      this.form.get('numberOfSubscriptions')?.clearValidators();
+      this.form.get('startDate')?.clearValidators();
+
+      // Update the form validity
+      this.form.get('numberOfSubscriptions')?.updateValueAndValidity();
+      this.form.get('startDate')?.updateValueAndValidity();
+
       const existingServiceIndex = this.selectedServices.findIndex(s => s.id === serviceId);
 
       // Calculate the total service price

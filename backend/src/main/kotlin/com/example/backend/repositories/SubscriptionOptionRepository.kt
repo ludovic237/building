@@ -2,14 +2,14 @@ package com.example.backend.repositories
 
 import com.example.backend.models.*
 import org.springframework.data.jpa.repository.JpaRepository
-import java.math.BigDecimal
-import java.util.Optional
+import org.springframework.stereotype.Repository
 
-interface SubscriptionOptionRepository : JpaRepository<SubscriptionOption, Long> {
+@Repository
+interface SubscriptionOptionRepository : JpaRepository<SubscriptionOptions, Long> {
 
   // Find services by name
-  fun findBySubscription(subscription: Subscription): List<SubscriptionOption>
+  fun findBySubscriptionService(subscriptionServices: SubscriptionServices): List<SubscriptionOptions>
 
-  fun findByOption(option: ServiceOption): SubscriptionOption
+  fun findByOption(option: ServiceOption): SubscriptionOptions
 
 }

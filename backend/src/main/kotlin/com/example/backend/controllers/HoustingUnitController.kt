@@ -2,9 +2,11 @@ package com.example.backend.controllers
 
 import com.example.backend.constants.StatusConstants
 import com.example.backend.models.HoustingUnit
+import com.example.backend.models.SubscriptionServices
 import com.example.backend.repositories.BillingCycleRepository
 import com.example.backend.repositories.PaymentLineRepository
 import com.example.backend.repositories.SubscriptionRepository
+import com.example.backend.repositories.SubscriptionServiceRepository
 import com.example.backend.services.HoustingUnitService
 import com.example.backend.services.SubscriptionService
 import org.springframework.http.ResponseEntity
@@ -18,6 +20,7 @@ import java.time.LocalDateTime
 class HoustingUnitController(
   private val housingUnitService: HoustingUnitService,
   private val subscriptionService: SubscriptionService,
+  private val subscriptionServiceRepository: SubscriptionServiceRepository,
   private val subscriptionRepository: SubscriptionRepository,
   private val billingCycleRepository: BillingCycleRepository,
   private val paymentLineRepository: PaymentLineRepository,
@@ -94,8 +97,9 @@ class HoustingUnitController(
           "Expired"
         }
 
-        val subscriptions = subscriptionRepository.findByTenant(tenant!!).orEmpty()
-          .filter { subscription -> subscription.service?.name == "loyer" }
+        val subscriptions = subscriptionRepository.findByTenant(tenant).orEmpty()
+          .filter { subscription -> subscriptionServiceRepository.findBySubscription(subscription)
+            .any { subscriptionServices ->  subscriptionServices.service?.name=="loyer"} }
 
         var total = subscriptions.sumOf { it.totalPrice!!*it.subscriptNumber!!.toBigDecimal() }
 
@@ -124,7 +128,7 @@ class HoustingUnitController(
 //        amountPaid = paidBillingCycles.sumOf { it.amountDue ?: BigDecimal.ZERO }
         leaseStartDate = tenant.moveInDate
         leaseEndDate = tenant.moveOutDate
-        billingMode = subscriptions.firstOrNull()?.service?.billingMode
+//        billingMode = subscriptions.firstOrNull()?.service?.billingMode
 
         if (leaseStatus == "Active") {
           remainingAmount = total-amountPaid
@@ -151,7 +155,7 @@ class HoustingUnitController(
         "amountPaid" to amountPaid,
         "leaseStartDate" to leaseStartDate,
         "leaseEndDate" to leaseEndDate,
-        "billingMode" to billingMode,
+//        "billingMode" to billingMode,
         "totalPayments" to (totalPayments ?: 0),
         "completedPayments" to (completedPayments ?: 0),
         "remainingPayments" to remainingPayments,
@@ -181,18 +185,25 @@ class HoustingUnitController(
     }
 
     // Map subscription details
-    val subscriptionDetails = subscriptions.map { subscription ->
+val subscriptionDetails = subscriptions.map { subscription ->
+  val subscriptionServices = subscriptionServiceRepository.findBySubscription(subscription)
+  mapOf(
+    "subscriptionId" to subscription.id,
+    "totalPrice" to subscription.totalPrice,
+    "startDate" to subscription.startDate,
+    "endDate" to subscription.endDate,
+    "status" to subscription.status,
+    "services" to subscriptionServices.map { subscriptionService ->
       mapOf(
-        "subscriptionId" to subscription.id,
-        "serviceName" to subscription.service?.name,
-        "serviceDescription" to subscription.service?.description,
-        "billingMode" to subscription.service?.billingMode,
-        "price" to subscription.totalPrice,
-        "startDate" to subscription.startDate,
-        "endDate" to subscription.endDate,
-        "status" to subscription.status
+        "serviceName" to subscriptionService.service?.name,
+        "serviceDescription" to subscriptionService.service?.description,
+        "billingMode" to subscriptionService.service?.billingMode,
+        "price" to subscriptionService.price,
+        "quantity" to subscriptionService.quantity
       )
     }
+  )
+}
 
     // Map billing cycle details
     val billingCycleDetails = billingCycles.map { cycle ->

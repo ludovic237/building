@@ -17,10 +17,6 @@ class Subscription {
   var tenant: com.example.backend.models.Tenant? = null
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "service_id")
-  var service: Services? = null
-
-  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "invoice_id")
   var invoice: Invoice? = null
 
@@ -31,7 +27,7 @@ class Subscription {
   @Column(name = "total_price", precision = 10, scale = 2)
   var totalPrice: BigDecimal? = null
 
-  @Column(name = "start_date", nullable = false)
+  @Column(name = "start_date")
   var startDate: LocalDateTime? = null
 
   @Column(name = "end_date")

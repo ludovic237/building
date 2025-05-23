@@ -1,10 +1,12 @@
 package com.example.backend.services
 
+import com.example.backend.constants.StatusConstants
 import com.example.backend.dtos.PaymentDTO
-import com.example.backend.models.Payment
-import com.example.backend.models.PaymentsView
+import com.example.backend.models.*
 import com.example.backend.repositories.*
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.*
@@ -15,6 +17,9 @@ class PaymentService(
   private val billingCycleRepository: BillingCycleRepository,
   private val paymentLineRepository: PaymentLineRepository,
   private val paymentRepository: PaymentRepository,
+  private val subscriptionRepository: SubscriptionRepository,
+  private val subscriptionServiceRepository: SubscriptionServiceRepository,
+  private val subscriptionOptionRepository: SubscriptionOptionRepository,
   private val paymentsViewRepository: PaymentsViewRepository,
   private val paymentsSimpleViewRepository: PaymentsSimpleViewRepository,
 ) {
@@ -64,42 +69,42 @@ class PaymentService(
     }
   }
 
-/*fun getAllPaymentsSimple(): List<Map<String, Any?>> {
-    return paymentRepository.findAll().map { payment ->
-      var pa
-        mapOf(
-            "paymentId" to payment.id,
-            "amountPaid" to payment.paymentLines.sumOf { it.amountPaid ?: BigDecimal.ZERO },
-            "paymentDate" to payment.paymentDate,
-            "paymentMethod" to payment.paymentMethod,
-            "billingCycleStatus" to payment.paymentLines.firstOrNull()?.billingCycle?.status,
-            "subscription" to payment.paymentLines.firstOrNull()?.billingCycle?.subscription?.let { subscription ->
-                mapOf(
-                    "subscriptionId" to subscription.id,
-                    "subscriptionStatus" to subscription.status
-                )
-            },
-            "tenant" to payment.tenant?.let { tenant ->
-                mapOf(
-                    "tenantId" to tenant.id,
-                    "moveInDate" to tenant.moveInDate,
-                    "moveOutDate" to tenant.moveOutDate,
-                    "securityDeposit" to tenant.securityDeposit
-                )
-            },
-            "service" to payment.paymentLines.firstOrNull()?.billingCycle?.subscription?.service?.let { service ->
-                mapOf(
-                    "serviceId" to service.id,
-                    "serviceName" to service.name,
-                    "serviceDescription" to service.description,
-                    "serviceCode" to service.code,
-                    "billingMode" to service.billingMode,
-                    "isActive" to service.isActive
-                )
-            }
-        )
-    }
-}*/
+  /*fun getAllPaymentsSimple(): List<Map<String, Any?>> {
+      return paymentRepository.findAll().map { payment ->
+        var pa
+          mapOf(
+              "paymentId" to payment.id,
+              "amountPaid" to payment.paymentLines.sumOf { it.amountPaid ?: BigDecimal.ZERO },
+              "paymentDate" to payment.paymentDate,
+              "paymentMethod" to payment.paymentMethod,
+              "billingCycleStatus" to payment.paymentLines.firstOrNull()?.billingCycle?.status,
+              "subscription" to payment.paymentLines.firstOrNull()?.billingCycle?.subscription?.let { subscription ->
+                  mapOf(
+                      "subscriptionId" to subscription.id,
+                      "subscriptionStatus" to subscription.status
+                  )
+              },
+              "tenant" to payment.tenant?.let { tenant ->
+                  mapOf(
+                      "tenantId" to tenant.id,
+                      "moveInDate" to tenant.moveInDate,
+                      "moveOutDate" to tenant.moveOutDate,
+                      "securityDeposit" to tenant.securityDeposit
+                  )
+              },
+              "service" to payment.paymentLines.firstOrNull()?.billingCycle?.subscription?.service?.let { service ->
+                  mapOf(
+                      "serviceId" to service.id,
+                      "serviceName" to service.name,
+                      "serviceDescription" to service.description,
+                      "serviceCode" to service.code,
+                      "billingMode" to service.billingMode,
+                      "isActive" to service.isActive
+                  )
+              }
+          )
+      }
+  }*/
 
   fun getPaymentById(id: Long): Optional<Payment> {
     return paymentRepository.findById(id)
@@ -195,4 +200,176 @@ class PaymentService(
     }
   }
 
+  fun payBillingCycles(subscriptionId: Long, paymentAmount: BigDecimal): Map<String, Any?> {
+    val subscription = subscriptionRepository.findById(subscriptionId)
+      .orElseThrow { IllegalArgumentException("Subscription not found with ID $subscriptionId") }
+
+    val billingCycles = billingCycleRepository.findBySubscriptionId(subscriptionId)
+      .filter { it.status != StatusConstants.BILLING_CYCLE_STATUS_PAID }
+
+    var remainingAmount = paymentAmount
+    billingCycles.forEach { cycle ->
+      val amountDue =
+        cycle.amountDue!! - paymentLineRepository.findByBillingCycle(cycle).sumOf { it.amountPaid ?: BigDecimal.ZERO }
+      val amountToPay = remainingAmount.min(amountDue)
+
+      paymentLineRepository.save(
+        PaymentLine().apply {
+          this.billingCycle = cycle
+          this.amountPaid = amountToPay
+          this.createdDate = LocalDateTime.now()
+        }
+      )
+
+      if (amountToPay == amountDue) {
+        cycle.status = StatusConstants.BILLING_CYCLE_STATUS_PAID
+        billingCycleRepository.save(cycle)
+      }
+
+      remainingAmount -= amountToPay
+      if (remainingAmount <= BigDecimal.ZERO) return@forEach
+    }
+
+    return mapOf("message" to "Payment processed successfully")
+  }
+
+  fun paySubscriptionServices(subscriptionId: Long, paymentAmount: BigDecimal): Map<String, Any?> {
+    val subscription = subscriptionRepository.findById(subscriptionId)
+      .orElseThrow { IllegalArgumentException("Subscription not found with ID $subscriptionId") }
+    val subscriptionServices = subscriptionServiceRepository.findBySubscription(subscription)
+    var remainingAmount = paymentAmount
+
+    subscriptionServices.forEach { service ->
+      val billingCycle = service.billingCycle
+        ?: throw IllegalStateException("No billing cycle associated with subscription service ID ${service.id}")
+
+      val cycleDue = billingCycle.amountDue!! - paymentLineRepository.findByBillingCycle(billingCycle)
+        .sumOf { it.amountPaid ?: BigDecimal.ZERO }
+      val amountToPayCycle = remainingAmount.min(cycleDue)
+
+      paymentLineRepository.save(
+        PaymentLine().apply {
+          this.billingCycle = billingCycle
+          this.amountPaid = amountToPayCycle
+          this.createdDate = LocalDateTime.now()
+        }
+      )
+
+      if (amountToPayCycle == cycleDue) {
+        billingCycle.status = StatusConstants.BILLING_CYCLE_STATUS_PAID
+        billingCycleRepository.save(billingCycle)
+      }
+
+      remainingAmount -= amountToPayCycle
+      if (remainingAmount <= BigDecimal.ZERO) return@forEach
+
+      val options = subscriptionOptionRepository.findBySubscriptionService(service)
+      options.forEach { option ->
+        val paymentLine = paymentLineRepository.findById(option.paymentLine?.id!!)
+          .orElseThrow { IllegalArgumentException("Payment line with ID ${option.paymentLine} not found") }
+        val optionDue = option.price!! - (paymentLine.amountPaid ?: BigDecimal.ZERO)
+//          val optionDue = option.price!! - paymentLineRepository.findById(option.paymentLine)
+//            .sumOf { paymentLine -> paymentLine.amountPaid ?: BigDecimal.ZERO }
+        val amountToPayOption = remainingAmount.min(optionDue)
+
+        paymentLineRepository.save(
+          PaymentLine().apply {
+//            this.subscriptionOption = option
+            this.amountPaid = amountToPayOption
+            this.createdDate = LocalDateTime.now()
+          }
+        )
+
+        remainingAmount -= amountToPayOption
+        if (remainingAmount <= BigDecimal.ZERO) return@forEach
+      }
+    }
+
+    return mapOf("message" to "Payment processed successfully")
+  }
+
+  fun payGlobally(subscriptionId: Long, paymentAmount: BigDecimal): Map<String, Any?> {
+    val subscription = subscriptionRepository.findById(subscriptionId)
+      .orElseThrow { IllegalArgumentException("Subscription not found with ID $subscriptionId") }
+
+    val billingCycles = billingCycleRepository.findBySubscriptionId(subscriptionId)
+      .filter { it.status != StatusConstants.BILLING_CYCLE_STATUS_PAID }
+    val subscriptionServices = subscriptionServiceRepository.findBySubscription(subscription)
+    val subscriptionOptions =
+      subscriptionServices.flatMap { subscriptionOptionRepository.findBySubscriptionService(it) }
+
+    var remainingAmount = paymentAmount
+
+    // Pay billing cycles
+    billingCycles.forEach { cycle ->
+      val cycleDue =
+        cycle.amountDue!! - paymentLineRepository.findByBillingCycle(cycle).sumOf { it.amountPaid ?: BigDecimal.ZERO }
+      val amountToPayCycle = remainingAmount.min(cycleDue)
+
+      paymentLineRepository.save(
+        PaymentLine().apply {
+          this.billingCycle = cycle
+          this.amountPaid = amountToPayCycle
+          this.createdDate = LocalDateTime.now()
+        }
+      )
+
+      if (amountToPayCycle == cycleDue) {
+        cycle.status = StatusConstants.BILLING_CYCLE_STATUS_PAID
+        billingCycleRepository.save(cycle)
+      }
+
+      remainingAmount -= amountToPayCycle
+      if (remainingAmount <= BigDecimal.ZERO) return@forEach
+    }
+
+    // Pay subscription options
+    subscriptionOptions.forEach { option ->
+      val paymentLine = paymentLineRepository.findById(option.paymentLine?.id!!)
+        .orElseThrow { IllegalArgumentException("Payment line with ID ${option.paymentLine} not found") }
+      val optionDue = option.price!! - (paymentLine.amountPaid ?: BigDecimal.ZERO)
+//      val optionDue = option.price!! - paymentLineRepository.findBySubscriptionOption(option)
+//        .sumOf { it.amountPaid ?: BigDecimal.ZERO }
+      val amountToPayOption = remainingAmount.min(optionDue)
+
+      paymentLineRepository.save(
+        PaymentLine().apply {
+//          this.subscriptionOption = option
+          this.amountPaid = amountToPayOption
+          this.createdDate = LocalDateTime.now()
+        }
+      )
+
+      remainingAmount -= amountToPayOption
+      if (remainingAmount <= BigDecimal.ZERO) return@forEach
+    }
+
+    return mapOf("message" to "Global payment processed successfully")
+  }
+
+  fun calculateServiceAmountDue(subscriptionService: SubscriptionServices): BigDecimal {
+    val totalPaid = paymentLineRepository.findByBillingCycle(subscriptionService.billingCycle!!)
+      .sumOf { it.amountPaid ?: BigDecimal.ZERO }
+    return subscriptionService.price - totalPaid
+  }
+
+  fun calculateOptionAmountDue(subscriptionOption: SubscriptionOptions): BigDecimal {
+    val totalPaid = subscriptionOption.paymentLine?.amountPaid ?: BigDecimal.ZERO
+    return subscriptionOption.price - totalPaid
+  }
+
+  @Transactional
+  fun updateAmountsDue(subscription: Subscription) {
+    val services = subscriptionServiceRepository.findBySubscription(subscription)
+    services.forEach { service: SubscriptionServices ->
+      service.amountDue = calculateServiceAmountDue(service)
+      subscriptionServiceRepository.save(service)
+
+      val options = subscriptionOptionRepository.findBySubscriptionService(service)
+      options.forEach { option: SubscriptionOptions ->
+        option.amountDue = calculateOptionAmountDue(option)
+        subscriptionOptionRepository.save(option)
+      }
+    }
+  }
 }

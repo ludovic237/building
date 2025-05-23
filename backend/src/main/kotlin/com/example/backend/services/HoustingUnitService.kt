@@ -14,6 +14,7 @@ class HoustingUnitService(
   private val housingUnitRepository: HoustingUnitRepository,
   private val houstingUnitRepository: HoustingUnitRepository,
   private val subscriptionRepository: SubscriptionRepository,
+  private val subscriptionServiceRepository: SubscriptionServiceRepository,
   private val issueRepository: IssueRepository,
   private val invoiceRepository: InvoiceRepository,
   private val billingCycleRepository: BillingCycleRepository,
@@ -108,13 +109,22 @@ class HoustingUnitService(
         )
       },
       "subscriptions" to subscriptions.map { subscription ->
+        val subscriptionServices = subscriptionServiceRepository.findBySubscription(subscription)
         mapOf(
           "id" to subscription.id,
-          "serviceName" to subscription.service?.name,
           "price" to subscription.totalPrice,
           "startDate" to subscription.startDate,
           "endDate" to subscription.endDate,
-          "status" to subscription.status
+          "status" to subscription.status,
+          "services" to subscriptionServices.map { subscriptionService ->
+            mapOf(
+              "serviceName" to subscriptionService.service?.name,
+              "serviceDescription" to subscriptionService.service?.description,
+              "billingMode" to subscriptionService.service?.billingMode,
+              "price" to subscriptionService.price,
+              "quantity" to subscriptionService.quantity
+            )
+          }
         )
       },
       "totalPayments" to billingCycles.size,

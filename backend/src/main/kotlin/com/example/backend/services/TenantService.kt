@@ -18,6 +18,7 @@ import java.util.*
 @Service
 class TenantService(
   private var authenticationManager: AuthenticationManager? = null,
+  private val subscriptionServiceRepository: SubscriptionServiceRepository,
   private val paymentsViewRepository: PaymentsViewRepository,
   private val serviceOptionRepository: ServiceOptionRepository,
   private val subscriptionOptionRepository: SubscriptionOptionRepository,
@@ -54,7 +55,10 @@ class TenantService(
   fun getAllTenants(): List<TenantDTO> {
     return tenantRepository.findAll().map { tenant ->
       var subscription = subscriptionRepository.findByTenant(tenantRepository.findByIdOrNull(tenant.id!!)!!)
-        .filter { subscription -> subscription.service?.name == "loyer" }
+        .filter { subscription ->
+          subscriptionServiceRepository.findBySubscription(subscription)
+            .any { subscriptionServices -> subscriptionServices.service?.name == "loyer" }
+        }
       println("tenant")
       println(tenant)
       println(tenant.user)
@@ -166,7 +170,6 @@ class TenantService(
 
     // Step 2: Create Subscription
     val subscription = Subscription()
-    subscription.service = service
     subscription.totalPrice = tenantData.logementBasePrice
     subscription.startDate = tenantData.startDate
     subscription.tenant = tenant
@@ -175,7 +178,23 @@ class TenantService(
     subscription.subscriptNumber = tenantData.numberOfSubscription
     subscription.status = "Active"
     subscription.createdDate = LocalDateTime.now()
-    subscriptionRepository.save(subscription)
+    val savedSubscription = subscriptionRepository.save(subscription)
+
+// Create associated subscription services
+
+    var serviceData = serviceRepository.findById(tenantData.serviceId)
+      .orElseThrow { IllegalArgumentException("Service not found with ID: ${tenantData.serviceId}") }
+    val subscriptionServices = SubscriptionServices()
+    subscriptionServices.subscription = savedSubscription
+    subscriptionServices.service = serviceRepository.findById(tenantData.serviceId)
+      .orElseThrow { IllegalArgumentException("Service not found with ID: ${tenantData.serviceId}") }
+    subscriptionServices.quantity = 1
+    subscriptionServices.price = tenantData.logementBasePrice
+    subscriptionServices.startDate = tenantData.startDate
+    subscriptionServices.endDate = tenantData.startDate.plusMonths(tenantData.numberOfSubscription.toLong())
+    subscriptionServices.createdDate = LocalDateTime.now()
+    subscriptionServiceRepository.save(subscriptionServices)
+
 
     // Step 3: Calculate billing cycles
     val logementBasePrice = tenantData.logementBasePrice
@@ -347,16 +366,27 @@ class TenantService(
         "status" to cycle.status
       )
     },
-      "subscriptions" to subscriptions.map { subscription ->
-        mapOf(
-          "id" to subscription.id,
-          "serviceName" to subscription.service?.name,
-          "price" to subscription.totalPrice,
-          "startDate" to subscription.startDate,
-          "endDate" to subscription.endDate,
-          "status" to subscription.status
-        )
-      },
+     "subscriptions" to subscriptions.map { subscription ->
+       val subscriptionServices = subscriptionServiceRepository.findBySubscription(subscription).map { subscriptionService ->
+         mapOf(
+           "id" to subscriptionService.id,
+           "serviceName" to subscriptionService.service?.name,
+           "quantity" to subscriptionService.quantity,
+           "price" to subscriptionService.price,
+           "startDate" to subscriptionService.startDate,
+           "endDate" to subscriptionService.endDate
+         )
+       }
+
+       mapOf(
+         "id" to subscription.id,
+         "price" to subscription.totalPrice,
+         "startDate" to subscription.startDate,
+         "endDate" to subscription.endDate,
+         "status" to subscription.status,
+         "subscriptionServices" to subscriptionServices
+       )
+     },
       "totalPayments" to billingCycles.size,
       "completedPayments" to paidBillingCycles.size,
       "remainingPayments" to unpaidBillingCycles.size,
@@ -409,32 +439,48 @@ class TenantService(
   fun getTenantDetailsAsMap(tenantId: Long): Map<String, Any?> {
     val tenant = tenantRepository.findById(tenantId).orElseThrow { IllegalArgumentException("Tenant not found") }
 
-    val subscriptions = subscriptionRepository.findByTenant(tenant).map { subscription ->
-      val subscribedOptions = subscriptionOptionRepository.findBySubscription(subscription).map { option ->
-        mapOf(
-          "id" to option.id, "name" to option.option!!.name, "price" to option.option!!.price
+    val subscriptions = subscriptionRepository.findByTenant(tenant)
+      .map { subscription ->
+        val subscriptionServices = subscriptionServiceRepository.findBySubscription(subscription)
+        val subscribedOptions = subscriptionServices
+          .flatMap { subscriptionService ->
+            subscriptionOptionRepository.findBySubscriptionService(subscriptionService)
+              .map { subscriptionOption ->
+                mutableMapOf(
+                  "id" to subscriptionOption.id as Any,
+                  "name" to (subscriptionOption.option?.name ?: "Unknown") as Any,
+                  "price" to (subscriptionOption.option?.price ?: BigDecimal.ZERO) as Any
+                )
+              }
+          }
+
+        val totalSubscriptions = subscription.subscriptNumber ?: 0
+        val completedSubscriptions = billingCycleRepository.findBySubscription(subscription)
+          .count { it.status == StatusConstants.BILLING_CYCLE_STATUS_PAID }
+        val remainingSubscriptions = totalSubscriptions - completedSubscriptions
+        val remainingAmount = BigDecimal(remainingSubscriptions) * (subscription.totalPrice ?: BigDecimal.ZERO)
+
+       mapOf(
+          "id" to subscription.id,
+          "price" to subscription.totalPrice,
+          "startDate" to subscription.startDate,
+          "endDate" to subscription.endDate,
+          "status" to subscription.status,
+          "subscriptionServices" to subscriptionServices.map { subscriptionService ->
+            mapOf(
+              "id" to subscriptionService.id,
+              "serviceName" to subscriptionService.service?.name,
+              "quantity" to subscriptionService.quantity,
+              "price" to subscriptionService.price,
+              "startDate" to subscriptionService.startDate,
+              "endDate" to subscriptionService.endDate
+            )
+          },
+          "totalSubscriptions" to totalSubscriptions,
+          "remainingSubscriptions" to remainingSubscriptions,
+          "remainingAmount" to remainingAmount
         )
       }
-
-      val totalSubscriptions = subscription.subscriptNumber ?: 0
-      val completedSubscriptions = billingCycleRepository.findBySubscription(subscription)
-        .count { it.status == StatusConstants.BILLING_CYCLE_STATUS_PAID }
-      val remainingSubscriptions = totalSubscriptions - completedSubscriptions
-      val remainingAmount = BigDecimal(remainingSubscriptions) * (subscription.totalPrice ?: BigDecimal.ZERO)
-
-      mapOf(
-        "id" to subscription.id,
-        "serviceName" to subscription.service?.name,
-        "price" to subscription.totalPrice,
-        "startDate" to subscription.startDate,
-        "endDate" to subscription.endDate,
-        "status" to subscription.status,
-        "options" to subscribedOptions,
-        "totalSubscriptions" to totalSubscriptions,
-        "remainingSubscriptions" to remainingSubscriptions,
-        "remainingAmount" to remainingAmount
-      )
-    }
 
     val subscriptionsSimple = subscriptionRepository.findByTenant(tenant)
 
@@ -484,8 +530,8 @@ class TenantService(
       billingCycleRepository.findBySubscription(subscriptionEntity).orEmpty().map { cycle ->
         mapOf(
           "id" to cycle.id,
-          "serviceId" to cycle.subscription?.service?.id,
-          "serviceName" to cycle.subscription?.service?.name,
+//          "serviceId" to cycle.subscription?.service?.id,
+//          "serviceName" to cycle.subscription?.service?.name,
           "amountDue" to cycle.amountDue,
           "periodStart" to cycle.periodStart,
           "periodEnd" to cycle.periodEnd,
@@ -529,9 +575,20 @@ class TenantService(
       "accountStatus" to if (tenant.user?.isActive == true) "Active" else "Inactive"
     )
 
-    val subscribedServices = subscriptionRepository.findByTenant(tenant).map { it.service?.id }
+    val subscribedServices = subscriptionRepository.findByTenant(tenant)
+      .flatMap { subscription ->
+        subscriptionServiceRepository.findBySubscription(subscription)
+          .map { it.service?.id }
+      }
+
     val subscribedOptions = subscriptionRepository.findByTenant(tenant)
-      .flatMap { subscription -> subscriptionOptionRepository.findBySubscription(subscription) }.map { it.option?.id }
+      .flatMap { subscription ->
+        subscriptionServiceRepository.findBySubscription(subscription)
+          .flatMap { subscriptionService ->
+            subscriptionOptionRepository.findBySubscriptionService(subscriptionService)
+              .map { it.option?.id }
+          }
+      }
 
     val services = serviceRepository.findAll().map { service ->
       val serviceOptions = serviceOptionRepository.findByService(service).map { option ->

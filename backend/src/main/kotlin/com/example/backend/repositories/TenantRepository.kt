@@ -5,6 +5,7 @@ import com.example.backend.models.Tenant
 import com.example.backend.models.User
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
 import java.time.LocalDateTime
 import java.util.Optional
 
@@ -12,6 +13,9 @@ interface TenantRepository : JpaRepository<Tenant, Long> {
   fun findByUser(user: User): Optional<Tenant>
 
   fun findByHousingUnit(houstingUnit: HoustingUnit): List<Tenant>
+
+  @Query("SELECT t FROM Tenant t JOIN FETCH t.user WHERE t.id = :tenantId")
+  fun findByIdWithUser(@Param("tenantId") tenantId: Long): Optional<Tenant>
 
   fun findByHousingUnitAndMoveInDateBetween(
     houstingUnit: HoustingUnit,

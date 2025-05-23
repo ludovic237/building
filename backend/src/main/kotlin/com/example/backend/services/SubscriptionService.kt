@@ -5,6 +5,7 @@ import com.example.backend.constants.StatusConstants
 import com.example.backend.dtos.SubscriptionDTO
 import com.example.backend.dtos.SubscriptionDetailsDTO
 import com.example.backend.models.*
+import com.example.backend.models.SubscriptionServices
 import com.example.backend.repositories.*
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
@@ -20,7 +21,10 @@ import java.time.Year
 @Service
 class SubscriptionService(
   private val documentRepository: DocumentRepository,
+  private val userRepository: UserRepository,
+  private val paymentService: PaymentService,
   private val invoiceRepository: InvoiceRepository,
+  private val subscriptionServiceRepository: SubscriptionServiceRepository,
   private val invoiceService: InvoiceService,
   private val serviceRepository: ServiceRepository,
   private val serviceOptionRepository: ServiceOptionRepository,
@@ -34,19 +38,39 @@ class SubscriptionService(
   private val userService: UserService
 ) {
 
-  fun getAllSubscriptions(): List<SubscriptionDTO> {
+  fun getAllSubscriptions(): List<Map<String, Any?>> {
     return subscriptionRepository.findAll().map { subscription ->
-
       val tenantName = tenantRepository.findById(subscription.tenant!!.id!!).get()
         .let { tenant -> "${tenant.user!!.firstName} ${tenant.user!!.lastName}" }
-      val serviceName = subscription.service!!.name
-      SubscriptionDTO(
-        id = subscription.id,
-        tenantName = tenantName,
-        serviceName = serviceName,
-        moveInDate = subscription.startDate,
-        moveOutDate = subscription.endDate,
-        paymentStatus = subscription.status
+
+      val subscriptionServices =
+        subscriptionServiceRepository.findBySubscription(subscription).map { subscriptionService ->
+          mapOf(
+            "serviceId" to subscriptionService.service?.id,
+            "serviceName" to subscriptionService.service?.name,
+            "serviceDescription" to subscriptionService.service?.description,
+            "price" to subscriptionService.price,
+            "quantity" to subscriptionService.quantity,
+            "options" to subscriptionOptionRepository.findBySubscriptionService(subscriptionService)
+              .map { subscriptionOption ->
+                mapOf(
+                  "subscriptionOptionId" to subscriptionOption.id,
+                  "optionId" to subscriptionOption.option?.id,
+                  "quantity" to subscriptionOption.quantity,
+                  "price" to subscriptionOption.price
+                )
+              }
+          )
+        }
+
+      mapOf(
+        "subscriptionId" to subscription.id,
+        "tenantName" to tenantName,
+        "startDate" to subscription.startDate,
+        "endDate" to subscription.endDate,
+        "status" to subscription.status,
+        "totalPrice" to subscription.totalPrice,
+        "services" to subscriptionServices
       )
     }
   }
@@ -140,39 +164,39 @@ class SubscriptionService(
       ?: throw IllegalArgumentException("No subscriptions found for tenant with ID $tenantId")
 
     return subscriptions
-      .filter { it.service?.isActive == true } // Filter only active services
+      .filter { it.status == "true" } // Filter only active services
       .map { subscription ->
         // Fetch the associated service
-        val service = subscription.service
-          ?: throw IllegalArgumentException("Service not found for subscription ID ${subscription.id}")
+        val subscriptionServices = subscriptionServiceRepository.findBySubscription(subscription)
 
+        val serviceDetails = subscriptionServices.map { subscriptionService ->
+          val service = subscriptionService.service
+            ?: throw IllegalArgumentException("Service not found for subscription service ID ${subscriptionService.id}")
 
-        // Calculate the remaining amount to be paid
-        val billingCycles = billingCycleRepository.findBySubscriptionId(subscription.id!!)
+          // Calculate the remaining amount for this service
+          val billingCycles = billingCycleRepository.findBySubscriptionId(subscription.id!!)
+          val billingCycleIds = billingCycles.map { it.id }
+          val totalAmountPaid = paymentLineRepository.findAllByBillingCycleIdIn(billingCycleIds)
+            .sumOf { it.amountPaid ?: BigDecimal.ZERO }
 
-        val billingCycleIds = billingCycles.map { it.id }
-        println("Billing Cycle IDs: $billingCycleIds")
-        val totalAmountPaid = paymentLineRepository.findAllByBillingCycleIdIn(billingCycleIds)
-          .sumOf { it.amountPaid ?: BigDecimal.ZERO }
-        println("Total Amount Paid: $totalAmountPaid")
+          val totalAmountService =
+            subscriptionService.quantity.toBigDecimal() * (subscriptionService.price ?: BigDecimal.ZERO)
+          val remainingAmount = totalAmountService - totalAmountPaid
 
-        val totalAmountSubscription =
-          (subscription.subscriptNumber ?: 0).toBigDecimal() * (subscription.totalPrice ?: BigDecimal.ZERO)
-        val remainingAmount = totalAmountSubscription - totalAmountPaid
+          mapOf(
+            "subscriptionServiceId" to subscriptionService.id!!,
+            "serviceId" to service.id!!,
+            "serviceName" to service.name!!,
+            "serviceCode" to service.code!!,
+            "serviceDescription" to service.description!!,
+            "billingMode" to service.billingMode!!,
+            "remainingAmount" to remainingAmount
+          )
+        }
 
-        // Calculate the number of unpaid cycles
-        val remainingCycles = subscription.subscriptNumber!! - billingCycles.size
-
-        // Build the result map
         mapOf(
-          "id" to subscription.id!!,
-          "serviceId" to service.id!!,
-          "serviceName" to service.name!!,
-          "serviceCode" to service.code!!,
-          "serviceDescription" to service.description!!,
-          "billingMode" to service.billingMode!!,
-          "remainingCycles" to remainingCycles,
-          "remainingAmount" to remainingAmount
+          "subscriptionId" to subscription.id!!,
+          "services" to serviceDetails
         )
       }
   }
@@ -191,9 +215,6 @@ class SubscriptionService(
 
     val subscription = subscriptionRepository.findById(subscriptionId)
       .orElseThrow { IllegalArgumentException("Subscription not found with ID $subscriptionId") }
-
-    val service = subscription.service
-      ?: throw IllegalArgumentException("Service not found for subscription ID $subscriptionId")
 
     val billingPrice = subscription.totalPrice ?: BigDecimal.ZERO
 
@@ -269,39 +290,46 @@ class SubscriptionService(
     var currentStartDate = lastBillingCycle?.periodEnd?.plusDays(1) ?: subscription.startDate
 
     while (remainingAmount > BigDecimal.ZERO) {
-      val currentEndDate = when (service.billingMode!!.lowercase()) {
-        "monthly" -> currentStartDate?.plusMonths(1)
-        "yearly" -> currentStartDate?.plusYears(1)
-        else -> throw IllegalArgumentException("Unsupported billing mode")
-      }
+      val subscriptionServices = subscriptionServiceRepository.findBySubscription(subscription)
+      subscriptionServices.forEach { subscriptionService ->
+        val currentEndDate = when (subscriptionService.service?.billingMode?.lowercase()) {
+          "monthly" -> currentStartDate?.plusMonths(1)
+          "yearly" -> currentStartDate?.plusYears(1)
+          else -> throw IllegalArgumentException("Unsupported billing mode")
+        }
 
-      val amountToPay = remainingAmount.min(billingPrice)
-      val billingCycle = BillingCycle().apply {
-        this.periodStart = currentStartDate
-        this.periodEnd = currentEndDate
-        this.amountDue = billingPrice
-        this.subscription = subscription
-        this.createdDate = LocalDateTime.now()
-        this.updatedDate = LocalDateTime.now()
-        this.status =
-          if (amountToPay == billingPrice) StatusConstants.BILLING_CYCLE_STATUS_PAID else StatusConstants.BILLING_CYCLE_STATUS_PARTIAL_PAID
-      }
-      billingCycleRepository.save(billingCycle)
-      billingCycles.add(billingCycle)
-
-      paymentLineRepository.save(
-        PaymentLine().apply {
-          this.payment = payment
-          this.billingCycle = billingCycle
-          this.amountPaid = amountToPay
+        val billingPrice = subscriptionService.price
+        val amountToPay = remainingAmount.min(billingPrice)
+        val billingCycle = BillingCycle().apply {
+          this.periodStart = currentStartDate
+          this.periodEnd = currentEndDate
+          this.amountDue = billingPrice
+          this.subscription = subscription
           this.createdDate = LocalDateTime.now()
           this.updatedDate = LocalDateTime.now()
+          this.status =
+            if (amountToPay == billingPrice) StatusConstants.BILLING_CYCLE_STATUS_PAID else StatusConstants.BILLING_CYCLE_STATUS_PARTIAL_PAID
         }
-      )
+        billingCycleRepository.save(billingCycle)
+        billingCycles.add(billingCycle)
 
-      remainingAmount -= amountToPay
-      currentStartDate = currentEndDate
+        paymentLineRepository.save(
+          PaymentLine().apply {
+            this.payment = payment
+            this.billingCycle = billingCycle
+            this.amountPaid = amountToPay
+            this.createdDate = LocalDateTime.now()
+            this.updatedDate = LocalDateTime.now()
+          }
+        )
+
+        remainingAmount -= amountToPay
+        currentStartDate = currentEndDate
+      }
     }
+
+    // Call updateAmountsDue to update the amounts due for the subscription
+    paymentService.updateAmountsDue(subscription)
 
     return mapOf(
       "message" to "Payment processed successfully",
@@ -340,11 +368,15 @@ class SubscriptionService(
     val subscription = subscriptionRepository.findById(subscriptionId)
       .orElseThrow { IllegalArgumentException("Subscription not found") }
 
-    val options = subscriptionOptionRepository.findBySubscription(subscription)
+    val subscriptionServices = subscriptionServiceRepository.findBySubscription(subscription)
+
+    val options = subscriptionServices.flatMap { subscriptionService ->
+      subscriptionOptionRepository.findBySubscriptionService(subscriptionService)
+    }
     val usage = serviceUsageRepository.findBySubscription(subscription)
 
     val allOptionsUsed = options.all { option ->
-      val usedQuantity = usage.filter { usageItem -> usageItem.option!!.id == option.id }.sumOf { it.quantityUsed ?: 0 }
+      val usedQuantity = usage.filter { usageItem -> usageItem.option?.id == option.id }.sumOf { it.quantityUsed ?: 0 }
       usedQuantity >= (option.quantity ?: 0)
     }
 
@@ -356,93 +388,36 @@ class SubscriptionService(
     }
   }
 
-  fun createSubscriptionWithDetails(
-    tenantId: Long,
-    serviceId: Long,
-    dateDebut: String,
-    dateFin: String,
-    status: String,
-    options: List<Map<String, Any>>
-  ): Subscription {
-    val tenant = tenantRepository.findById(tenantId)
-      .orElseThrow { IllegalArgumentException("Tenant not found with ID $tenantId") }
-
-    val service = serviceRepository.findById(serviceId)
-      .orElseThrow { IllegalArgumentException("Service not found with ID $serviceId") }
-    val formatter = DateTimeFormatter.ISO_DATE_TIME
-    val subscription = Subscription().apply {
-      this.tenant = tenant
-      this.service = service
-      this.startDate = LocalDateTime.parse(dateDebut, formatter)
-      this.endDate = LocalDateTime.parse(dateFin, formatter)
-      this.status = status
-      this.createdDate = LocalDateTime.now()
-      this.updatedDate = LocalDateTime.now()
-    }
-
-    // Save the subscription
-    val savedSubscription = subscriptionRepository.save(subscription)
-
-    // Save the options
-    options.forEach { option ->
-      val optionId = (option["id"] as Number).toLong()
-      val serviceOption = serviceOptionRepository.findById(optionId)
-        .orElseThrow { IllegalArgumentException("Service option not found with ID $optionId") }
-      val quantity = (option["quantity"] as Number).toInt()
-      subscriptionOptionRepository.save(
-        SubscriptionOption().apply {
-          this.subscription = savedSubscription
-          this.quantity = quantity
-          this.option = serviceOption
-          this.createdDate = LocalDateTime.now()
-          this.updatedDate = LocalDateTime.now()
-        }
-      )
-    }
-
-    // Create an invoice
-    val invoice = Invoice().apply {
-      this.user = tenant.user
-      this.type = "subscription"
-      this.month = LocalDate.now().monthValue
-      this.year = LocalDate.now().year
-      this.amount = options.sumOf { option ->
-        val quantity = (option["quantity"] as Number).toInt()
-        val serviceOption = serviceOptionRepository.findById((option["id"] as Number).toLong())
-          .orElseThrow { IllegalArgumentException("Service option not found with ID ${option["id"]}") }
-        serviceOption.price?.multiply(quantity.toBigDecimal()) ?: BigDecimal.ZERO
-      }
-      this.paymentDate = null
-      this.createdDate = LocalDateTime.now()
-      this.status = "PENDING"
-      this.number = invoiceService.generateInvoiceNumber()
-    }
-    invoiceRepository.save(invoice)
-
-    return savedSubscription
-  }
-
   fun getSubscriptionWithDetails(
     subscriptionId: Long,
   ): Map<String, Any?> {
     val subscription = subscriptionRepository.getById(subscriptionId)
+    val subscriptionServices = subscriptionServiceRepository.findBySubscription(subscription)
 
-    val subscriptionOptions = subscriptionOptionRepository.findBySubscription(subscription)
+    val subscriptionOptions = subscriptionServices.flatMap { subscriptionService ->
+      subscriptionOptionRepository.findBySubscriptionService(subscriptionService)
+    }
 
     val formattedData = mapOf(
       "tenantId" to (subscription.tenant?.id ?: throw IllegalArgumentException("Tenant is null")),
-      "serviceId" to (subscription.service?.id ?: throw IllegalArgumentException("Service is null")),
+      "subscriptionServices" to subscriptionServices.map { subscriptionService ->
+        mapOf(
+          "serviceId" to subscriptionService.service?.id,
+          "serviceName" to subscriptionService.service?.name,
+          "serviceDescription" to subscriptionService.service?.description,
+          "options" to subscriptionOptionRepository.findBySubscriptionService(subscriptionService)
+            .map { subscriptionOption ->
+              mapOf(
+                "subscriptionOptionId" to subscriptionOption.id,
+                "optionId" to subscriptionOption.option?.id,
+                "quantity" to subscriptionOption.quantity
+              )
+            }
+        )
+      },
       "dateDebut" to subscription.startDate.toString(),
       "dateFin" to subscription.endDate.toString(),
-      "status" to subscription.status,
-      "options" to subscriptionOptions.map { subscriptionOption ->
-        mapOf(
-          "subscriptionOptionId" to subscriptionOption.id,
-          "subscriptionId" to subscriptionOption.subscription?.id,
-          "optionId" to subscriptionOption.option?.id,
-          "quantity" to subscriptionOption.quantity
-        )
-      }
+      "status" to subscription.status
     )
     return formattedData
   }
@@ -492,17 +467,19 @@ class SubscriptionService(
   }
 
   @Transactional
-  fun saveSubscriptionsTenantWithInvoice(data: Map<String, Any?>) {
+  fun saveSubscriptionsTenantWithInvoice(data: Map<String, Any?>): Map<String, Any?> {
+    val userConnect = userService.getCurrentUser()
     val finalTotal = (data["finalTotal"] as Int).toBigDecimal()
     val tenantId = (data["tenantId"] as Int).toLong()
     val selectedServices = data["selectedServices"] as List<Map<String, Any?>>
 
-    val tenant = tenantRepository.findById(tenantId)
+    val tenant = tenantRepository.findByIdWithUser(tenantId)
       .orElseThrow { IllegalArgumentException("Tenant not found with ID $tenantId") }
 
     // Create invoice
     var invoice = Invoice().apply {
       this.user = tenant.user
+      this.modify = userConnect
       this.type = "subscription"
       this.amount = finalTotal
       this.status = "PENDING"
@@ -512,53 +489,141 @@ class SubscriptionService(
     }
     invoice = invoiceRepository.save(invoice)
 
+    val status = "ACTIVE"
+    val subscription = Subscription().apply {
+      this.invoice = invoice
+      this.modifyBy = userConnect
+      this.tenant = tenant
+      startDate = LocalDateTime.now()
+      endDate = LocalDateTime.now().plusMonths(1)
+      this.status = status
+      totalPrice = finalTotal
+      this.createdDate = LocalDateTime.now()
+      this.updatedDate = LocalDateTime.now()
+    }
+
+    if (subscription.tenant == null || subscription.startDate == null || subscription.endDate == null) {
+      throw IllegalArgumentException("Subscription data is incomplete.")
+    }
+
+    val savedSubscription = createSubscriptionSimple(subscription)
 
     selectedServices.forEach { serviceData ->
       val serviceId = (serviceData["id"] as Number).toLong()
       val service = serviceRepository.findById(serviceId)
         .orElseThrow { IllegalArgumentException("Service not found with ID $serviceId") }
 
-      val startDate = LocalDateTime.parse(serviceData["startDate"] as String)
-      val endDate = LocalDateTime.parse(serviceData["endDate"] as String)
-      val status = serviceData["status"] as String
-      val totalPrice = (serviceData["totalPrice"] as Int)
-      val numberOfSubscriptions = (serviceData["numberOfSubscriptions"] as Int)
+      val startDate = (serviceData["startDate"] as? String)?.let {
+        LocalDateTime.parse(it.removeSuffix("Z"))
+      } ?: LocalDateTime.now()
+      val numberOfSubscriptions = serviceData["numberOfSubscriptions"] as? Int ?: 1
+      val endDate = (serviceData["endDate"] as? String)?.let {
+        LocalDate.parse(it).atTime(startDate.toLocalTime())
+      } ?: when (service.billingMode?.lowercase()) {
+        "monthly" -> startDate.plusMonths(1L * numberOfSubscriptions)
+        "yearly" -> startDate.plusYears(1L * numberOfSubscriptions)
+        else -> startDate.plusMonths(1L * numberOfSubscriptions)
+      }
 
-      // Create subscription
-      val subscription = Subscription().apply {
-        this.invoice = invoice
-        this.tenant = tenant
-        this.service = service
-        this.startDate = startDate
-        this.endDate = endDate
-        this.status = status
-        this.totalPrice = totalPrice.toBigDecimal()
-        this.subscriptNumber = numberOfSubscriptions
+      val totalPrice = (serviceData["totalPrice"] as Int).toBigDecimal()
+
+      // Create billing cycle
+      val billingCycle = BillingCycle().apply {
+        this.subscription = savedSubscription
+        this.periodStart = startDate
+        this.periodEnd = endDate
+        this.amountDue = totalPrice
+        this.status = "PENDING"
         this.createdDate = LocalDateTime.now()
         this.updatedDate = LocalDateTime.now()
       }
-      val savedSubscription = subscriptionRepository.save(subscription)
+      val savedBillingCycle = billingCycleRepository.save(billingCycle)
+
+
+      // Create subscription service
+      val subscriptionService = SubscriptionServices().apply {
+        this.subscription = savedSubscription
+        this.billingCycle = savedBillingCycle
+        this.service = service
+        this.quantity = numberOfSubscriptions
+        this.price = totalPrice
+        this.startDate = LocalDateTime.now()
+        this.createdDate = LocalDateTime.now()
+        this.updatedDate = LocalDateTime.now()
+      }
+      val savedSubscriptionService = subscriptionServiceRepository.save(subscriptionService)
+
+      // Create payment line
+      val paymentLine = PaymentLine().apply {
+        this.billingCycle = savedBillingCycle
+        this.amountPaid = BigDecimal.ZERO // No payment yet
+        this.createdDate = LocalDateTime.now()
+        this.updatedDate = LocalDateTime.now()
+      }
+      val savedPaymentLine = paymentLineRepository.save(paymentLine)
 
       // Save subscription options
       val options = serviceData["options"] as List<Map<String, Any?>>
       options.forEach { optionData ->
         val optionId = (optionData["id"] as Number).toLong()
-        val quantity = (optionData["quantity"] as Number).toInt()
+        val quantity = (optionData["quantity"] as? Number)?.toInt() ?: 1
+//       val price = (optionData["price"] as? Number)?.toInt() ?: 1
         val serviceOption = serviceOptionRepository.findById(optionId)
           .orElseThrow { IllegalArgumentException("Option not found with ID $optionId") }
 
         subscriptionOptionRepository.save(
-          SubscriptionOption().apply {
-            this.subscription = savedSubscription
+          SubscriptionOptions().apply {
+            this.paymentLine = savedPaymentLine
+            this.subscriptionService = savedSubscriptionService
             this.option = serviceOption
             this.quantity = quantity
-            this.price = serviceOption.price!!.multiply(quantity.toBigDecimal())
+            this.price = (serviceOption.price ?: BigDecimal.ZERO).multiply(quantity.toBigDecimal())
+            this.amountDue = this.price // Deduce the amount due
             this.createdDate = LocalDateTime.now()
             this.updatedDate = LocalDateTime.now()
           }
         )
       }
+    }
 
+    return mapOf(
+      "message" to "Subscription processed successfully",
+      "invoiceId" to invoice.id
+    )
+  }
+  /* fun getUserSubscriptionsGroupedByInvoice(): List<Map<String, Any?>> {
+
+       // Fetch all subscriptions for the user's tenant(s)
+       val subscriptions = subscriptionRepository.findAll()
+
+       // Group subscriptions by invoice_id
+       val groupedSubscriptions = subscriptions.groupBy { it.invoice?.id }
+
+       // Format the result
+       return groupedSubscriptions.map { (invoiceId, subscriptions) ->
+           mapOf(
+               "invoiceId" to invoiceId?.toString(),
+               "subscriptions" to subscriptions.map { subscription ->
+                   mapOf(
+                       "id" to subscription.id ?: 0L,
+                       "serviceName" to subscription.service?.name ?: "Unknown",
+                       "startDate" to subscription.startDate?.toString(),
+                       "endDate" to subscription.endDate?.toString(),
+                       "status" to subscription.status ?: "Unknown",
+                       "totalPrice" to subscription.totalPrice ?: BigDecimal.ZERO
+                   )
+               }
+           )
+       }
+   }
+ */
+
+  @Transactional
+  fun createSubscriptionSimple(subscription: Subscription): Subscription {
+    return try {
+      subscriptionRepository.save(subscription)
+    } catch (e: Exception) {
+      throw RuntimeException("Erreur lors de la sauvegarde de la souscription : ${e.message}", e)
     }
   }
 }

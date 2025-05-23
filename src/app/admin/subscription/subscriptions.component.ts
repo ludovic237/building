@@ -58,6 +58,7 @@ export class SubscriptionsComponent implements OnInit {
     this.subscriptionService.getSubscriptions().subscribe({
       next: (data) => {
         this.subscriptions = data;
+        this.count = this.subscriptions.length
         console.log('Get subscription:', data);
       },
       error: (err) => {

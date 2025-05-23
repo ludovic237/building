@@ -17,7 +17,7 @@ class SubscriptionController(
   @CrossOrigin(origins = ["http://localhost:4200"])
   @PreAuthorize("isAuthenticated()")
   @GetMapping
-  fun getAllSubscriptions(): ResponseEntity<List<SubscriptionDTO>> {
+  fun getAllSubscriptions(): ResponseEntity<List<Map<String, Any?>>> {
     return ResponseEntity.ok(subscriptionService.getAllSubscriptions())
   }
 
@@ -56,7 +56,7 @@ class SubscriptionController(
 
   @CrossOrigin(origins = ["http://localhost:4200"])
   @PreAuthorize("isAuthenticated()")
-  @PutMapping ("/canceled/{id}")
+  @PutMapping("/canceled/{id}")
   fun canceledSubscription(@PathVariable id: Long): ResponseEntity<Subscription> {
     return ResponseEntity.ok(subscriptionService.canceledSubscription(id))
   }
@@ -91,47 +91,34 @@ class SubscriptionController(
     return ResponseEntity.ok(data)
   }
 
-  @CrossOrigin(origins = ["http://localhost:4200"])
-  @PreAuthorize("isAuthenticated()")
-  @PostMapping("/add-subscription")
-  fun saveSubscription(@RequestBody subscriptionRequest: Map<String, Any>): ResponseEntity<Subscription> {
-      val tenantId = (subscriptionRequest["tenantId"] as Number).toLong()
-      val serviceId = (subscriptionRequest["serviceId"] as Number).toLong()
-      val dateDebut = subscriptionRequest["dateDebut"] as String
-      val dateFin = subscriptionRequest["dateFin"] as String
-      val status = subscriptionRequest["status"] as String
-      val options = subscriptionRequest["options"] as List<Map<String, Any>>
-
-      val subscription = subscriptionService.createSubscriptionWithDetails(
-          tenantId, serviceId, dateDebut, dateFin, status, options
-      )
-      return ResponseEntity.ok(subscription)
-  }
 
   @CrossOrigin(origins = ["http://localhost:4200"])
   @PreAuthorize("isAuthenticated()")
   @GetMapping("/{id}/get-subscription")
   fun getSubscriptionFormattedData(@PathVariable id: Long): ResponseEntity<Map<String, Any?>> {
-      val formattedData = subscriptionService.getSubscriptionWithDetails(id)
-      return ResponseEntity.ok(formattedData)
+    val formattedData = subscriptionService.getSubscriptionWithDetails(id)
+    return ResponseEntity.ok(formattedData)
   }
 
   @CrossOrigin(origins = ["http://localhost:4200"])
   @PreAuthorize("isAuthenticated()")
   @PutMapping("/{id}/status")
   fun updateSubscriptionStatus(
-      @PathVariable id: Long,
-      @RequestBody statusRequest: Map<String, String>
-  ): ResponseEntity<Map<String,Any?> > {
-      val newStatus = statusRequest["status"]
-          ?: throw IllegalArgumentException("Status is required in the request body")
-      val updatedSubscription = subscriptionService.updateSubscriptionStatus(id, newStatus)
-      return ResponseEntity.ok(updatedSubscription)
+    @PathVariable id: Long,
+    @RequestBody statusRequest: Map<String, String>
+  ): ResponseEntity<Map<String, Any?>> {
+    val newStatus = statusRequest["status"]
+      ?: throw IllegalArgumentException("Status is required in the request body")
+    val updatedSubscription = subscriptionService.updateSubscriptionStatus(id, newStatus)
+    return ResponseEntity.ok(updatedSubscription)
   }
 
   @PostMapping("/tenant/save-subscriptions")
-  fun saveSubscriptionsTenantWithInvoice(@RequestBody data: Map<String, Any>): ResponseEntity<String> {
-      subscriptionService.saveSubscriptionsTenantWithInvoice(data)
-      return ResponseEntity.ok("Subscriptions and invoice saved successfully.")
+  fun saveSubscriptionsTenantWithInvoice(
+    @RequestBody data: Map<String, Any>
+  ): ResponseEntity<Map<String, Any?>> {
+    val result = subscriptionService.saveSubscriptionsTenantWithInvoice(data)
+    return ResponseEntity.ok(result)
   }
+
 }

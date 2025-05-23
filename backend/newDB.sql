@@ -57,7 +57,7 @@ create table if not exists invoices
 (
   id           bigint auto_increment
     primary key,
-  user_id    bigint         null,
+  user_id      bigint         null,
   modify_id    bigint         null,
   type         tinytext       not null,
   number       tinytext       null,
@@ -75,14 +75,14 @@ create table if not exists invoices
 CREATE TABLE services
 (
   id           BIGINT AUTO_INCREMENT PRIMARY KEY,
-  code         VARCHAR(50) NULL UNIQUE,
-  name         VARCHAR(100) NOT NULL,
-  type         VARCHAR(100) NOT NULL,
+  code         VARCHAR(50)    NULL UNIQUE,
+  name         VARCHAR(100)   NOT NULL,
+  type         VARCHAR(100)   NOT NULL,
   description  TEXT,
-  billing_mode tinytext     NULL,
-  price            decimal(10, 2) null,
-  created_date datetime     null,
-  updated_date datetime     null,
+  billing_mode tinytext       NULL,
+  price        decimal(10, 2) null,
+  created_date datetime       null,
+  updated_date datetime       null,
   is_active    BOOLEAN DEFAULT TRUE
 );
 
@@ -93,7 +93,7 @@ CREATE TABLE service_options
   service_id   BIGINT         NOT NULL,
   name         VARCHAR(255)   NOT NULL,
   price        DECIMAL(10, 2) NOT NULL,
-  max_quantity     INT     DEFAULT 0,
+  max_quantity INT     DEFAULT 0,
   is_active    BOOLEAN DEFAULT TRUE,
   created_date datetime       null,
   updated_date datetime       null
@@ -106,10 +106,10 @@ create table if not exists subscriptions
     primary key,
   tenant_id        bigint         null,
   update_by        bigint         null,
-  invoice_id        bigint         null,
+  invoice_id       bigint         null,
   service_id       bigint         null,
-  total_price            decimal(10, 2) null,
-  start_date       datetime       not null,
+  total_price      decimal(10, 2) null,
+  start_date       datetime       null,
   end_date         datetime       null,
   subscript_number int            null,
   created_date     datetime       null,
@@ -118,16 +118,30 @@ create table if not exists subscriptions
 
 );
 
--- SUBSCRIPTION OPTIONS
-CREATE TABLE subscription_options
+-- SUBSCRIPTION SERVICEs
+CREATE TABLE subscription_services
 (
-  id              BIGINT PRIMARY KEY AUTO_INCREMENT,
-  subscription_id BIGINT   NOT NULL,
-  option_id       BIGINT   NOT NULL,
-  quantity        INT DEFAULT 1,
-  price DECIMAL(10, 2) NOT NULL, -- Prix total pour cette option (quantity * option.price)
-  created_date    datetime null,
-  updated_date    datetime null
+  id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+  subscription_id BIGINT NOT NULL,
+  service_id      BIGINT NOT NULL,
+  quantity        INT            DEFAULT 1,
+  price           DECIMAL(10, 2) DEFAULT 0.00,
+  start_date       datetime       not null,
+  end_date         datetime       null,
+  created_date    DATETIME       DEFAULT CURRENT_TIMESTAMP,
+  updated_date    DATETIME       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- subscription options
+create table subscription_options
+(
+  id                      bigint primary key auto_increment,
+  subscription_service_id bigint         not null,
+  option_id               bigint         not null,
+  quantity                int default 1,
+  price                   decimal(10, 2) not null, -- prix total pour cette option (quantity * option.price)
+  created_date            datetime       null,
+  updated_date            datetime       null
 );
 
 -- BILLING CYCLES
@@ -234,6 +248,16 @@ alter table subscriptions
   add foreign key (invoice_id) references invoices (id),
   add foreign key (service_id) references services (id);
 
+-- foreign key constraints
+alter table subscription_services
+  add foreign key (subscription_id) references subscriptions (id),
+  add foreign key (service_id) references services (id);
+
+-- foreign key constraints
+alter table subscription_options
+  add foreign key (subscription_service_id) references subscription_services (id),
+  add foreign key (option_id) references service_options (id);
+
 alter table tenants
   add foreign key (user_id) references users (id),
   add foreign key (housing_unit_id) references housting_units (id);
@@ -261,9 +285,6 @@ alter table issues
 alter table service_options
   add FOREIGN KEY (service_id) REFERENCES services (id) ON DELETE CASCADE;
 
-alter table subscription_options
-  add foreign KEY (subscription_id) REFERENCES subscriptions (id) ON DELETE CASCADE,
-  add foreign KEY (option_id) REFERENCES service_options (id) ON DELETE CASCADE;
 
 alter table service_usage
   add FOREIGN KEY (subscription_id) REFERENCES subscriptions (id) ON DELETE CASCADE,
@@ -448,3 +469,38 @@ FROM (SELECT ROW_NUMBER() OVER (PARTITION BY p.id ORDER BY p.payment_date DESC) 
              LEFT JOIN subscriptions s ON bc.subscription_id = s.id
              LEFT JOIN services srv ON s.service_id = srv.id) subquery
 WHERE row_num = 1;
+
+ALTER TABLE subscription_services
+ADD COLUMN billing_cycle_id BIGINT NULL,
+ADD FOREIGN KEY (billing_cycle_id) REFERENCES billing_cycles (id);
+
+ALTER TABLE subscription_options
+ADD COLUMN payment_line_id BIGINT NULL,
+ADD FOREIGN KEY (payment_line_id) REFERENCES payment_lines (id);
+
+ALTER TABLE subscription_services
+ADD COLUMN amount_due DECIMAL(10, 2) DEFAULT 0.00;
+
+ALTER TABLE subscription_options
+ADD COLUMN amount_due DECIMAL(10, 2) DEFAULT 0.00;
+
+CREATE VIEW subscription_payment_summary AS
+SELECT
+    s.id AS subscription_id,
+    ss.id AS subscription_service_id,
+    so.id AS subscription_option_id,
+    s.total_price AS subscription_total_price,
+    ss.price AS service_price,
+    so.price AS option_price,
+    COALESCE(SUM(pl.amount_paid), 0) AS total_paid,
+    (s.total_price - COALESCE(SUM(pl.amount_paid), 0)) AS remaining_balance
+FROM subscriptions s
+LEFT JOIN subscription_services ss ON ss.subscription_id = s.id
+LEFT JOIN subscription_options so ON so.subscription_service_id = ss.id
+LEFT JOIN payment_lines pl ON pl.billing_cycle_id = ss.billing_cycle_id
+GROUP BY s.id, ss.id, so.id;
+
+CREATE INDEX idx_subscription_id ON subscription_services (subscription_id);
+CREATE INDEX idx_subscription_service_id ON subscription_options (subscription_service_id);
+CREATE INDEX idx_billing_cycle_id ON billing_cycles (subscription_id);
+CREATE INDEX idx_payment_line_id ON payment_lines (billing_cycle_id);
