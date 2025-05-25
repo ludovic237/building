@@ -72,7 +72,7 @@ class SubscriptionController(
   @CrossOrigin(origins = ["http://localhost:4200"])
   @PreAuthorize("isAuthenticated()")
   @GetMapping("/tenant/{tenantId}/info")
-  fun getSubscriptionByTenant(@PathVariable tenantId: Long): ResponseEntity<List<Map<String, Any>>> {
+  fun getSubscriptionByTenant(@PathVariable tenantId: Long): ResponseEntity<List<Map<String, Any?>>> {
     val subscriptionDetails = subscriptionService.getSubscriptionsByTenantId(tenantId)
     return ResponseEntity.ok(subscriptionDetails)
   }
@@ -87,6 +87,20 @@ class SubscriptionController(
     val paymentAmount = (paymentRequest["paymentAmount"] as Int).toBigDecimal()
 
     var data = subscriptionService.processPayment(tenantId, paymentMode, subscriptionId, paymentAmount)
+//      return ResponseEntity.ok("Payment processed successfully")
+    return ResponseEntity.ok(data)
+  }
+
+  @CrossOrigin(origins = ["http://localhost:4200"])
+  @PreAuthorize("isAuthenticated()")
+  @PostMapping("/process-payment/multiple")
+  fun processMultiplePayment(@RequestBody paymentRequest: Map<String, Any?>): ResponseEntity<Map<String, Any?>> {
+    val tenantId = (paymentRequest["tenantId"] as Number).toLong()
+    val paymentMode = paymentRequest["paymentMode"] as String
+    val selectedSubscriptions = (paymentRequest["selectedSubscriptions"] as List<Map<String, Any?>>)
+    val paymentAmount = (paymentRequest["paymentAmount"] as Int).toBigDecimal()
+
+    var data = subscriptionService.processMultipleSubscriptionsPayment(tenantId, paymentMode, selectedSubscriptions, paymentAmount)
 //      return ResponseEntity.ok("Payment processed successfully")
     return ResponseEntity.ok(data)
   }

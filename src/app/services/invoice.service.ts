@@ -7,7 +7,7 @@ import { Invoice } from '../model/data';
   providedIn: 'root'
 })
 export class InvoiceService {
-  private apiUrl = '/api/invoices';
+  private apiUrl = '/api/pdf/invoice';
 
   constructor(private http: HttpClient) {}
 
@@ -22,8 +22,8 @@ export class InvoiceService {
     return this.http.get<Invoice[]>(this.apiUrl, {headers: this.getHeaders()});
   }
 
-  getInvoiceById(id: number): Observable<Invoice> {
-    return this.http.get<Invoice>(`${this.apiUrl}/${id}`, {headers: this.getHeaders()});
+  getInvoiceById(id: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/download?subscriptionId=${id}`, {headers: this.getHeaders()});
   }
 
   createInvoice(invoice: Invoice): Observable<Invoice> {

@@ -31,6 +31,18 @@ class PdfController(
       .body(pdfBytes)
   }
 
+  @CrossOrigin(origins = ["http://localhost:4200"])
+  @PreAuthorize("isAuthenticated()")
+  @GetMapping("/invoice/download")
+  fun downloadInvoicePdf(@RequestParam subscriptionId: Int): ResponseEntity<ByteArray> {
+    val pdfBytes = pdfService.downloadInvoiced(subscriptionId.toLong())
+
+    return ResponseEntity.ok()
+      .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=invoice.pdf")
+      .contentType(MediaType.APPLICATION_PDF)
+      .body(pdfBytes)
+  }
+
   @PostMapping("/upload")
   fun uploadPdf(@RequestParam("file") file: MultipartFile): ResponseEntity<String> {
     val content = file.bytes

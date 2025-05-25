@@ -31,12 +31,19 @@ class SubscriptionServices (
   @Column(name = "price", nullable = false, columnDefinition = "DECIMAL(10, 2) DEFAULT 0.00")
   var price: BigDecimal = BigDecimal.ZERO,
 
+  @Column(name = "total_price", nullable = false, columnDefinition = "DECIMAL(10, 2) DEFAULT 0.00")
+  var totalPrice: BigDecimal = BigDecimal.ZERO,
+
   @ManyToOne
   @JoinColumn(name = "billing_cycle_id")
   var billingCycle: BillingCycle? = null,
 
   @Column(name = "amount_due", nullable = false, columnDefinition = "DECIMAL(10, 2) DEFAULT 0.00")
   var amountDue: BigDecimal = BigDecimal.ZERO,
+
+  @Lob
+  @Column(name = "subscript_number")
+  var subscriptNumber: Int? = null,
 
   @Column(name = "start_date", nullable = false)
   var startDate: LocalDateTime? = null,

@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Query
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Repository
 interface SubscriptionRepository : JpaRepository<Subscription, Long> {
 
   // Find subscriptions by status

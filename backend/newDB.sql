@@ -121,15 +121,16 @@ create table if not exists subscriptions
 -- SUBSCRIPTION SERVICEs
 CREATE TABLE subscription_services
 (
-  id              BIGINT AUTO_INCREMENT PRIMARY KEY,
-  subscription_id BIGINT NOT NULL,
-  service_id      BIGINT NOT NULL,
-  quantity        INT            DEFAULT 1,
-  price           DECIMAL(10, 2) DEFAULT 0.00,
-  start_date       datetime       not null,
-  end_date         datetime       null,
-  created_date    DATETIME       DEFAULT CURRENT_TIMESTAMP,
-  updated_date    DATETIME       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  id               BIGINT AUTO_INCREMENT PRIMARY KEY,
+  subscription_id  BIGINT   NOT NULL,
+  service_id       BIGINT   NOT NULL,
+  quantity         INT            DEFAULT 1,
+  price            DECIMAL(10, 2) DEFAULT 0.00,
+  subscript_number int      null,
+  start_date       datetime not null,
+  end_date         datetime null,
+  created_date     DATETIME       DEFAULT CURRENT_TIMESTAMP,
+  updated_date     DATETIME       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- subscription options
@@ -137,9 +138,10 @@ create table subscription_options
 (
   id                      bigint primary key auto_increment,
   subscription_service_id bigint         not null,
+  subscription_id bigint         not null,
   option_id               bigint         not null,
   quantity                int default 1,
-  price                   decimal(10, 2) not null, -- prix total pour cette option (quantity * option.price)
+  price                   decimal(10, 2) null, -- prix total pour cette option (quantity * option.price)
   created_date            datetime       null,
   updated_date            datetime       null
 );
@@ -467,40 +469,53 @@ FROM (SELECT ROW_NUMBER() OVER (PARTITION BY p.id ORDER BY p.payment_date DESC) 
              LEFT JOIN housting_units hu ON t.housing_unit_id = hu.id
              LEFT JOIN billing_cycles bc ON pl.billing_cycle_id = bc.id
              LEFT JOIN subscriptions s ON bc.subscription_id = s.id
-             LEFT JOIN services srv ON s.service_id = srv.id) subquery
+             LEFT JOIN subscription_services ss ON ss.subscription_id = s.id
+             LEFT JOIN services srv ON ss.service_id = srv.id) subquery
 WHERE row_num = 1;
 
 ALTER TABLE subscription_services
-ADD COLUMN billing_cycle_id BIGINT NULL,
-ADD FOREIGN KEY (billing_cycle_id) REFERENCES billing_cycles (id);
+  ADD COLUMN billing_cycle_id BIGINT NULL,
+  ADD FOREIGN KEY (billing_cycle_id) REFERENCES billing_cycles (id);
 
 ALTER TABLE subscription_options
-ADD COLUMN payment_line_id BIGINT NULL,
-ADD FOREIGN KEY (payment_line_id) REFERENCES payment_lines (id);
+  ADD COLUMN payment_line_id BIGINT NULL,
+  ADD FOREIGN KEY (payment_line_id) REFERENCES payment_lines (id),
+  ADD FOREIGN KEY (subscription_id) REFERENCES subscriptions (id);
 
 ALTER TABLE subscription_services
-ADD COLUMN amount_due DECIMAL(10, 2) DEFAULT 0.00;
+  ADD COLUMN amount_due DECIMAL(10, 2) DEFAULT 0.00;
 
 ALTER TABLE subscription_options
-ADD COLUMN amount_due DECIMAL(10, 2) DEFAULT 0.00;
+  ADD COLUMN amount_due DECIMAL(10, 2) DEFAULT 0.00;
 
 CREATE VIEW subscription_payment_summary AS
-SELECT
-    s.id AS subscription_id,
-    ss.id AS subscription_service_id,
-    so.id AS subscription_option_id,
-    s.total_price AS subscription_total_price,
-    ss.price AS service_price,
-    so.price AS option_price,
-    COALESCE(SUM(pl.amount_paid), 0) AS total_paid,
-    (s.total_price - COALESCE(SUM(pl.amount_paid), 0)) AS remaining_balance
+SELECT s.id                                               AS subscription_id,
+       ss.id                                              AS subscription_service_id,
+       so.id                                              AS subscription_option_id,
+       s.total_price                                      AS subscription_total_price,
+       ss.price                                           AS service_price,
+       so.price                                           AS option_price,
+       COALESCE(SUM(pl.amount_paid), 0)                   AS total_paid,
+       (s.total_price - COALESCE(SUM(pl.amount_paid), 0)) AS remaining_balance
 FROM subscriptions s
-LEFT JOIN subscription_services ss ON ss.subscription_id = s.id
-LEFT JOIN subscription_options so ON so.subscription_service_id = ss.id
-LEFT JOIN payment_lines pl ON pl.billing_cycle_id = ss.billing_cycle_id
+       LEFT JOIN subscription_services ss ON ss.subscription_id = s.id
+       LEFT JOIN subscription_options so ON so.subscription_service_id = ss.id
+       LEFT JOIN payment_lines pl ON pl.billing_cycle_id = ss.billing_cycle_id
 GROUP BY s.id, ss.id, so.id;
 
 CREATE INDEX idx_subscription_id ON subscription_services (subscription_id);
 CREATE INDEX idx_subscription_service_id ON subscription_options (subscription_service_id);
 CREATE INDEX idx_billing_cycle_id ON billing_cycles (subscription_id);
 CREATE INDEX idx_payment_line_id ON payment_lines (billing_cycle_id);
+
+alter table subscription_options
+  modify price decimal(38, 2) null;
+
+alter table subscription_options
+  modify subscription_id bigint null;
+
+alter table subscription_options
+  modify amount_due decimal(10, 2) default 0.00 null;
+
+alter table subscription_services
+  add total_price decimal(10, 2) default 0.00 not null after price;

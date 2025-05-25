@@ -1,5 +1,5 @@
 import {Component, Inject, OnInit} from '@angular/core';
-import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
+import {FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {MatButtonModule} from '@angular/material/button';
 import {MAT_DIALOG_DATA, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
 import {MatInputModule} from '@angular/material/input';
@@ -12,11 +12,20 @@ import {CommonModule} from "@angular/common";
 import {HttpClient} from "@angular/common/http";
 import {TenantService} from "@services/tenant.service";
 import {SubscriptionService} from "@services/subscription.service";
+import {MatListModule} from "@angular/material/list";
+import {MatCardModule} from "@angular/material/card";
+import {MatCheckboxModule} from "@angular/material/checkbox";
+import {MatChipsModule} from "@angular/material/chips";
+import {debounceTime} from "rxjs";
 
 @Component({
   selector: 'app-payment-dialog',
   imports: [
     CommonModule,
+    MatListModule,
+    MatCardModule,
+    MatChipsModule,
+    MatCheckboxModule,
     ReactiveFormsModule,
     FlexLayoutModule,
     MatTabsModule,
@@ -37,6 +46,7 @@ export class PaymentDialogComponent implements OnInit {
   remainingAmount: number | null = null;
   remainingCycles: number | null = null;
   billingMode: string | null = null;
+  totalPrice: number = 0;
 
   constructor(
     private tenantService: TenantService,
@@ -51,12 +61,46 @@ export class PaymentDialogComponent implements OnInit {
   ngOnInit(): void {
     this.form = this.fb.group({
       tenantId: ['', Validators.required],
-      subscriptionId: ['', Validators.required],
       paymentMode: ['', Validators.required],
-      paymentAmount: ['', [Validators.required, Validators.max(0)]]
+      paymentAmount: ['', [Validators.required, Validators.min(0)]]
     });
 
     this.fetchTenants();
+    this.initializeFormControls();
+
+    // Subscribe to the entire form's valueChanges
+    this.form.valueChanges.pipe(debounceTime(100)).subscribe(() => {
+      this.updateTotalPrice();
+    });
+  }
+
+  initializeFormControls(): void {
+    this.subscriptions.forEach(subscription => {
+      const subscriptionControl = new FormControl(false);
+      this.form.addControl(`subscription_${subscription.subscriptionId}`, subscriptionControl);
+
+      subscriptionControl.valueChanges.subscribe(() => {
+        this.updateTotalPrice();
+      });
+
+      subscription.services?.forEach((service:any) => {
+        const serviceControl = new FormControl(false);
+        this.form.addControl(`service_${service.subscriptionServiceId}`, serviceControl);
+
+        serviceControl.valueChanges.subscribe(() => {
+          this.updateTotalPrice();
+        });
+
+        service.options?.forEach((option:any) => {
+          const optionControl = new FormControl(false);
+          this.form.addControl(`option_${option.id}`, optionControl);
+
+          optionControl.valueChanges.subscribe(() => {
+            this.updateTotalPrice();
+          });
+        });
+      });
+    });
   }
 
   fetchTenants(): void {
@@ -82,6 +126,24 @@ export class PaymentDialogComponent implements OnInit {
     this.subscriptionService.getSubscriptionByITenantId(tenantId).subscribe(
       (response) => {
         this.subscriptions = response;
+
+        // Dynamically add controls for subscriptions, services, and options
+        this.subscriptions.forEach(subscription => {
+          const subscriptionControl = new FormControl(false);
+          this.form.addControl(`subscription_${subscription.subscriptionId}`, this.fb.control(false));
+
+          subscriptionControl.valueChanges.subscribe(() => {
+            this.updateTotalPrice();
+          });
+
+          subscription.services?.forEach((service:any) => {
+            this.form.addControl(`service_${service.subscriptionServiceId}`, this.fb.control(false));
+
+            service.options?.forEach((option:any) => {
+              this.form.addControl(`option_${option.id}`, this.fb.control(false));
+            });
+          });
+        });
       },
       (error) => {
         console.error('Error fetching subscriptions:', error);
@@ -104,10 +166,25 @@ export class PaymentDialogComponent implements OnInit {
 
   onSubmit(): void {
     if (this.form.valid) {
-      console.log('Payment Data:', this.form.value);
-      const paymentData = this.form.value;
+      // Retrieve all form values
+      const formData = this.form.value;
 
-      this.subscriptionService.processPayment(paymentData).subscribe(
+      // Get the list of subscriptions with checked checkboxes
+      const selectedSubscriptions = this.subscriptions.filter(subscription =>
+        this.form.get(`subscription_${subscription.subscriptionId}`)?.value
+      );
+
+      console.log('Form Data:', formData);
+      console.log('Selected Subscriptions:', selectedSubscriptions);
+
+      const paymentData = {
+        ...formData,
+        selectedSubscriptions
+      };
+
+      console.log('Payment Data:', paymentData);
+
+      this.subscriptionService.processMultiplePayment(paymentData).subscribe(
         (response) => {
           console.log('Payment processed successfully:', response);
           this.dialogRef.close(true); // Close the modal and pass a success flag
@@ -119,4 +196,54 @@ export class PaymentDialogComponent implements OnInit {
       );
     }
   }
+
+  protected readonly FormControl = FormControl;
+
+  getFormControl(controlName: string): FormControl {
+    return this.form.get(controlName) as FormControl;
+  }
+
+
+  updateTotalPrice(): void {
+    this.totalPrice = 0;
+
+    this.subscriptions.forEach(subscription => {
+      if (this.form.get(`subscription_${subscription.subscriptionId}`)?.value) {
+        this.totalPrice += subscription.totalPrice || 0;
+      }
+
+      // subscription.services?.forEach(service => {
+      //   if (this.form.get(`service_${service.subscriptionServiceId}`)?.value) {
+      //     this.totalPrice += service.price || 0;
+      //   }
+      //
+      //   service.options?.forEach(option => {
+      //     if (this.form.get(`option_${option.id}`)?.value) {
+      //       this.totalPrice += option.price || 0;
+      //     }
+      //   });
+      // });
+    });
+  }
+
+isFormValid(): boolean {
+
+  // Check if the form is valid
+  if (!this.form.valid) {
+    // console.log('Form is invalid:', this.form.errors);
+    return false;
+  }
+
+  // Check if at least one subscription checkbox is checked
+  const isAnySubscriptionChecked = this.subscriptions.some(subscription =>
+    this.form.get(`subscription_${subscription.subscriptionId}`)?.value
+  );
+
+  if (!isAnySubscriptionChecked) {
+    // console.log('No subscription checkbox is checked');
+  }
+
+  return isAnySubscriptionChecked;
+}
+
 }

@@ -38,6 +38,10 @@ export class SubscriptionService {
     return this.http.post<Subscription>(this.apiUrl+'/process-payment', subscription,{headers: this.getHeaders()});
   }
 
+  processMultiplePayment(subscription: any): Observable<any> {
+    return this.http.post<any>(this.apiUrl+'/process-payment/multiple', subscription,{headers: this.getHeaders()});
+  }
+
   updateSubscription(id: number, subscription: Subscription): Observable<Subscription> {
     return this.http.put<Subscription>(`${this.apiUrl}/${id}`, subscription,{headers: this.getHeaders()});
   }

@@ -18,6 +18,12 @@ interface InvoiceRepository : JpaRepository<Invoice, Long> {
     // Find invoices by status
     fun findByStatus(status: String): List<Invoice>
 
+    fun findByTenantIdAndStatus(tenantId:Long, status: String): List<Invoice>
+
+    fun findByTenantIdAndStatusIsNot(tenantId:Long, status: String): List<Invoice>
+
+    fun findByIdAndStatusIsNot(id:Long, status: String): Invoice
+
     // Find invoices by month and year
     fun findByMonthAndYear(month: Int, year: Int): List<Invoice>
 

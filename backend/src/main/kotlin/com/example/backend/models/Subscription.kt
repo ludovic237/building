@@ -38,7 +38,7 @@ class Subscription {
   var status: String? = null
 
   @Lob
-  @Column(name = "subscript_number", nullable = false)
+  @Column(name = "subscript_number")
   var subscriptNumber: Int? = null
 
   @Column(name = "created_date")

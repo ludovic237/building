@@ -4,11 +4,16 @@ import com.example.backend.models.Payment
 import com.example.backend.models.SubscriptionOptions
 import com.example.backend.models.Tenant
 import com.example.backend.repositories.*
+import com.itextpdf.io.image.ImageDataFactory
+import com.itextpdf.kernel.colors.ColorConstants
 import com.itextpdf.kernel.pdf.PdfWriter
 import com.itextpdf.kernel.pdf.PdfDocument
 import com.itextpdf.layout.Document
+import com.itextpdf.layout.element.Cell
+import com.itextpdf.layout.element.Image
 import com.itextpdf.layout.element.Paragraph
 import com.itextpdf.layout.element.Table
+import com.itextpdf.layout.properties.TextAlignment
 import org.springframework.stereotype.Service
 import java.io.ByteArrayOutputStream
 import java.math.BigDecimal
@@ -244,46 +249,138 @@ class PdfService(
       val pdfDocument = PdfDocument(writer)
       val document = com.itextpdf.layout.Document(pdfDocument)
 
-      // Add receipt header
-      document.add(Paragraph("Payment Receipt").setFontSize(18f))
-      document.add(Paragraph("Date: ${subscription.createdDate}"))
-      document.add(Paragraph("Subscription ID: ${subscription.id}"))
+      // Logo and Title
+//      val logo =
+//        Image(ImageDataFactory.create("C:\\IdeaProjects\\buildingGesh\\public\\images\\avatars\\avatar-1.png"))
+//          .setWidth(50f)
+//          .setHeight(50f)
+//
+//      document.add(logo)
+      document.add(
+        Paragraph("FACTURE DE SERVICES").setFontSize(20f).setBold().setTextAlignment(TextAlignment.RIGHT)
+          .setTextAlignment(TextAlignment.RIGHT)
+      )
+      document.add(
+        Paragraph("FACTURE : ${subscription.id}").setTextAlignment(TextAlignment.RIGHT)
+          .setTextAlignment(TextAlignment.RIGHT)
 
-      // Add tenant details
-      document.add(Paragraph("\nTenant Details:"))
-      document.add(Paragraph("Name: ${tenant.user?.firstName} ${tenant.user?.lastName}"))
-      document.add(Paragraph("Email: ${tenant.user?.email}"))
+      )
+      document.add(
+        Paragraph("DATE : ${subscription.createdDate}").setTextAlignment(TextAlignment.RIGHT)
+          .setTextAlignment(TextAlignment.RIGHT)
+      )
+      document.add(Paragraph("\n"))
 
-      // Add subscription and options
-      document.add(Paragraph("\nSubscription Details:"))
-      val columnWidths = floatArrayOf(4f, 2f, 2f)
-      val table = Table(columnWidths)
-      table.addCell("Subscription/Option")
-      table.addCell("Quantity")
-      table.addCell("Price")
+      // Fournisseur et Client Details
+      val tableDetails = Table(floatArrayOf(1f, 1f)).useAllAvailableWidth()
+      tableDetails.addCell(
+        Cell().add(Paragraph("FOURNISSEUR DE SERVICES").setBold()).setBackgroundColor(ColorConstants.BLACK)
+          .setFontColor(ColorConstants.WHITE)
+      )
+      tableDetails.addCell(
+        Cell().add(Paragraph("CLIENT").setBold()).setBackgroundColor(ColorConstants.BLACK)
+          .setFontColor(ColorConstants.WHITE)
+      )
+      tableDetails.addCell(Cell().add(Paragraph("François Durand\nHV Service\n210 avenue des Lys\n54 000 Nancy\nTéléphone : (33) 06 65 78 21 34\nFax : (33) 09 87 32 21\ninfo@hvservice.com")))
+      tableDetails.addCell(Cell().add(Paragraph("Jean Dupont\nEntreprise SL\n107 avenue du Port\n13 000 Marseille\nTéléphone : (33) 11 55 66 77\nFax : (33) 22 55 65 79\ninfo@companylimitedinc.com")))
+      document.add(tableDetails)
+      document.add(Paragraph("\n"))
 
-      var totalAmount = subscription.totalPrice ?: BigDecimal.ZERO
+      // Demandes du Client
+      document.add(
+        Paragraph("DEMANDES DU CLIENT").setBold().setBackgroundColor(ColorConstants.BLACK)
+          .setFontColor(ColorConstants.WHITE).setTextAlignment(TextAlignment.CENTER)
+      )
+      document.add(
+        Paragraph("Lorem ipsum dolor sit amet, in porttitor. Donec laoreet nonummy augue. Suspendisse dui purus, scelerisque at, vulputate vitae, pretium mattis, nunc. Mauris eget neque at sem venenatis eleifend. Fusce est. Vivamus a tellus.").setTextAlignment(
+          TextAlignment.JUSTIFIED
+        )
+      )
+      document.add(Paragraph("\n"))
+
+      // Tableau des Services
+      val columnWidths = floatArrayOf(4f, 1f, 1f, 2f)
+      val table = Table(columnWidths).useAllAvailableWidth()
+
+      // En-têtes du tableau
+      table.addHeaderCell(Cell().add(Paragraph("DESCRIPTION").setBold()))
+      table.addHeaderCell(Cell().add(Paragraph("QTÉ").setBold()))
+      table.addHeaderCell(Cell().add(Paragraph("PU").setBold()))
+      table.addHeaderCell(Cell().add(Paragraph("MONTANT").setBold()))
+
+      var grandTotal = BigDecimal.ZERO
+
+      // Parcourir les services
       subscriptionServices.forEach { subscriptionService ->
-        table.addCell(subscriptionService.service!!.name)
-        table.addCell(subscriptionService.quantity.toString())
-        table.addCell(subscriptionService.price.toString())
-        totalAmount += subscriptionService.price!!
+        val numberOfSubscriptions = subscriptionService.quantity
+        val servicePrice = subscriptionService.price ?: BigDecimal.ZERO
+        var serviceTotal = servicePrice.multiply(numberOfSubscriptions.toBigDecimal())
+
+        // Ligne pour le service
+        table.addCell(Cell().add(Paragraph(subscriptionService.service!!.name).setBold()))
+        table.addCell(Cell().add(Paragraph(numberOfSubscriptions.toString())))
+        table.addCell(Cell().add(Paragraph(servicePrice.toString())))
+        table.addCell(Cell().add(Paragraph(serviceTotal.toString())))
+
+        // Parcourir les options du service
+        val options = subscriptionOptions.filter { it.subscriptionService == subscriptionService }
+        options.forEach { option ->
+          val optionPrice = option.price ?: BigDecimal.ZERO
+          val optionQuantity = option.quantity
+          val optionTotal =
+            optionPrice.multiply(optionQuantity.toBigDecimal()).multiply(numberOfSubscriptions.toBigDecimal())
+          serviceTotal += optionTotal
+
+          table.addCell(Cell().add(Paragraph("  - ${option.option?.name}")))
+          table.addCell(Cell().add(Paragraph("${optionQuantity.toString()} * $numberOfSubscriptions")))
+          table.addCell(Cell().add(Paragraph(optionPrice.toString())))
+          table.addCell(Cell().add(Paragraph(optionTotal.toString())))
+        }
+
+        grandTotal += serviceTotal
       }
-      subscriptionOptions.forEach { option: SubscriptionOptions ->
-        table.addCell("  - ${option.option?.name}")
-        table.addCell(option.quantity.toString())
-        table.addCell(option.price.toString())
-        totalAmount += option.price!!
-      }
+
+
+      // Sous-total, TVA et Total général
+      val taxRate = BigDecimal("0.0")
+//        val taxRate = BigDecimal("0.2")
+      val tax = grandTotal.multiply(taxRate)
+      val totalWithTax = grandTotal.add(tax)
+
+      table.addCell(Cell(1, 3).add(Paragraph("SOUS-TOTAL").setBold()))
+      table.addCell(Cell().add(Paragraph(grandTotal.toString()).setBold()))
+      table.addCell(Cell(1, 3).add(Paragraph("TVA (0%)").setBold()))
+//        table.addCell(Cell(1, 3).add(Paragraph("TVA (20%)").setBold()))
+      table.addCell(Cell().add(Paragraph(tax.toString()).setBold()))
+      table.addCell(Cell(1, 3).add(Paragraph("TOTAL").setBold()))
+      table.addCell(Cell().add(Paragraph(totalWithTax.toString()).setBold().setFontSize(14f)))
+
       document.add(table)
 
-      // Add total amount
-      document.add(Paragraph("\nTotal Amount: $${totalAmount}"))
-      document.add(Paragraph("Status: ${subscription.status}"))
+
+      // Total Section
+      document.add(Paragraph("\n"))
+      val totalTable = Table(floatArrayOf(3f, 1f)).useAllAvailableWidth()
+      totalTable.addCell(Cell().add(Paragraph("TOTAL HORS TAXE").setBold()))
+      totalTable.addCell(Cell().add(Paragraph(grandTotal.toString())))
+      totalTable.addCell(Cell().add(Paragraph("TAXE (0%)").setBold()))
+      totalTable.addCell(Cell().add(Paragraph(tax.toString())))
+      totalTable.addCell(Cell().add(Paragraph("TOTAL TTC").setBold()))
+      totalTable.addCell(Cell().add(Paragraph(grandTotal.add(tax).toString()).setBold().setFontSize(14f)))
+      document.add(totalTable)
+
+      // Footer
+      document.add(Paragraph("\nMERCI DE VOTRE CONFIANCE !").setBold().setTextAlignment(TextAlignment.CENTER))
+      document.add(
+        Paragraph("CONDITIONS GÉNÉRALES\nVeuillez effectuer le paiement par virement direct sur notre compte bancaire 10000-45856-222XX10 en indiquant le numéro de la facture.").setTextAlignment(
+          TextAlignment.JUSTIFIED
+        )
+      )
 
       document.close()
     }
 
     return outputStream.toByteArray()
   }
+
 }

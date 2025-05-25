@@ -9,6 +9,7 @@ interface SubscriptionOptionRepository : JpaRepository<SubscriptionOptions, Long
 
   // Find services by name
   fun findBySubscriptionService(subscriptionServices: SubscriptionServices): List<SubscriptionOptions>
+  fun findBySubscriptionServiceIn(subscriptionServices: List<SubscriptionServices>): List<SubscriptionOptions>
 
   fun findByOption(option: ServiceOption): SubscriptionOptions
 

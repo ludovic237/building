@@ -2,6 +2,7 @@ package com.example.backend.models
 
 import jakarta.persistence.*
 import java.math.BigDecimal
+import java.time.Instant
 import java.time.LocalDateTime
 
 @Entity
@@ -16,13 +17,13 @@ class Invoice {
   @JoinColumn(name = "user_id")
   var user: User? = null
 
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "modify_id")
+  var modify: User? = null
+
   @Lob
   @Column(name = "type", nullable = false)
   var type: String? = null
-
-  @Lob
-  @Column(name = "number", nullable = false)
-  var number: String? = null
 
   @Column(name = "month")
   var month: Int? = null
@@ -40,17 +41,16 @@ class Invoice {
   @Column(name = "status", nullable = false)
   var status: String? = null
 
-  @Column(name = "created_date")
+  @Lob
+  @Column(name = "number")
+  var number: String? = null
+
+  @Column(name = "created_date", nullable = false)
   var createdDate: LocalDateTime? = null
 
-  @Column(name = "updated_date")
+  @Column(name = "updated_date", nullable = false)
   var updatedDate: LocalDateTime? = null
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "modify_id")
-  var modify: User? = null
-
-  override fun toString(): String {
-    return "Invoice(id=$id, tenant=${user?.id}, type='$type', month=$month, year=$year, amount=$amount, paymentDate=$paymentDate, status='$status')"
-  }
+  @Column(name = "tenant_id")
+  var tenantId: Long? = null
 }

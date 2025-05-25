@@ -14,6 +14,7 @@ import java.util.*
 @Service
 class PaymentService(
   private val billingCycleDetailsViewRepository: BillingCycleDetailsViewRepository,
+  private val invoiceRepository: InvoiceRepository,
   private val billingCycleRepository: BillingCycleRepository,
   private val paymentLineRepository: PaymentLineRepository,
   private val paymentRepository: PaymentRepository,
@@ -229,13 +230,15 @@ class PaymentService(
       remainingAmount -= amountToPay
       if (remainingAmount <= BigDecimal.ZERO) return@forEach
     }
-
+    updateInvoiceStatus(subscription)
     return mapOf("message" to "Payment processed successfully")
   }
 
   fun paySubscriptionServices(subscriptionId: Long, paymentAmount: BigDecimal): Map<String, Any?> {
     val subscription = subscriptionRepository.findById(subscriptionId)
       .orElseThrow { IllegalArgumentException("Subscription not found with ID $subscriptionId") }
+    val invoice = subscription.invoice
+      ?: throw IllegalStateException("No invoice associated with subscription ID $subscriptionId")
     val subscriptionServices = subscriptionServiceRepository.findBySubscription(subscription)
     var remainingAmount = paymentAmount
 
@@ -284,7 +287,7 @@ class PaymentService(
         if (remainingAmount <= BigDecimal.ZERO) return@forEach
       }
     }
-
+    updateInvoiceStatus(subscription)
     return mapOf("message" to "Payment processed successfully")
   }
 
@@ -343,8 +346,21 @@ class PaymentService(
       remainingAmount -= amountToPayOption
       if (remainingAmount <= BigDecimal.ZERO) return@forEach
     }
-
+    updateInvoiceStatus(subscription)
     return mapOf("message" to "Global payment processed successfully")
+  }
+
+  fun updateInvoiceStatus(subscription: Subscription) {
+    val billingCycles = billingCycleRepository.findBySubscriptionId(subscription.id!!)
+    val totalAmountDue = billingCycles.sumOf { it.amountDue ?: BigDecimal.ZERO }
+    val totalPaid = billingCycles.flatMap { billingCycle ->
+      paymentLineRepository.findByBillingCycle(billingCycle)
+    }.sumOf { it.amountPaid ?: BigDecimal.ZERO }
+
+    val invoice = subscription.invoice ?: return
+    invoice.status = if (totalPaid >= totalAmountDue) "PAID" else "PARTIAL_PAID"
+    invoice.updatedDate = LocalDateTime.now()
+    invoiceRepository.save(invoice)
   }
 
   fun calculateServiceAmountDue(subscriptionService: SubscriptionServices): BigDecimal {

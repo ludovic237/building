@@ -17,11 +17,10 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
+import kotlin.math.log
 
 @Service
 class SubscriptionService(
-  private val documentRepository: DocumentRepository,
-  private val userRepository: UserRepository,
   private val paymentService: PaymentService,
   private val invoiceRepository: InvoiceRepository,
   private val subscriptionServiceRepository: SubscriptionServiceRepository,
@@ -154,7 +153,7 @@ class SubscriptionService(
     )
   }
 
-  fun getSubscriptionsByTenantId(tenantId: Long): List<Map<String, Any>> {
+  fun getSubscriptionsByTenantId(tenantId: Long): List<Map<String, Any?>> {
     // Retrieve the tenant or throw an exception if not found
     val tenant = tenantRepository.findById(tenantId)
       .orElseThrow { IllegalArgumentException("Tenant not found with ID $tenantId") }
@@ -163,42 +162,68 @@ class SubscriptionService(
     val subscriptions = subscriptionRepository.findByTenant(tenant)
       ?: throw IllegalArgumentException("No subscriptions found for tenant with ID $tenantId")
 
-    return subscriptions
-      .filter { it.status == "true" } // Filter only active services
-      .map { subscription ->
-        // Fetch the associated service
-        val subscriptionServices = subscriptionServiceRepository.findBySubscription(subscription)
+    /*    // Map subscription services for all subscriptions
+        return subscriptions.flatMap { subscription ->
+          subscriptionServiceRepository.findBySubscription(subscription).map { subscriptionService ->
+            mapOf(
+              "subscriptionId" to subscription.id,
+              "subscriptionServiceId" to subscriptionService.service?.id,
+              "serviceName" to subscriptionService.service?.name,
+              "serviceDescription" to subscriptionService.service?.description,
+              "price" to subscriptionService.price,
+              "quantity" to subscriptionService.quantity,
+              "totalPrice" to subscriptionService.totalPrice,
+              "options" to subscriptionOptionRepository.findBySubscriptionService(subscriptionService).map { subscriptionOption ->
+                mapOf(
+                  "subscriptionOptionId" to subscriptionOption.id,
+                  "optionId" to subscriptionOption.option?.id,
+                  "quantity" to subscriptionOption.quantity,
+                  "price" to subscriptionOption.price
+                )
+              }
+            )
+          }
+        }*/
 
-        val serviceDetails = subscriptionServices.map { subscriptionService ->
-          val service = subscriptionService.service
-            ?: throw IllegalArgumentException("Service not found for subscription service ID ${subscriptionService.id}")
+    return subscriptions.mapNotNull { subscription ->
+      val tenantName = tenantRepository.findById(subscription.tenant!!.id!!).get()
+        .let { tenant -> "${tenant.user!!.firstName} ${tenant.user!!.lastName}" }
 
-          // Calculate the remaining amount for this service
-          val billingCycles = billingCycleRepository.findBySubscriptionId(subscription.id!!)
-          val billingCycleIds = billingCycles.map { it.id }
-          val totalAmountPaid = paymentLineRepository.findAllByBillingCycleIdIn(billingCycleIds)
-            .sumOf { it.amountPaid ?: BigDecimal.ZERO }
-
-          val totalAmountService =
-            subscriptionService.quantity.toBigDecimal() * (subscriptionService.price ?: BigDecimal.ZERO)
-          val remainingAmount = totalAmountService - totalAmountPaid
-
-          mapOf(
-            "subscriptionServiceId" to subscriptionService.id!!,
-            "serviceId" to service.id!!,
-            "serviceName" to service.name!!,
-            "serviceCode" to service.code!!,
-            "serviceDescription" to service.description!!,
-            "billingMode" to service.billingMode!!,
-            "remainingAmount" to remainingAmount
-          )
-        }
-
+      if (subscription.invoice?.status != "PAID") {
+        val subscriptionServices =
+          subscriptionServiceRepository.findBySubscription(subscription).map { subscriptionService ->
+            mapOf(
+              "subscriptionId" to subscription.id,
+              "subscriptionServiceId" to subscriptionService.id,
+              "serviceId" to subscriptionService.service?.id,
+              "serviceName" to subscriptionService.service?.name,
+              "serviceDescription" to subscriptionService.service?.description,
+              "price" to subscriptionService.price,
+              "quantity" to subscriptionService.quantity,
+              "options" to subscriptionOptionRepository.findBySubscriptionService(subscriptionService)
+                .map { subscriptionOption ->
+                  mapOf(
+                    "subscriptionOptionId" to subscriptionOption.id,
+                    "optionId" to subscriptionOption.option?.id,
+                    "quantity" to subscriptionOption.quantity,
+                    "price" to subscriptionOption.price
+                  )
+                }
+            )
+          }
         mapOf(
-          "subscriptionId" to subscription.id!!,
-          "services" to serviceDetails
+          "subscriptionId" to subscription.id,
+          "tenantName" to tenantName,
+          "startDate" to subscription.startDate,
+          "endDate" to subscription.endDate,
+          "status" to subscription.status,
+          "totalPrice" to subscription.totalPrice,
+          "services" to subscriptionServices
         )
+      } else {
+        null
       }
+    }
   }
 
   fun processPayment(
@@ -335,6 +360,110 @@ class SubscriptionService(
       "message" to "Payment processed successfully",
       "paymentId" to payment.id,
       "invoiceId" to invoice.id
+    )
+  }
+
+  /**
+   * Processes a payment for multiple subscriptions.
+   *
+   * @param tenantId The ID of the tenant making the payment.
+   * @param paymentMode The mode of payment (e.g., cash, credit card).
+   * @param selectedSubscriptions A list of selected subscriptions to process payment for.
+   * @param amount The total amount to be paid.
+   * @return A map containing the result of the payment processing.
+   */
+  fun processMultipleSubscriptionsPayment(
+    tenantId: Long,
+    paymentMode: String,
+    selectedSubscriptions: List<Map<String, Any?>>,
+    amount: BigDecimal
+  ): Map<String, Any?> {
+    var remainingAmount = amount
+
+    // Retrieve tenant
+    val tenant = tenantRepository.findById(tenantId)
+      .orElseThrow { IllegalArgumentException("Tenant not found with ID $tenantId") }
+
+    // Create a new payment record
+    val payment = paymentRepository.save(
+      Payment().apply {
+        this.tenant = tenant
+        this.totalAmount = amount
+        this.paymentMethod = when (paymentMode.uppercase()) {
+          PaymentTypeConstants.PAYMENT_METHOD_CASH -> PaymentTypeConstants.PAYMENT_METHOD_CASH
+          PaymentTypeConstants.PAYMENT_METHOD_CREDIT_CARD -> PaymentTypeConstants.PAYMENT_METHOD_CREDIT_CARD
+          PaymentTypeConstants.PAYMENT_METHOD_BANK_TRANSFER -> PaymentTypeConstants.PAYMENT_METHOD_BANK_TRANSFER
+          PaymentTypeConstants.PAYMENT_METHOD_CHECK -> PaymentTypeConstants.PAYMENT_METHOD_CHECK
+          PaymentTypeConstants.PAYMENT_METHOD_MOBILE_PAYMENT -> PaymentTypeConstants.PAYMENT_METHOD_MOBILE_PAYMENT
+          else -> "OTHER"
+        }
+        this.paymentDate = LocalDateTime.now()
+        this.createdDate = LocalDateTime.now()
+        this.updatedDate = LocalDateTime.now()
+      }
+    )
+
+    // Process each subscription
+    selectedSubscriptions.forEach { subscriptionData ->
+      val subscriptionId = (subscriptionData["subscriptionId"] as Number).toLong()
+      val subscription = subscriptionRepository.findById(subscriptionId)
+        .orElseThrow { IllegalArgumentException("Subscription not found with ID $subscriptionId") }
+
+      val subscriptionServices = subscriptionServiceRepository.findBySubscription(subscription)
+
+      subscriptionServices.forEach { subscriptionService ->
+        val billingCycles = billingCycleRepository.findById(subscriptionService.billingCycle?.id ?: 0L)
+          .orElseThrow { IllegalArgumentException("Billing cycle not found for subscription service") }
+        val paymentLines = paymentLineRepository.findByBillingCycleId(subscriptionService.billingCycle?.id ?: 0L)
+
+       val options = subscriptionOptionRepository.findBySubscriptionService(subscriptionService) ?: emptyList()
+       val totalOptionsPrice = if (options.isEmpty())
+         BigDecimal.ZERO
+       else options.sumOf { it.amountDue ?: BigDecimal.ZERO }
+
+        val servicePrice = (subscriptionService.totalPrice ?: BigDecimal.ZERO) + totalOptionsPrice
+        val amountToPay = remainingAmount.min(servicePrice)
+
+        paymentLines.payment = payment
+        paymentLines.amountPaid = amountToPay
+        paymentLines.updatedDate = LocalDateTime.now()
+
+        // Update a payment line for the service
+        val savePaymentLine = paymentLineRepository.save(paymentLines)
+
+
+        billingCycles.status = StatusConstants.BILLING_CYCLE_STATUS_PAID
+        billingCycles.updatedDate = LocalDateTime.now()
+        billingCycleRepository.save(billingCycles)
+
+        remainingAmount -= amountToPay
+        if (remainingAmount <= BigDecimal.ZERO) return@forEach
+      }
+
+      // Update subscription status if fully paid
+      if (remainingAmount <= BigDecimal.ZERO) {
+        subscription.updatedDate = LocalDateTime.now()
+        subscriptionRepository.save(subscription)
+      }
+
+      var invoice = invoiceRepository.findById(subscription.invoice?.id ?: 0L)
+        .orElseThrow { IllegalArgumentException("Invoice not found for subscription") }
+      if (invoice.amount == subscription.totalPrice) {
+        invoice.status = "PAID"
+        invoice.paymentDate = LocalDateTime.now()
+        invoice.updatedDate = LocalDateTime.now()
+        invoiceRepository.save(invoice)
+      } else {
+        invoice.status = "PARTIAL PAID"
+        invoice.paymentDate = LocalDateTime.now()
+        invoice.updatedDate = LocalDateTime.now()
+        invoiceRepository.save(invoice)
+      }
+    }
+
+    return mapOf(
+      "message" to "Payment processed successfully",
+      "paymentId" to payment.id
     )
   }
 
@@ -477,21 +606,21 @@ class SubscriptionService(
       .orElseThrow { IllegalArgumentException("Tenant not found with ID $tenantId") }
 
     // Create invoice
-    var invoice = Invoice().apply {
-      this.user = tenant.user
-      this.modify = userConnect
-      this.type = "subscription"
-      this.amount = finalTotal
-      this.status = "PENDING"
-      this.createdDate = LocalDateTime.now()
-      this.updatedDate = LocalDateTime.now()
-      this.number = invoiceService.generateInvoiceNumber()
-    }
-    invoice = invoiceRepository.save(invoice)
 
+    val saveInvoice = invoiceRepository.save(Invoice().apply {
+      user = tenant.user
+      modify = userConnect
+      type = "subscription"
+      amount = finalTotal
+      status = "PENDING"
+      createdDate = LocalDateTime.now()
+      updatedDate = LocalDateTime.now()
+      number = invoiceService.generateInvoiceNumber()
+    })
+    println("Invoice created with ID: ${saveInvoice.id}")
     val status = "ACTIVE"
     val subscription = Subscription().apply {
-      this.invoice = invoice
+      this.invoice = saveInvoice
       this.modifyBy = userConnect
       this.tenant = tenant
       startDate = LocalDateTime.now()
@@ -525,7 +654,7 @@ class SubscriptionService(
         else -> startDate.plusMonths(1L * numberOfSubscriptions)
       }
 
-      val totalPrice = (serviceData["totalPrice"] as Int).toBigDecimal()
+      val totalPrice = (serviceData["totalPrice"] as? Int ?: 0).toBigDecimal()
 
       // Create billing cycle
       val billingCycle = BillingCycle().apply {
@@ -546,8 +675,13 @@ class SubscriptionService(
         this.billingCycle = savedBillingCycle
         this.service = service
         this.quantity = numberOfSubscriptions
-        this.price = totalPrice
-        this.startDate = LocalDateTime.now()
+        this.subscriptNumber = numberOfSubscriptions
+        this.price = service.price ?: BigDecimal.ZERO
+        this.totalPrice =
+          (service.price ?: BigDecimal.ZERO).multiply(numberOfSubscriptions.toBigDecimal()) // Deduce the amount due
+        this.amountDue = totalPrice
+        this.startDate = startDate
+        this.endDate = endDate
         this.createdDate = LocalDateTime.now()
         this.updatedDate = LocalDateTime.now()
       }
@@ -571,24 +705,28 @@ class SubscriptionService(
         val serviceOption = serviceOptionRepository.findById(optionId)
           .orElseThrow { IllegalArgumentException("Option not found with ID $optionId") }
 
+        val saveSubscriptionOption = SubscriptionOptions().apply {
+          this.paymentLine = savedPaymentLine
+          this.subscriptionService = savedSubscriptionService
+          this.subscription = savedSubscription
+          this.option = serviceOption
+          this.quantity = quantity
+          this.price = (serviceOption.price ?: BigDecimal.ZERO)
+          this.amountDue =
+            (serviceOption.price
+              ?: BigDecimal.ZERO).multiply(quantity.toBigDecimal()) * numberOfSubscriptions.toBigDecimal()// Deduce the amount due
+          this.createdDate = LocalDateTime.now()
+          this.updatedDate = LocalDateTime.now()
+        }
         subscriptionOptionRepository.save(
-          SubscriptionOptions().apply {
-            this.paymentLine = savedPaymentLine
-            this.subscriptionService = savedSubscriptionService
-            this.option = serviceOption
-            this.quantity = quantity
-            this.price = (serviceOption.price ?: BigDecimal.ZERO).multiply(quantity.toBigDecimal())
-            this.amountDue = this.price // Deduce the amount due
-            this.createdDate = LocalDateTime.now()
-            this.updatedDate = LocalDateTime.now()
-          }
+          saveSubscriptionOption
         )
       }
     }
 
     return mapOf(
       "message" to "Subscription processed successfully",
-      "invoiceId" to invoice.id
+      "invoiceId" to saveInvoice.id
     )
   }
   /* fun getUserSubscriptionsGroupedByInvoice(): List<Map<String, Any?>> {

@@ -9,5 +9,6 @@ import org.springframework.stereotype.Repository
 interface SubscriptionServiceRepository : JpaRepository<SubscriptionServices, Long> {
 
  fun findBySubscription(subscription: Subscription): List<SubscriptionServices>
+ fun findBySubscriptionIn(subscriptions: List<Subscription>): List<SubscriptionServices>
 
 }
