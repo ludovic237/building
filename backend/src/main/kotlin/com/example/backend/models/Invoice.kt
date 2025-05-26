@@ -48,7 +48,7 @@ class Invoice {
   @Column(name = "created_date", nullable = false)
   var createdDate: LocalDateTime? = null
 
-  @Column(name = "updated_date", nullable = false)
+  @Column(name = "updated_date", nullable = true)
   var updatedDate: LocalDateTime? = null
 
   @Column(name = "tenant_id")

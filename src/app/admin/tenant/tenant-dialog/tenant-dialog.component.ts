@@ -116,9 +116,6 @@ export class TenantDialogComponent implements OnInit {
     const logementBasePrice = this.logementBasePrice || 0;
     const maxDeposit = logementBasePrice * this.subscriptionForm.get('numberOfSubscription')?.value || 0;
 
-    console.log("this.data");
-    console.log(this.data);
-
     this.fetchhousingUnits();
     this.fetchUsers();
     this.loadServices();
@@ -126,22 +123,16 @@ export class TenantDialogComponent implements OnInit {
     this.subscriptionForm.get('serviceId')?.valueChanges.subscribe((serviceId) => {
       const selectedService = this.services.find(service => service.id === serviceId);
       if (selectedService) {
-        console.log("selectedService.billingMode");
-        console.log(selectedService);
         const billingMode = selectedService.billingMode + "";
-        console.log(billingMode);
         this.subscriptionForm.patchValue({
           billingSubscription: billingMode,
           // status: selectedService.status
         })
-        console.log("this.subscriptionForm.get('billingSubscription')?.value");
-        console.log(this.subscriptionForm.get('billingSubscription')?.value);
         // this.subscriptionForm.get('billingMode')?.setValue(billingMode);
         this.subscriptionForm.get('billingMode')?.disable();
         this.subscriptionForm.get('numberOfSubscription')?.enable();
         this.subscriptionForm.get('startDate')?.enable();
       } else {
-        console.log("selectedService else");
         this.subscriptionForm.reset();
         this.subscriptionForm.get('billingSubscription')?.disable();
         this.subscriptionForm.get('numberOfSubscription')?.disable();
@@ -213,23 +204,26 @@ export class TenantDialogComponent implements OnInit {
     const numberOfSubscription = this.subscriptionForm.get('numberOfSubscription')?.value;
     const billingSubscription = this.subscriptionForm.get('billingSubscription')?.value;
 
-    if (billingSubscription === 'Monthly' && startDate && numberOfSubscription) {
+    if (startDate && numberOfSubscription) {
       const start = new Date(startDate);
       const end = new Date(start);
-      end.setMonth(end.getMonth() + numberOfSubscription);
-      end.setDate(end.getDate()+numberOfSubscription);
-      this.subscriptionForm.get('endDate')?.setValue(end.toISOString().split('T')[0]);
-    }
-    else if (billingSubscription === 'Yearly' && startDate && numberOfSubscription) {
-      const start = new Date(startDate);
-      const end = new Date(start);
-      end.setFullYear(end.getFullYear() + numberOfSubscription);
-      end.setDate(end.getDate()+numberOfSubscription);
-      this.subscriptionForm.get('endDate')?.setValue(end.toISOString().split('T')[0]);
-    }
-    else{
 
+      if (billingSubscription.toLowerCase() === 'Monthly'.toLowerCase() && startDate && numberOfSubscription) {
+        end.setMonth(end.getMonth() + numberOfSubscription);
+        // end.setDate(end.getDate()+numberOfSubscription);
+      }
+      else if (billingSubscription.toLowerCase() === 'Yearly'.toLowerCase() && startDate && numberOfSubscription) {
+        end.setFullYear(end.getFullYear() + numberOfSubscription);
+        // end.setDate(end.getDate()+numberOfSubscription);
+      }
+      else{
+
+      }
+      console.log('Start Date:', start);
+      console.log('End Date:', end);
+      this.subscriptionForm.get('endDate')?.setValue(end.toISOString().split('T')[0]);
     }
+
   }
 
   private fetchUsers(): void {
@@ -295,11 +289,6 @@ export class TenantDialogComponent implements OnInit {
     const paymentData = this.paymentForm.value;
     const paymentLineData = this.paymentLineForm.value;
 
-    console.log('Tenant Data:', tenantData);
-    console.log('Subscription Data:', subscriptionData);
-    console.log('Billing Cycle Data:', billingCycleData);
-    console.log('Payment Data:', paymentData);
-    console.log('Payment Line Data:', paymentLineData);
     const data = {
       housingUnitId:tenantData.housingUnitId,
       userId : tenantData.userId,
@@ -313,7 +302,6 @@ export class TenantDialogComponent implements OnInit {
     }
     this.tenantService.createTenant(data).subscribe(
       (response) => {
-        console.log('Tenant created successfully:', response);
         this.snackBar.open('Tenant created successfully', 'Close', { duration: 3000 });
         this.dialogRef.close(response);
       },
@@ -338,10 +326,10 @@ export class TenantDialogComponent implements OnInit {
     this.remainingAmount = logementBasePrice - depositAmount;
 
     // Log or update any additional summary details if needed
-    console.log('Updated Summary and Payment Details:');
-    console.log('Logement Base Price:', logementBasePrice);
-    console.log('Deposit Amount:', depositAmount);
-    console.log('Remaining Amount:', this.remainingAmount);
+    // console.log('Updated Summary and Payment Details:');
+    // console.log('Logement Base Price:', logementBasePrice);
+    // console.log('Deposit Amount:', depositAmount);
+    // console.log('Remaining Amount:', this.remainingAmount);
   }
 
 }

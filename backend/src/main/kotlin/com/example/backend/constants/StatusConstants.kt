@@ -4,6 +4,7 @@ object StatusConstants {
     // Statuts pour la table "invoices"
     const val INVOICE_STATUS_PAID = "PAID"
     const val INVOICE_STATUS_PENDING = "PENDING"
+    const val INVOICE_STATUS_PARTIAL_PAID = "PARTIAL_PAID"
     const val INVOICE_STATUS_OVERDUE = "OVERDUE"
 
     // Statuts pour la table "subscriptions"

@@ -1,6 +1,9 @@
 package com.example.backend.services
 
 import com.example.backend.constants.StatusConstants
+import com.example.backend.constants.StatusConstants.SUBSCRIPTION_STATUS_ACTIVE
+import com.example.backend.constants.StatusConstants.SUBSCRIPTION_STATUS_CANCELED
+import com.example.backend.constants.StatusConstants.SUBSCRIPTION_STATUS_EXPIRED
 import com.example.backend.dtos.DashboardDTO
 import com.example.backend.models.HoustingUnit
 import com.example.backend.models.User
@@ -70,9 +73,9 @@ class DashboardService(
   fun getAdminDashboardData(startDate: LocalDateTime?, endDate: LocalDateTime?): Map<String, Any> {
     // Subscriptions
     val subscriptions = subscriptionRepository.subscriptionsByStatusAndDates("", startDate, endDate)
-    val activeSubscriptions = subscriptionRepository.subscriptionsByStatusAndDates("Active", startDate, endDate)
-    val expiredSubscriptions = subscriptionRepository.subscriptionsByStatusAndDates("Expired", startDate, endDate)
-    val canceledSubscriptions = subscriptionRepository.subscriptionsByStatusAndDates("Canceled", startDate, endDate)
+    val activeSubscriptions = subscriptionRepository.subscriptionsByStatusAndDates(SUBSCRIPTION_STATUS_ACTIVE, startDate, endDate)
+    val expiredSubscriptions = subscriptionRepository.subscriptionsByStatusAndDates(SUBSCRIPTION_STATUS_EXPIRED, startDate, endDate)
+    val canceledSubscriptions = subscriptionRepository.subscriptionsByStatusAndDates(SUBSCRIPTION_STATUS_CANCELED, startDate, endDate)
 
     val subscriptionDetails = mapOf(
       "totalSubscriptions" to subscriptions.size,

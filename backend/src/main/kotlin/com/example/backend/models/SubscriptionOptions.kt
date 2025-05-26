@@ -37,10 +37,6 @@ class SubscriptionOptions (
   @Column(name = "price", nullable = false)
   var price: BigDecimal=1.toBigDecimal(),
 
-  @ManyToOne
-  @JoinColumn(name = "payment_line_id")
-  var paymentLine: PaymentLine? = null,
-
   @Column(name = "amount_due", nullable = false, columnDefinition = "DECIMAL(10, 2) DEFAULT 0.00")
   var amountDue: BigDecimal = BigDecimal.ZERO,
 

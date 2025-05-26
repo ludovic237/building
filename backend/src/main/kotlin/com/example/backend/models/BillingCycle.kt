@@ -14,7 +14,11 @@ class BillingCycle {
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "subscription_id")
-  var subscription: com.example.backend.models.Subscription? = null
+  var subscription: Subscription? = null
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "subscription_services_id")
+  var subscriptionServices:SubscriptionServices? = null
 
   @Column(name = "amount_due", precision = 10, scale = 2)
   var amountDue: BigDecimal? = null

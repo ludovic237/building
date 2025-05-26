@@ -80,7 +80,8 @@
       <div fxFlex="100" fxFlex.gt-sm="33" class="px-2">
         <mat-form-field appearance="outline" class="w-100">
           <mat-label>End Date</mat-label>
-          <input matInput [readonly]="true" formControlName="endDate"/>
+          <input matInput [matDatepicker]="endDatePicker" readonly formControlName="endDate"/>
+          <mat-datepicker #endDatePicker></mat-datepicker>
         </mat-form-field>
       </div>
     </div>

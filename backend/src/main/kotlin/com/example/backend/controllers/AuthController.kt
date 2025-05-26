@@ -13,6 +13,7 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.crypto.password.PasswordEncoder
 
 import org.springframework.web.bind.annotation.*
+import java.time.LocalDateTime
 import java.util.*
 import kotlin.math.log
 
@@ -94,7 +95,9 @@ class AuthController(
       lastName = registerRequest.lastName
       phone = registerRequest.phone
       email = registerRequest.email
-      registrationDate = Date().toInstant()
+      registrationDate = LocalDateTime.now()
+      createdDate = LocalDateTime.now()
+      updatedDate = LocalDateTime.now()
       username = registerRequest.email
       password = passwordEncoder.encode(registerRequest.password)
       role = registerRequest.role // Initialize and set a default role

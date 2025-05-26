@@ -54,7 +54,7 @@ class User {
   var isDeleted: Boolean? = false
 
   @Column(name = "registration_date", nullable = false)
-  var registrationDate: Instant? = null
+  var registrationDate: LocalDateTime? = null
 
   @Column(name = "joined_date")
   var joinedDate: Instant? = null
