@@ -1,7 +1,11 @@
 package com.example.backend.repositories
 
+import com.example.backend.constants.StatusConstants.BILLING_CYCLE_STATUS_PAID
+import com.example.backend.constants.StatusConstants.BILLING_CYCLE_STATUS_PARTIAL_PAID
+import com.example.backend.constants.StatusConstants.BILLING_CYCLE_STATUS_PENDING
 import com.example.backend.models.BillingCycle
 import com.example.backend.models.Subscription
+import com.example.backend.models.SubscriptionServices
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import java.math.BigDecimal
@@ -17,6 +21,8 @@ interface BillingCycleRepository : JpaRepository<BillingCycle, Long> {
 
   fun findBySubscription(subscription: Subscription): List<BillingCycle>
 
+  fun findBySubscriptionServices(subscriptionServices: SubscriptionServices): List<BillingCycle>
+
   // Find billing cycles by status
   fun findByStatus(status: String): List<BillingCycle>
 
@@ -29,16 +35,16 @@ interface BillingCycleRepository : JpaRepository<BillingCycle, Long> {
   @Query("SELECT SUM(bc.amountDue) FROM BillingCycle bc WHERE bc.status = 'Due' AND bc.periodEnd BETWEEN :startDate AND :endDate")
   fun findTotalOverduePaymentsBetweenDates(startDate: LocalDateTime?, endDate: LocalDateTime?): BigDecimal?
 
-  @Query("SELECT SUM(bc.amountDue) FROM BillingCycle bc WHERE bc.status = 'Partial Paid' AND bc.periodEnd BETWEEN :startDate AND :endDate")
+  @Query("SELECT SUM(bc.amountDue) FROM BillingCycle bc WHERE bc.status = '$BILLING_CYCLE_STATUS_PARTIAL_PAID' AND bc.periodEnd BETWEEN :startDate AND :endDate")
   fun findTotalPendingPaymentsBetweenDates(startDate: LocalDateTime?, endDate: LocalDateTime?): BigDecimal?
 
-  @Query("SELECT COUNT(bc) FROM BillingCycle bc WHERE bc.status = 'Paid' AND bc.periodEnd BETWEEN :startDate AND :endDate")
+  @Query("SELECT COUNT(bc) FROM BillingCycle bc WHERE bc.status = '$BILLING_CYCLE_STATUS_PAID' AND bc.periodEnd BETWEEN :startDate AND :endDate")
   fun countPaidBillingCyclesBetweenDates(startDate: LocalDateTime?, endDate: LocalDateTime?): Int
 
-  @Query("SELECT COUNT(bc) FROM BillingCycle bc WHERE bc.status = 'Partial Paid' AND bc.periodEnd BETWEEN :startDate AND :endDate")
+  @Query("SELECT COUNT(bc) FROM BillingCycle bc WHERE bc.status = '$BILLING_CYCLE_STATUS_PARTIAL_PAID' AND bc.periodEnd BETWEEN :startDate AND :endDate")
   fun countPartiallyPaidBillingCyclesBetweenDates(startDate: LocalDateTime?, endDate: LocalDateTime?): Int
 
-  @Query("SELECT COUNT(bc) FROM BillingCycle bc WHERE bc.status = 'Due' AND bc.periodEnd BETWEEN :startDate AND :endDate")
+  @Query("SELECT COUNT(bc) FROM BillingCycle bc WHERE bc.status = '$BILLING_CYCLE_STATUS_PENDING' AND bc.periodEnd BETWEEN :startDate AND :endDate")
   fun countOverdueBillingCyclesBetweenDates(startDate: LocalDateTime?, endDate: LocalDateTime?): Int
 
   @Query("""

@@ -209,7 +209,7 @@ export class PaymentDialogComponent implements OnInit {
 
     this.subscriptions.forEach(subscription => {
       if (this.form.get(`subscription_${subscription.subscriptionId}`)?.value) {
-        this.totalPrice += subscription.totalPrice || 0;
+        this.totalPrice += subscription.remainingAmountToPay || 0;
       }
 
       // subscription.services?.forEach(service => {

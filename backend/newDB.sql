@@ -286,7 +286,6 @@ alter table issues
   add foreign key (tenant_id) references tenants (id);
 
 alter table billing_cycles
-  add  subscription_services_id bigint         null,
   add foreign key (subscription_services_id) references subscription_services (id);
 
 alter table service_options
@@ -318,21 +317,6 @@ ALTER TABLE subscription_services
 
 ALTER TABLE subscription_options
   ADD COLUMN amount_due DECIMAL(10, 2) DEFAULT 0.00;
-
-CREATE VIEW subscription_payment_summary AS
-SELECT s.id                                               AS subscription_id,
-       ss.id                                              AS subscription_service_id,
-       so.id                                              AS subscription_option_id,
-       s.total_price                                      AS subscription_total_price,
-       ss.price                                           AS service_price,
-       so.price                                           AS option_price,
-       COALESCE(SUM(pl.amount_paid), 0)                   AS total_paid,
-       (s.total_price - COALESCE(SUM(pl.amount_paid), 0)) AS remaining_balance
-FROM subscriptions s
-       LEFT JOIN subscription_services ss ON ss.subscription_id = s.id
-       LEFT JOIN subscription_options so ON so.subscription_service_id = ss.id
-       LEFT JOIN payment_lines pl ON pl.billing_cycle_id = ss.billing_cycle_id
-GROUP BY s.id, ss.id, so.id;
 
 CREATE INDEX idx_subscription_id ON subscription_services (subscription_id);
 CREATE INDEX idx_subscription_service_id ON subscription_options (subscription_service_id);
@@ -389,7 +373,6 @@ FROM billing_cycles bc
      payment_lines pl ON bc.id = pl.billing_cycle_id
        LEFT JOIN
      payments p ON pl.payment_id = p.id;
-
 
 CREATE VIEW payment_lines_view AS
 SELECT row_number() OVER () AS `id`,
@@ -481,7 +464,6 @@ FROM payments p
        LEFT JOIN
      services srv ON s.service_id = srv.id;
 
-
 CREATE DEFINER = root@localhost VIEW payments_simple_view AS
 SELECT *
 FROM (SELECT ROW_NUMBER() OVER (PARTITION BY p.id ORDER BY p.payment_date DESC) AS row_num,
@@ -524,3 +506,17 @@ FROM (SELECT ROW_NUMBER() OVER (PARTITION BY p.id ORDER BY p.payment_date DESC) 
              LEFT JOIN services srv ON ss.service_id = srv.id) subquery
 WHERE row_num = 1;
 
+CREATE VIEW subscription_payment_summary AS
+SELECT s.id                                               AS subscription_id,
+       ss.id                                              AS subscription_service_id,
+       so.id                                              AS subscription_option_id,
+       s.total_price                                      AS subscription_total_price,
+       ss.price                                           AS service_price,
+       so.price                                           AS option_price,
+       COALESCE(SUM(pl.amount_paid), 0)                   AS total_paid,
+       (s.total_price - COALESCE(SUM(pl.amount_paid), 0)) AS remaining_balance
+FROM subscriptions s
+       LEFT JOIN subscription_services ss ON ss.subscription_id = s.id
+       LEFT JOIN subscription_options so ON so.subscription_service_id = ss.id
+       LEFT JOIN payment_lines pl ON pl.billing_cycle_id = ss.billing_cycle_id
+GROUP BY s.id, ss.id, so.id;

@@ -24,7 +24,7 @@
         <mat-card>
            <mat-card-header>
              <mat-checkbox [formControl]="getFormControl('subscription_' + subscription.subscriptionId)">
-               <strong>Subscription {{ subscription.subscriptionId }}</strong> - Prix total ({{ subscription.totalPrice | currency }})
+               <strong>Subscription {{ subscription.subscriptionId }}</strong> - Prix total ({{ subscription.totalPrice | currency }}) / Remaining to pay ({{ subscription.remainingAmountToPay | currency }})
              </mat-checkbox>
            </mat-card-header>
            <mat-card-content>

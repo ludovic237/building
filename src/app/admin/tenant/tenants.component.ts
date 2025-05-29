@@ -155,27 +155,7 @@ export class TenantsComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(tenant => {
-      if (tenant) {
-        const formattedTenant = {
-          id: this.tenants.length + 1, // Generate a new ID
-          // name: usersDial.find(user => user.id === tenant.userId)?.name || 'Unknown',
-          // apartment: logementsDial.find(logement => logement.id === tenant.housingUnitId)?.name || 'Unknown',
-          entryDate: tenant.moveInDate,
-          deposit: tenant.securityDeposit,
-          paymentStatus: tenant.status
-        };
-        console.log('New Tenant Data:', formattedTenant);
-        // this.tenants.push(tenant); // Add the new tenant to the list
-        const index: number = this.tenants.findIndex(x => x.id === tenant.id);
-        if (index !== -1) {
-          this.tenants[index] = tenant; // Mise à jour d'un locataire existant
-        } else {
-          tenant.id = this.tenants.length + 1; // Attribution d'un nouvel ID
-          this.tenants.push(formattedTenant); // Ajout d'un nouveau locataire
-        }
-        console.log("this.tenants");
-        console.log(this.tenants);
-      }
+      this.getTenantData();
     });
   }
 
@@ -192,27 +172,7 @@ export class TenantsComponent implements OnInit {
     });
 
     dialogRef.afterClosed().subscribe(tenant => {
-      if (tenant) {
-        const formattedTenant = {
-          id: this.tenants.length + 1, // Generate a new ID
-          // name: usersDial.find(user => user.id === tenant.userId)?.name || 'Unknown',
-          // apartment: logementsDial.find(logement => logement.id === tenant.housingUnitId)?.name || 'Unknown',
-          entryDate: tenant.moveInDate,
-          deposit: tenant.securityDeposit,
-          paymentStatus: tenant.status
-        };
-        console.log('New Tenant Data:', formattedTenant);
-        // this.tenants.push(tenant); // Add the new tenant to the list
-        const index: number = this.tenants.findIndex(x => x.id === tenant.id);
-        if (index !== -1) {
-          this.tenants[index] = tenant; // Mise à jour d'un locataire existant
-        } else {
-          tenant.id = this.tenants.length + 1; // Attribution d'un nouvel ID
-          this.tenants.push(formattedTenant); // Ajout d'un nouveau locataire
-        }
-        console.log("this.tenants");
-        console.log(this.tenants);
-      }
+      this.getTenantData();
     });
   }
 

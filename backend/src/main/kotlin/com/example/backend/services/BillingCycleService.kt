@@ -34,7 +34,7 @@ class BillingCycleService(
     }
   }
 
-  fun getBillingCycleDetails(): List<BillingCycleDetailsDTO> {
+/*  fun getBillingCycleDetails(): List<BillingCycleDetailsDTO> {
     // Fetch billing cycles and join with related entities
     val billingCycles = billingCycleRepository.findAll()
     return billingCycles.map { cycle ->
@@ -60,7 +60,7 @@ class BillingCycleService(
         payment = payment
       )
     }
-  }
+  }*/
 
   fun getBillingCycleDetailsView(): List<BillingCycleDetailsView> {
    return billingCycleDetailsViewRepository.findAll()
