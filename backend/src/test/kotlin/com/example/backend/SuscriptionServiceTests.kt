@@ -1,4 +1,5 @@
 import com.example.backend.BackendApplication
+import com.example.backend.constants.StatusConstants.SERVICE_BILLING_MODEL_MONTHLY
 import com.example.backend.models.*
 import com.example.backend.repositories.*
 import com.example.backend.services.SubscriptionService
