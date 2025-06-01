@@ -92,6 +92,7 @@ CREATE TABLE service_options
   id           BIGINT PRIMARY KEY AUTO_INCREMENT,
   service_id   BIGINT         NOT NULL,
   name         VARCHAR(255)   NOT NULL,
+  pricing_model        tinytext       NULL,
   price        DECIMAL(10, 2) NOT NULL,
   max_quantity INT     DEFAULT 0,
   is_active    BOOLEAN DEFAULT TRUE,
@@ -106,6 +107,7 @@ create table if not exists subscriptions
     primary key,
   tenant_id        bigint         null,
   update_by        bigint         null,
+  modify_by        bigint         null,
   invoice_id       bigint         null,
   service_id       bigint         null,
   total_price      decimal(10, 2) null,
@@ -278,8 +280,17 @@ alter table payment_lines
   add foreign key (payment_id) references payments (id),
   add foreign key (billing_cycle_id) references billing_cycles (id);
 
+alter table subscriptions
+  add foreign key (modify_by) references users (id);
+
 alter table invoices
+  add   tenant_id       BIGINT    NULL,
+  add foreign key (tenant_id) references tenants (id);
+
+alter table invoices
+  add   tenant_id       BIGINT   NOT NULL,
   add foreign key (modify_id) references users (id),
+  add foreign key (tenant_id) references tenants (id),
   add foreign key (user_id) references users (id);
 
 alter table issues
@@ -297,7 +308,6 @@ alter table service_usage
   add FOREIGN KEY (option_id) REFERENCES subscription_options (option_id) ON DELETE CASCADE;
 
 alter table documents
-  add user_id bigint null,
   add hash    blob   null,
   add foreign key (user_id) references users (id);
 

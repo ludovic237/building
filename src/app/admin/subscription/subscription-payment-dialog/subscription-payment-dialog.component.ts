@@ -21,7 +21,7 @@ import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatIconModule} from "@angular/material/icon";
 
 @Component({
-  selector: 'app-payment-dialog',
+  selector: 'app-subscription-payment-dialog',
   imports: [
     CommonModule,
     MatToolbarModule,
@@ -40,10 +40,10 @@ import {MatIconModule} from "@angular/material/icon";
     MatNativeDateModule,
     MatDialogModule
   ],
-  templateUrl: './payment-dialog.component.html',
-  styleUrl: './payment-dialog.component.scss'
+  templateUrl: './subscription-payment-dialog.component.html',
+  styleUrl: './subscription-payment-dialog.component.scss'
 })
-export class PaymentDialogComponent implements OnInit {
+export class SubscriptionPaymentDialogComponent implements OnInit {
   form: FormGroup;
   tenants: any[] = [];
   subscriptions: any[] = [];
@@ -57,7 +57,7 @@ export class PaymentDialogComponent implements OnInit {
     private subscriptionService: SubscriptionService,
     private fb: FormBuilder,
     private http: HttpClient,
-    public dialogRef: MatDialogRef<PaymentDialogComponent>,
+    public dialogRef: MatDialogRef<SubscriptionPaymentDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public data: any
   ) {
   }
@@ -111,6 +111,31 @@ export class PaymentDialogComponent implements OnInit {
     this.tenantService.getTenants().subscribe(
       (response) => {
         this.tenants = response;
+
+        if (this.data) {
+          this.subscriptions.push(this.data);
+          if (this.data.tenantId) {
+            this.form.patchValue({tenantId: this.data.tenantId});
+          }
+          console.log("this.subscriptions");
+          console.log(this.subscriptions);
+          this.subscriptions.forEach(subscription => {
+            const subscriptionControl = new FormControl(false);
+            this.form.addControl(`subscription_${subscription.subscriptionId}`, this.fb.control(false));
+
+            subscriptionControl.valueChanges.subscribe(() => {
+              this.updateTotalPrice();
+            });
+
+            subscription.services?.forEach((service:any) => {
+              this.form.addControl(`service_${service.subscriptionServiceId}`, this.fb.control(false));
+
+              service.options?.forEach((option:any) => {
+                this.form.addControl(`option_${option.id}`, this.fb.control(false));
+              });
+            });
+          });
+        }
       },
       (error) => {
         console.error('Error fetching tenants:', error);

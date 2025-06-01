@@ -2,6 +2,8 @@ package com.example.backend.services
 
 import com.example.backend.constants.PaymentTypeConstants
 import com.example.backend.constants.StatusConstants
+import com.example.backend.constants.StatusConstants.SERVICE_BILLING_MODEL_MONTHLY
+import com.example.backend.constants.StatusConstants.SERVICE_BILLING_MODEL_YEARLY
 import com.example.backend.constants.StatusConstants.SUBSCRIPTION_STATUS_ACTIVE
 import com.example.backend.dtos.*
 import com.example.backend.models.*
@@ -234,8 +236,8 @@ class TenantService(
     for (i in 1..tenantData.numberOfSubscription) {
 
       val currentEndDate = when (savedSubscriptionService.service?.billingMode?.lowercase()) {
-        "monthly" -> currentStartDate?.plusMonths(1)
-        "yearly" -> currentStartDate?.plusYears(1)
+        SERVICE_BILLING_MODEL_MONTHLY -> currentStartDate?.plusMonths(1)
+        SERVICE_BILLING_MODEL_YEARLY -> currentStartDate?.plusYears(1)
         else -> throw IllegalArgumentException("Unsupported billing mode")
       }
 
@@ -280,8 +282,8 @@ class TenantService(
     // Calculate end date based on billing mode
     val totalSubscriptions = subscription.subscriptNumber ?: 0
     val calculatedEndDate = when (service.billingMode!!.lowercase()) {
-      "monthly" -> subscription.startDate?.plusMonths(totalSubscriptions.toLong())
-      "yearly" -> subscription.startDate?.plusYears(totalSubscriptions.toLong())
+      SERVICE_BILLING_MODEL_MONTHLY -> subscription.startDate?.plusMonths(totalSubscriptions.toLong())
+      SERVICE_BILLING_MODEL_YEARLY -> subscription.startDate?.plusYears(totalSubscriptions.toLong())
       else -> throw IllegalArgumentException("Unsupported billing mode")
     }
 

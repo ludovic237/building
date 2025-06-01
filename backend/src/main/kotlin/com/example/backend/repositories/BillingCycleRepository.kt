@@ -21,6 +21,8 @@ interface BillingCycleRepository : JpaRepository<BillingCycle, Long> {
 
   fun findBySubscription(subscription: Subscription): List<BillingCycle>
 
+  fun findBySubscriptionServicesIn(subscriptionServices: List<SubscriptionServices>): List<BillingCycle>
+
   fun findBySubscriptionServices(subscriptionServices: SubscriptionServices): List<BillingCycle>
 
   // Find billing cycles by status

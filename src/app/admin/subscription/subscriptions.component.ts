@@ -21,6 +21,7 @@ import {FormControl, FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {MatFormFieldModule} from "@angular/material/form-field";
 import {MatInputModule} from "@angular/material/input";
 import {InvoiceService} from "@services/invoice.service";
+import {SubscriptionPaymentDialogComponent} from "./subscription-payment-dialog/subscription-payment-dialog.component";
 
 @Component({
   selector: 'app-subscriptions',
@@ -175,5 +176,33 @@ export class SubscriptionsComponent implements OnInit {
     });
   }
 
+  makePayment(subscription:any){
+    this.getSubscriptionDataAndDisplayStatus(subscription)
+  }
 
+  getSubscriptionDataAndDisplayStatus(data:any) {
+    this.subscriptionService.getSubscriptionFormattedData(data.subscriptionId).subscribe({
+      next: (response) => {
+        const dialogRef = this.dialog.open(SubscriptionPaymentDialogComponent, {
+          // maxWidth: '400px',
+          width: '80%',
+          data: response
+        });
+
+        dialogRef.afterClosed().subscribe(dialogResult => {
+          this.getAllSubscription();
+          // if (dialogResult) {
+          //   this.subscriptions = this.subscriptions.filter(s => s.id !== subscription.id);
+          // }
+        });
+      },
+      error: (err) => {
+
+        if (err.status == "403") {
+          this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+        }
+        console.error('Error updating status:', err);
+      },
+    });
+  }
 }

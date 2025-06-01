@@ -53,10 +53,14 @@ import {MatTableModule} from "@angular/material/table";
 })
 export class SubscriptionDialogComponent implements OnInit {
 
+  currentStatus: string = 'active'; // Set initial status
+
   title: string = 'Create Subscription';
   selectedOption: any = null;
   selectedServiceData: any = null;
   isReadonly: boolean = false;
+  isReadonlyTenant: boolean = false;
+  isReadonlyService: boolean = false;
   selectedQuantity: number | null = null;
   addedOptions: any[] = [];
   disabledStatuses: string[] = [];
@@ -100,20 +104,8 @@ export class SubscriptionDialogComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if (this.data?.id) {
+    if (this.data?.subscriptionId) {
       this.title = "Subscription detail";
-
-      Object.keys(this.form.controls).forEach(controlName => {
-        this.form.get(controlName)?.disable();
-      });
-
-      this.isReadonly = true;
-      console.log("this.data")
-      console.log(this.data)
-      // Check if the status is 'canceled' or 'expired' and disable all statuses
-      if (this.data.paymentStatus?.toLowerCase() === 'canceled' || this.data.paymentStatus?.toLowerCase() === 'expired') {
-        this.disabledStatuses = [...this._status];
-      }
     }
 
     // Initialize the form with data if available
@@ -176,54 +168,9 @@ export class SubscriptionDialogComponent implements OnInit {
     this.serviceService.getServiceAllWithOptions().subscribe({
       next: (data) => {
         this.services = data;
-        if (this.data?.id) {
-          // Wait for tenants and services to load before updating the form
-          this.subscriptionService.getSubscriptionFormattedData(this.data.id).subscribe({
-            next: (service) => {
-              // Convert date strings to Date objects
-              const dateDebut = new Date(service.dateDebut);
-              const dateFin = new Date(service.dateFin);
-
-              // Patch the form with the data
-              this.form.patchValue({
-                tenantId: service.tenantId,
-                serviceId: service.serviceId,
-                dateDebut: dateDebut,
-                dateFin: dateFin,
-                status: service.status,
-              });
-
-              // If options are returned, populate them
-              if (service.options) {
-                this.addedOptions = service.options.map((option: { optionId: number; quantity: number }) => {
-                  const detailedOption = this.services
-                    .find(s => s.id === service.serviceId)
-                    ?.activeOptions.find((o: { id: number }) => o.id === option.optionId);
-
-                  return {
-                    id: option.optionId,
-                    quantity: option.quantity,
-                    name: detailedOption?.name || 'Unknown',
-                    price: detailedOption?.price || 0
-                  };
-                });
-                // Update the selected service options
-                if (service.serviceId) {
-                  this.onServiceChange(service.serviceId);
-                }
-              }
-            },
-            error: (err) => {
-              this.snackBar.open('Failed to load service details.', 'Close', {
-                duration: 3000,
-                panelClass: ['error-snackbar']
-              });
-              if (err.status == "403") {
-                this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
-              }
-              console.error('Error loading service:', err);
-            }
-          });
+        if (this.data?.subscriptionId) {
+          this.title = "Subscription detail";
+          this.getSubscriptionDataAndDisplayStatus();
         }
       },
       error: (err) => {
@@ -664,6 +611,73 @@ export class SubscriptionDialogComponent implements OnInit {
     console.log("optionsTotal :", optionsTotal);
     console.log("Total :", serviceTotal + optionsTotal)
     return serviceTotal + optionsTotal;
+  }
+
+
+
+  changeStatus(status: string) {
+    this.currentStatus = status;
+    // Call your Service to update the server side status here.
+    this.subscriptionService.updateSubscriptionStatus(this.data?.subscriptionId,status).subscribe(
+      response => {
+        console.log(response);
+        this.getSubscriptionDataAndDisplayStatus();
+      },
+      error => {
+        console.error(error);
+      }
+    );
+  }
+
+   getSubscriptionDataAndDisplayStatus() {
+    this.subscriptionService.getSubscriptionFormattedData(this.data.subscriptionId).subscribe({
+      next: (response) => {
+        this.form.patchValue({
+          tenantId: response.tenantId,
+        });
+        this.currentStatus = response.status.toLowerCase();
+        response.subscriptionServices.forEach((data: any) => {
+          data.options.forEach((option: any) => {
+            this.addedOptions = [...this.addedOptions, {
+              id: option.subscriptionOptionId,
+              quantity: option.quantity,
+              name: option?.name || 'Unknown',
+              price: option?.price || 0
+            }];
+          })
+          this.selectedServices = [...this.selectedServices, {
+            id: data.serviceId,
+            name: data.serviceName,
+            options: [...this.addedOptions],
+            startDate: data.startDate,
+            endDate: data.endDate,
+            totalPrice: data.totalPrice,
+            status: data.status,
+            disable: true
+          }];
+        })
+
+        this.isReadonlyService = true;
+        this.isReadonlyTenant = true;
+        console.log("this.selectedServices");
+        console.log(this.selectedServices);
+
+        this.snackBar.open('Status updated successfully!', 'Close', {
+          duration: 3000,
+          verticalPosition: 'top',
+        });
+      },
+      error: (err) => {
+        this.snackBar.open('Failed to update status. Please try again.', 'Close', {
+          duration: 3000,
+          verticalPosition: 'top',
+        });
+        if (err.status == "403") {
+          this.router.navigate(['/sign-in']); // Redirect to login if not authenticated
+        }
+        console.error('Error updating status:', err);
+      },
+    });
   }
 
 }

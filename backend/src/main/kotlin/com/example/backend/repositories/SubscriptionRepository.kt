@@ -15,6 +15,7 @@ interface SubscriptionRepository : JpaRepository<Subscription, Long> {
 
   fun findByTenant(tenant: Tenant): List<Subscription>
 
+  fun findByTenantAndStatus(tenant: Tenant,status: String): List<Subscription>
 
   fun findByStatusAndStartDateBetween(
     status: String,
@@ -27,6 +28,9 @@ interface SubscriptionRepository : JpaRepository<Subscription, Long> {
 
   // Find subscriptions by end date
   fun findByEndDate(endDate: LocalDateTime): List<Subscription>
+
+  // Find subscriptions by end date
+  fun findByEndDateBeforeAndStatusNotIn(date: LocalDateTime, statuses: List<String>): List<Subscription>
 
   // Find active subscriptions (end date is null or in the future)
   fun findByEndDateIsNullOrEndDateAfter(date: LocalDateTime): List<Subscription>

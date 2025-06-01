@@ -43,6 +43,7 @@ class ServiceService(
         name = option.name!!,
         price = option.price!!.toInt(),
         quantity = option.maxQuantity!!,
+        pricingModel = option.pricingModel!!,
         isSelected = option.isActive!!
       )
     }
@@ -62,7 +63,8 @@ class ServiceService(
         OptionNewDTO(
           name = option.name,
           price = option.price,
-          quantity = option.quantity
+          quantity = option.quantity!!,
+          pricingModel = option.pricingModel!!
         )
       }
     )
@@ -118,6 +120,7 @@ class ServiceService(
           name = option.name!!,
           price = option.price!!.toInt(),
           quantity = option.maxQuantity!!,
+          pricingModel = option.pricingModel!!,
           isSelected = option.isActive ?: false,
         )
       }

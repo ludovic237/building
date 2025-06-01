@@ -4,6 +4,7 @@ data class ActiveOptionNewDTO(
   val id: Long,
   val name: String,
   val price: Int,
-  val quantity: Int,
+  val quantity: Int?,
+  val pricingModel: String,
   val isSelected: Boolean,
 )

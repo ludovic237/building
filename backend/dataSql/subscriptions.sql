@@ -5,7 +5,6 @@ create table subscriptions
     tenant_id        bigint         null,
     update_by        bigint         null,
     invoice_id       bigint         null,
-    service_id       bigint         null,
     total_price      decimal(10, 2) null,
     start_date       datetime       null,
     end_date         datetime       null,

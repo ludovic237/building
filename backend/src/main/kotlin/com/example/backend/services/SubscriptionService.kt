@@ -2,9 +2,14 @@ package com.example.backend.services
 
 import com.example.backend.constants.PaymentTypeConstants
 import com.example.backend.constants.StatusConstants
+import com.example.backend.constants.StatusConstants.BILLING_CYCLE_STATUS_CANCELED
 import com.example.backend.constants.StatusConstants.BILLING_CYCLE_STATUS_PARTIAL_PAID
 import com.example.backend.constants.StatusConstants.BILLING_CYCLE_STATUS_PENDING
+import com.example.backend.constants.StatusConstants.SERVICE_BILLING_MODEL_MONTHLY
+import com.example.backend.constants.StatusConstants.SERVICE_BILLING_MODEL_YEARLY
 import com.example.backend.constants.StatusConstants.SUBSCRIPTION_STATUS_ACTIVE
+import com.example.backend.constants.StatusConstants.SUBSCRIPTION_STATUS_CANCELED
+import com.example.backend.constants.StatusConstants.SUBSCRIPTION_STATUS_EXPIRED
 import com.example.backend.dtos.SubscriptionDTO
 import com.example.backend.dtos.SubscriptionDetailsDTO
 import com.example.backend.models.*
@@ -17,9 +22,12 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.Year
+import java.time.temporal.ChronoUnit
+import java.util.logging.Logger
 import kotlin.math.log
 
 @Service
@@ -332,8 +340,8 @@ class SubscriptionService(
       val subscriptionServices = subscriptionServiceRepository.findBySubscription(subscription)
       subscriptionServices.forEach { subscriptionService ->
         val currentEndDate = when (subscriptionService.service?.billingMode?.lowercase()) {
-          "monthly" -> currentStartDate?.plusMonths(1)
-          "yearly" -> currentStartDate?.plusYears(1)
+          SERVICE_BILLING_MODEL_MONTHLY -> currentStartDate?.plusMonths(1)
+          SERVICE_BILLING_MODEL_YEARLY -> currentStartDate?.plusYears(1)
           else -> throw IllegalArgumentException("Unsupported billing mode")
         }
 
@@ -450,7 +458,7 @@ class SubscriptionService(
             if (remainingAmount >= remainingToPay) {
               amountToPay = remainingToPay
               val paymentLineNew = PaymentLine()
-              paymentLineNew.amountPaid =  amountToPay
+              paymentLineNew.amountPaid = amountToPay
               paymentLineNew.payment = payment
               paymentLineNew.createdDate = LocalDateTime.now()
               paymentLineNew.updatedDate = LocalDateTime.now()
@@ -462,9 +470,8 @@ class SubscriptionService(
               billingCycle.updatedDate = LocalDateTime.now()
               billingCycleRepository.save(billingCycle)
             }
-          }
-          else if (billingCycle.status == BILLING_CYCLE_STATUS_PENDING) {
-            if (remainingAmount > BigDecimal.ZERO && remainingAmount <  billingCycle.amountDue){
+          } else if (billingCycle.status == BILLING_CYCLE_STATUS_PENDING) {
+            if (remainingAmount > BigDecimal.ZERO && remainingAmount < billingCycle.amountDue) {
               billingCycle.status = StatusConstants.BILLING_CYCLE_STATUS_PARTIAL_PAID
               amountToPay = remainingAmount
               val newPaymentLine = PaymentLine().apply {
@@ -477,8 +484,7 @@ class SubscriptionService(
               paymentLineRepository.save(newPaymentLine)
               billingCycle.updatedDate = LocalDateTime.now()
               billingCycleRepository.save(billingCycle)
-            }
-            else if (remainingAmount >  billingCycle.amountDue){
+            } else if (remainingAmount > billingCycle.amountDue) {
               billingCycle.status = StatusConstants.BILLING_CYCLE_STATUS_PAID
               amountToPay = remainingAmount.min(billingCycle.amountDue)
               val newPaymentLine = PaymentLine().apply {
@@ -583,24 +589,48 @@ class SubscriptionService(
     subscriptionId: Long,
   ): Map<String, Any?> {
     val subscription = subscriptionRepository.getById(subscriptionId)
+    var remainingAmountToPay = BigDecimal.ZERO
+    var amountPay = BigDecimal.ZERO
     val subscriptionServices = subscriptionServiceRepository.findBySubscription(subscription)
-
+    val billingCycles = billingCycleRepository.findBySubscription(subscription)
+    billingCycles.forEach { billingCycle ->
+      val paymentLines = paymentLineRepository.findByBillingCycle(billingCycle)
+      paymentLines.forEach { paymentLine ->
+        amountPay += paymentLine.amountPaid!!
+      }
+    }
     val subscriptionOptions = subscriptionServices.flatMap { subscriptionService ->
       subscriptionOptionRepository.findBySubscriptionService(subscriptionService)
     }
 
+    remainingAmountToPay = subscription.totalPrice!! - amountPay
+
     val formattedData = mapOf(
       "tenantId" to (subscription.tenant?.id ?: throw IllegalArgumentException("Tenant is null")),
+      "totalPrice" to (subscription.totalPrice),
+      "subscriptionId" to (subscription.id),
+      "tenantName" to ("${{ subscription.tenant!!.user?.lastName }} ${{ subscription.tenant!!.user?.lastName }}"
+        ?: throw IllegalArgumentException("Tenant is null")),
       "subscriptionServices" to subscriptionServices.map { subscriptionService ->
         mapOf(
+          "subscriptionServiceId" to subscriptionService.id,
+          "subscriptionId" to subscription.id,
           "serviceId" to subscriptionService.service?.id,
           "serviceName" to subscriptionService.service?.name,
           "serviceDescription" to subscriptionService.service?.description,
+          "price" to subscriptionService.price,
+          "quantity" to subscriptionService.quantity,
+          "startDate" to subscriptionService.startDate,
+          "endDate" to subscriptionService.endDate,
+          "totalPrice" to subscriptionService.totalPrice,
+          "subscriptNumber" to subscriptionService.subscriptNumber,
           "options" to subscriptionOptionRepository.findBySubscriptionService(subscriptionService)
             .map { subscriptionOption ->
               mapOf(
                 "subscriptionOptionId" to subscriptionOption.id,
                 "optionId" to subscriptionOption.option?.id,
+                "name" to subscriptionOption.option?.name,
+                "price" to subscriptionOption.price,
                 "quantity" to subscriptionOption.quantity
               )
             }
@@ -608,6 +638,9 @@ class SubscriptionService(
       },
       "dateDebut" to subscription.startDate.toString(),
       "dateFin" to subscription.endDate.toString(),
+      "startDate" to subscription.startDate.toString(),
+      "endDate" to subscription.endDate.toString(),
+      "remainingAmountToPay" to remainingAmountToPay,
       "status" to subscription.status
     )
     return formattedData
@@ -617,16 +650,35 @@ class SubscriptionService(
     var subscription = subscriptionRepository.findById(subscriptionId)
       .orElseThrow { IllegalArgumentException("Subscription not found with ID $subscriptionId") }
 
-    subscription.status = newStatus
+    when {
+      newStatus.contains("cancel") -> {
+        subscription.status = SUBSCRIPTION_STATUS_CANCELED
+        Logger.getLogger("SubscriptionUpdate").info("Subscription $subscriptionId has been canceled")
+      }
+
+      newStatus.contains("expire") -> {
+        subscription.status = SUBSCRIPTION_STATUS_EXPIRED
+        Logger.getLogger("SubscriptionUpdate").info("Subscription $subscriptionId has expired")
+      }
+
+      newStatus.contains("active") -> {
+        subscription.status = SUBSCRIPTION_STATUS_ACTIVE
+        Logger.getLogger("SubscriptionUpdate").info("Subscription $subscriptionId is now active")
+      }
+
+      else -> {
+        println("No match found")
+      }
+    }
     subscription.updatedDate = LocalDateTime.now()
     return validateAndSaveSubscription(subscription)
   }
 
   fun validateAndSaveSubscription(subscription: Subscription): Map<String, Any?> {
     val validStatuses = listOf(
-      StatusConstants.SUBSCRIPTION_STATUS_ACTIVE,
-      StatusConstants.SUBSCRIPTION_STATUS_EXPIRED,
-      StatusConstants.SUBSCRIPTION_STATUS_CANCELED
+      SUBSCRIPTION_STATUS_ACTIVE,
+      SUBSCRIPTION_STATUS_EXPIRED,
+      SUBSCRIPTION_STATUS_CANCELED
     )
 
     if (subscription.status !in validStatuses) {
@@ -645,171 +697,269 @@ class SubscriptionService(
   fun checkForExpiredSubscriptions() {
     val now = LocalDateTime.now()
 
-    // Récupérer les souscriptions expirées
-    val expiredSubscriptions = subscriptionRepository.findByEndDateBeforeAndStatusNot(now, "EXPIRED")
+    // Récupouscriptions dont la date de fin est passée et qui ne sont pas déjà EXPIRED ou CANCELED
+    val subscriptionsToExpire = subscriptionRepository.findByEndDateBeforeAndStatusNotIn(
+      now,
+      listOf(SUBSCRIPTION_STATUS_EXPIRED, SUBSCRIPTION_STATUS_CANCELED)
+    )
 
-    // Mettre à jour leur statut
-    expiredSubscriptions.forEach { subscription ->
-      subscription.status = "EXPIRED"
-      subscriptionRepository.save(subscription)
+    if (subscriptionsToExpire.isNotEmpty()) {
+      Logger.getLogger(this.javaClass.name)
+        .info("Scheduler: Found ${subscriptionsToExpire.size} subscriptions to expire.")
+      subscriptionsToExpire.forEach { subscription ->
+        try {
+          Logger.getLogger(this.javaClass.name).info("Scheduler: Expiring subscription ${subscription.id}")
+          // La date d'effet est la date de fin de la souscription
+          processSubscriptionStatusChange(
+            subscriptionId = subscription.id!!,
+            newStatus = SUBSCRIPTION_STATUS_EXPIRED,
+            effectiveDateTime = subscription.endDate
+              ?: now // Utilise endDate, ou now si endDate est null (ne devrait pas arriver pour expiration)
+          )
+        } catch (e: Exception) {
+          Logger.getLogger(this.javaClass.name)
+            .severe("Scheduler: Error expiring subscription ${subscription.id}: ${e.message}")
+        }
+      }
+      Logger.getLogger(this.javaClass.name).info("Scheduler: Finished processing expired subscriptions.")
+    } else {
+      Logger.getLogger(this.javaClass.name).info("Scheduler: No subscriptions to expire at this time.")
     }
 
-    println("Checked and updated expired subscriptions: ${expiredSubscriptions.size}")
   }
 
   @Transactional
   fun saveSubscriptionsTenantWithInvoice(data: Map<String, Any?>): Map<String, Any?> {
     val userConnect = userService.getCurrentUser()
-    val finalTotal = (data["finalTotal"] as Int).toBigDecimal()
-    val tenantId = (data["tenantId"] as Int).toLong()
-    val selectedServices = data["selectedServices"] as List<Map<String, Any?>>
+    val tenantId = (data["tenantId"] as? Number)?.toLong()
+      ?: throw IllegalArgumentException("Tenant ID is missing or invalid in the request.")
+    val requestedServicesData = data["selectedServices"] as? List<Map<String, Any?>>
+      ?: throw IllegalArgumentException("Selected services are missing in the request.")
 
-    val tenant = tenantRepository.findByIdWithUser(tenantId)
-      .orElseThrow { IllegalArgumentException("Tenant not found with ID $tenantId") }
+    val tenant =
+      tenantRepository.findByIdWithUser(tenantId) // Assurez-vous que findByIdWithUser charge bien tenant.user
+        .orElseThrow { IllegalArgumentException("Tenant not found with ID $tenantId") }
 
-    // Create invoice
+    // 1. Récupérer les IDs des services déjà activement souscrits par le locataire
+    val existingActiveServiceIds = subscriptionRepository.findByTenantAndStatus(tenant, SUBSCRIPTION_STATUS_ACTIVE)
+      .flatMap { sub -> subscriptionServiceRepository.findBySubscription(sub) }
+      .mapNotNull { subService -> subService.service?.id }
+      .toSet()
 
-    val saveInvoice = invoiceRepository.save(Invoice().apply {
-      user = tenant.user
-      modify = userConnect
-      type = "subscription"
-      amount = finalTotal
-      status = "PENDING"
-      createdDate = LocalDateTime.now()
-      updatedDate = LocalDateTime.now()
-      number = invoiceService.generateInvoiceNumber()
+    // 2. Filtrer les services demandés
+    val servicesToCreateData = mutableListOf<Map<String, Any?>>()
+    val skippedServicesInfo = mutableListOf<String>()
+
+    requestedServicesData.forEach { serviceData ->
+      val serviceId = (serviceData["id"] as? Number)?.toLong()
+        ?: throw IllegalArgumentException("Service ID is missing for one of the selected services.")
+
+      if (existingActiveServiceIds.contains(serviceId)) {
+        val serviceName = serviceRepository.findById(serviceId).map { it.name }.orElse("Unknown Service")
+        val infoMsg =
+          "Service '$serviceName' (ID: $serviceId) is already actively subscribed by this tenant and will be skipped."
+        skippedServicesInfo.add(infoMsg)
+        Logger.getLogger(this.javaClass.name).info(infoMsg)
+      } else {
+        servicesToCreateData.add(serviceData)
+      }
+    }
+
+    // 3. Si aucun nouveau service n'est réer
+    if (servicesToCreateData.isEmpty()) {
+      val message = if (requestedServicesData.isNotEmpty() && skippedServicesInfo.isNotEmpty()) {
+        "No new subscriptions created. All requested services are already active for this tenant. Details: ${skippedServicesInfo.joinToString()}"
+      } else if (requestedServicesData.isEmpty()) {
+        "No services provided in the request."
+      } else { // requestedServicesData non vide, mais tous ont été skipped
+        "No new subscriptions created. All requested services are already active for this tenant."
+      }
+      Logger.getLogger(this.javaClass.name).info(message)
+      return mapOf(
+        "message" to message,
+        "invoiceId" to null,
+        "subscriptionId" to null,
+        "createdServicesCount" to 0,
+        "skippedServicesInfo" to skippedServicesInfo
+      )
+    }
+
+    // 4. Recalculer le finalTotal basé sur les services qui VONT être créés
+    val actualFinalTotal = servicesToCreateData.sumOf { serviceData ->
+      // Assurez-vous que "totalPrice" dans serviceData est un Number (Int, Double, Long)
+      (serviceData["totalPrice"] as? Number)?.let { BigDecimal(it.toString()) } ?: BigDecimal.ZERO
+    }
+
+    // 5. Créer la facture avec le montant recalculé
+    val savedInvoice = invoiceRepository.save(Invoice().apply {
+      this.user = tenant.user // Le propriétaire de la facture (souvent l'utilisateur du locataire)
+//      this.tenant = tenant // Lier la facture au locataire directement si votre modèle le permet et que c'est pertinent
+      this.modify = userConnect // L'utilisateur qui a effectué l'action
+      this.type = "subscription"
+      this.amount = actualFinalTotal
+      this.status = StatusConstants.BILLING_CYCLE_STATUS_PENDING // Ou un statut de facture approprié
+      this.createdDate = LocalDateTime.now()
+      this.updatedDate = LocalDateTime.now()
+      this.number = invoiceService.generateInvoiceNumber()
     })
-    println("Invoice created with ID: ${saveInvoice.id}")
-    val status = SUBSCRIPTION_STATUS_ACTIVE
+    Logger.getLogger(this.javaClass.name)
+      .info("Invoice ${savedInvoice.id} created with amount $actualFinalTotal for tenant $tenantId.")
+
+    // Déterminer les dates de début et de fin globales pour la souscription principale
+    var globalSubscriptionStartDate: LocalDateTime? = null
+    var globalSubscriptionEndDate: LocalDateTime? = null
+
+    servicesToCreateData.forEach { serviceData ->
+      val serviceStartDate = (serviceData["startDate"] as? String)?.let {
+        LocalDateTime.parse(it.removeSuffix("Z")) // Attention au format de date du frontend
+      } ?: LocalDateTime.now()
+
+      val service = serviceRepository.findById((serviceData["id"] as Number).toLong()).orElse(null)
+      val numberOfSubscriptions = serviceData["numberOfSubscriptions"] as? Int ?: 1
+
+      val serviceEndDate = (serviceData["endDate"] as? String)?.let {
+        LocalDate.parse(it).atStartOfDay() // Assurez-vous que c'est un LocalDateTime
+      } ?: when (service?.billingMode?.lowercase()) {
+        SERVICE_BILLING_MODEL_MONTHLY -> serviceStartDate.plusMonths(numberOfSubscriptions.toLong())
+        SERVICE_BILLING_MODEL_YEARLY -> serviceStartDate.plusYears(numberOfSubscriptions.toLong())
+        else -> serviceStartDate.plusMonths(numberOfSubscriptions.toLong())
+      }
+
+      if (globalSubscriptionStartDate == null || serviceStartDate.isBefore(globalSubscriptionStartDate)) {
+        globalSubscriptionStartDate = serviceStartDate
+      }
+      if (globalSubscriptionEndDate == null || serviceEndDate.isAfter(globalSubscriptionEndDate)) {
+        globalSubscriptionEndDate = serviceEndDate
+      }
+    }
+
+
+    // 6. Créer la souscription principale
     val subscription = Subscription().apply {
-      this.invoice = saveInvoice
+      this.invoice = savedInvoice
       this.modifyBy = userConnect
       this.tenant = tenant
-      startDate = LocalDateTime.now()
-      endDate = LocalDateTime.now().plusMonths(1)
-      this.status = status
-      totalPrice = finalTotal
+      this.startDate = globalSubscriptionStartDate ?: LocalDateTime.now()
+      this.endDate = globalSubscriptionEndDate ?: LocalDateTime.now().plusMonths(1) // Fallback
+      this.status = SUBSCRIPTION_STATUS_ACTIVE // Ou PENDING_PAYMENT si un paiement est requis avant activation
+      this.totalPrice = actualFinalTotal
       this.createdDate = LocalDateTime.now()
       this.updatedDate = LocalDateTime.now()
     }
 
-    if (subscription.tenant == null || subscription.startDate == null || subscription.endDate == null) {
-      throw IllegalArgumentException("Subscription data is incomplete.")
-    }
-
     val savedSubscription = createSubscriptionSimple(subscription)
+    Logger.getLogger(this.javaClass.name)
+      .info("Main subscription ${savedSubscription.id} created for invoice ${savedInvoice.id}.")
 
-    selectedServices.forEach { serviceData ->
+    // 7. Boucler sur `servicesToCreateData` pour créer les SubscriptionServices, Options et BillingCycles
+    servicesToCreateData.forEach { serviceData ->
       val serviceId = (serviceData["id"] as Number).toLong()
-      val service = serviceRepository.findById(serviceId)
+      val serviceEntity = serviceRepository.findById(serviceId)
         .orElseThrow { IllegalArgumentException("Service not found with ID $serviceId") }
 
-      val startDate = (serviceData["startDate"] as? String)?.let {
+      val serviceStartDate = (serviceData["startDate"] as? String)?.let {
         LocalDateTime.parse(it.removeSuffix("Z"))
       } ?: LocalDateTime.now()
-      val numberOfSubscriptions = serviceData["numberOfSubscriptions"] as? Int ?: 1
-      val endDate = (serviceData["endDate"] as? String)?.let {
-        LocalDate.parse(it).atTime(startDate.toLocalTime())
-      } ?: when (service.billingMode?.lowercase()) {
-        "monthly" -> startDate.plusMonths(1L * numberOfSubscriptions)
-        "yearly" -> startDate.plusYears(1L * numberOfSubscriptions)
-        else -> startDate.plusMonths(1L * numberOfSubscriptions)
+      val numberOfCycles =
+        serviceData["numberOfSubscriptions"] as? Int ?: 1 // Renommer pour clarté, c'est le nombre de cycles
+
+      val serviceEndDate = (serviceData["endDate"] as? String)?.let {
+        LocalDate.parse(it).atTime(serviceStartDate.toLocalTime())
+      } ?: when (serviceEntity.billingMode?.lowercase()) {
+        SERVICE_BILLING_MODEL_MONTHLY -> serviceStartDate.plusMonths(numberOfCycles.toLong())
+        SERVICE_BILLING_MODEL_YEARLY -> serviceStartDate.plusYears(numberOfCycles.toLong())
+        else -> serviceStartDate.plusMonths(numberOfCycles.toLong())
       }
 
-      var totalPrice = (serviceData["totalPrice"] as? Int ?: 0).toBigDecimal()
+      // Ce `totalPriceForThisService` vient du front et représente le cot total pour ce service et ses options sur `numberOfCycles` périodes.
+      val totalPriceForThisService =
+        (serviceData["totalPrice"] as? Number)?.let { BigDecimal(it.toString()) } ?: BigDecimal.ZERO
 
-      // Create subscription service
       val subscriptionService = SubscriptionServices().apply {
         this.subscription = savedSubscription
-//        this.billingCycle = savedBillingCycle
-        this.service = service
-        this.quantity = numberOfSubscriptions
-        this.subscriptNumber = numberOfSubscriptions
-        this.price = service.price ?: BigDecimal.ZERO
-        this.totalPrice =
-          (service.price ?: BigDecimal.ZERO).multiply(numberOfSubscriptions.toBigDecimal()) // Deduce the amount due
-        this.amountDue = totalPrice
-        this.startDate = startDate
-        this.endDate = endDate
+        this.service = serviceEntity
+        this.quantity =
+          1 // Généralement 1, sauf si le service lui-même peut être pris en plusieurs unités indépendantes
+        this.subscriptNumber = numberOfCycles // Nombre de périodes/cycles pour ce service
+        this.price = serviceEntity.price ?: BigDecimal.ZERO // Prix de base du service (par cycle ou total ?)
+        // this.totalPrice doit être le prix total du service de base pour tous les cycles (serviceEntity.price * numberOfCycles)
+        this.totalPrice = (serviceEntity.price ?: BigDecimal.ZERO).multiply(numberOfCycles.toBigDecimal())
+        // this.amountDue est le montant total pour ce service incluant ses options pour tous les cycles.
+        // Il doit correspondre à totalPriceForThisService.
+        this.amountDue = totalPriceForThisService
+        this.startDate = serviceStartDate
+        this.endDate = serviceEndDate
         this.createdDate = LocalDateTime.now()
         this.updatedDate = LocalDateTime.now()
       }
       val savedSubscriptionService = subscriptionServiceRepository.save(subscriptionService)
+      Logger.getLogger(this.javaClass.name)
+        .info("SubscriptionService ${savedSubscriptionService.id} (Service: ${serviceEntity.name}) created for subscription ${savedSubscription.id}.")
 
-      // Save subscription options
-      val options = serviceData["options"] as List<Map<String, Any?>>
-      options.forEach { optionData ->
+      val optionsData = serviceData["options"] as? List<Map<String, Any?>> ?: emptyList()
+      optionsData.forEach { optionData ->
         val optionId = (optionData["id"] as Number).toLong()
         val quantity = (optionData["quantity"] as? Number)?.toInt() ?: 1
-//       val price = (optionData["price"] as? Number)?.toInt() ?: 1
-        val serviceOption = serviceOptionRepository.findById(optionId)
+        val serviceOptionEntity = serviceOptionRepository.findById(optionId)
           .orElseThrow { IllegalArgumentException("Option not found with ID $optionId") }
 
-        val saveSubscriptionOption = SubscriptionOptions().apply {
+        // Montant dû pour cette option pour TOUS les cycles du service parent
+        val optionAmountDueTotal = (serviceOptionEntity.price ?: BigDecimal.ZERO)
+          .multiply(quantity.toBigDecimal())
+          .multiply(numberOfCycles.toBigDecimal())
+
+        SubscriptionOptions().apply {
           this.subscriptionService = savedSubscriptionService
-          this.subscription = savedSubscription
-          this.option = serviceOption
-          this.quantity = quantity
-          this.price = (serviceOption.price ?: BigDecimal.ZERO)
-          this.amountDue =
-            (serviceOption.price
-              ?: BigDecimal.ZERO).multiply(quantity.toBigDecimal()) * numberOfSubscriptions.toBigDecimal()// Deduce the amount due
+          this.subscription = savedSubscription // Peut être redondant
+          this.option = serviceOptionEntity
+          this.quantity = quantity // Quantité de cette option
+          this.price = serviceOptionEntity.price ?: BigDecimal.ZERO // Prix unitaire de l'option (par cycle ?)
+          this.amountDue = optionAmountDueTotal
           this.createdDate = LocalDateTime.now()
           this.updatedDate = LocalDateTime.now()
-        }
-        subscriptionOptionRepository.save(
-          saveSubscriptionOption
-        )
+        }.also { subscriptionOptionRepository.save(it) }
       }
 
-      var currentStartDate = startDate
-      for (i in 1..numberOfSubscriptions) {
-        println("Processing subscription number $i")
+      // Génération des cycles de facturation
+      var currentBillingStartDate = serviceStartDate
+      val amountDuePerCycle = if (numberOfCycles > 0) {
+        totalPriceForThisService.divide(numberOfCycles.toBigDecimal(), 2, RoundingMode.HALF_UP)
+      } else {
+        BigDecimal.ZERO
+      }
 
-        val currentEndDate = when (subscriptionService.service?.billingMode?.lowercase()) {
-          "monthly" -> currentStartDate?.plusMonths(1)
-          "yearly" -> currentStartDate?.plusYears(1)
-          else -> throw IllegalArgumentException("Unsupported billing mode")
-        }
+      for (i in 1..numberOfCycles) {
+        val currentBillingEndDate = when (serviceEntity.billingMode?.lowercase()) {
+          SERVICE_BILLING_MODEL_MONTHLY -> currentBillingStartDate.plusMonths(1)
+          SERVICE_BILLING_MODEL_YEARLY -> currentBillingStartDate.plusYears(1)
+          else -> currentBillingStartDate.plusMonths(1) // Fallback
+        } ?: throw IllegalStateException("Could not determine billing end date.")
 
-        // Calculate the total price of options
-        val totalOptionsPrice = subscriptionOptionRepository.findBySubscriptionService(subscriptionService)
-          .sumOf { (it.price ?: BigDecimal.ZERO) * it.quantity.toBigDecimal() }
 
-        val billingPrice = subscriptionService.price + totalOptionsPrice
-
-        val amountToPay = totalPrice.min(billingPrice)
-        // Create billing cycle
-        val billingCycle = BillingCycle().apply {
+        BillingCycle().apply {
           this.subscription = savedSubscription
           this.subscriptionServices = savedSubscriptionService
-          this.periodStart = currentStartDate
-          this.periodEnd = currentEndDate
-          this.amountDue = amountToPay
-          this.status = "PENDING"
+          this.periodStart = currentBillingStartDate
+          this.periodEnd = currentBillingEndDate
+          this.amountDue = amountDuePerCycle
+          this.status = BILLING_CYCLE_STATUS_PENDING // Statut initial
           this.createdDate = LocalDateTime.now()
           this.updatedDate = LocalDateTime.now()
-        }
-        val savedBillingCycle = billingCycleRepository.save(billingCycle)
+        }.also { billingCycleRepository.save(it) }
 
-        // Create payment line
-//        val paymentLine = PaymentLine().apply {
-//          this.billingCycle = savedBillingCycle
-//          this.amountPaid = BigDecimal.ZERO // No payment yet
-//          this.createdDate = LocalDateTime.now()
-//          this.updatedDate = LocalDateTime.now()
-//        }
-//        paymentLineRepository.save(paymentLine)
-        totalPrice -= amountToPay
-        currentStartDate = currentEndDate
+        currentBillingStartDate = currentBillingEndDate
       }
-
-
     }
 
+    val successMessage = "Subscription processed successfully." +
+      if (skippedServicesInfo.isNotEmpty()) " Some services were skipped: ${skippedServicesInfo.joinToString()}" else ""
+
     return mapOf(
-      "message" to "Subscription processed successfully",
-      "invoiceId" to saveInvoice.id
+      "message" to successMessage,
+      "invoiceId" to savedInvoice.id,
+      "subscriptionId" to savedSubscription.id,
+      "createdServicesCount" to servicesToCreateData.size,
+      "skippedServicesInfo" to skippedServicesInfo
     )
   }
 
@@ -848,4 +998,126 @@ class SubscriptionService(
       throw RuntimeException("Erreur lors de la sauvegarde de la souscription : ${e.message}", e)
     }
   }
+
+  // Fonction principale pour gérer le changement de statut et ses impacts
+  @Transactional
+  protected fun processSubscriptionStatusChange(
+    subscriptionId: Long,
+    newStatus: String,
+    effectiveDateTime: LocalDateTime // La date à laquelle le changement prend effet
+  ): Subscription {
+    val subscription = subscriptionRepository.findById(subscriptionId)
+      .orElseThrow { IllegalArgumentException("Subscription not found with ID $subscriptionId") }
+
+    // 1. Mettre à jour la souscription principale
+    subscription.status = newStatus
+    subscription.updatedDate = LocalDateTime.now()
+
+    // Si c'est une annulation ou une expiration, la date de fin doit être mise à jour.
+    if (newStatus == SUBSCRIPTION_STATUS_CANCELED || newStatus == SUBSCRIPTION_STATUS_EXPIRED) {
+      subscription.endDate = effectiveDateTime
+    }
+    val savedSubscription = subscriptionRepository.save(subscription)
+    Logger.getLogger("SubscriptionUpdate")
+      .info("Subscription $subscriptionId status changed to $newStatus, effective $effectiveDateTime")
+
+    // 2. Mettre à jour les SubscriptionServices associés
+    val subscriptionServices = subscriptionServiceRepository.findBySubscription(savedSubscription)
+    subscriptionServices.forEach { subService ->
+
+      if (newStatus == SUBSCRIPTION_STATUS_CANCELED || newStatus == SUBSCRIPTION_STATUS_EXPIRED) {
+        // Mettre à jour la date de fin du service si elle est postérieure à la date d'effet
+        if (subService.endDate == null || subService.endDate!!.isAfter(effectiveDateTime)) {
+          subService.endDate = effectiveDateTime
+        }
+      }
+      // Si vous aviez un champ "status" sur SubscriptionServices, vous le mettriez à jour ici.
+      // Actuellement, le statut de la souscription parente dicte l'accès.
+      subService.updatedDate = LocalDateTime.now()
+      subscriptionServiceRepository.save(subService)
+    }
+
+    // 3. Mettre à jour les BillingCycles futurs ou affectés
+    // On cible les cycles de facturation liés aux services de cette souscription
+    val billingCyclesToUpdate = billingCycleRepository.findBySubscriptionServicesIn(subscriptionServices)
+
+    billingCyclesToUpdate.forEach { bc ->
+      if (newStatus == SUBSCRIPTION_STATUS_CANCELED || newStatus == SUBSCRIPTION_STATUS_EXPIRED) {
+        // Annuler les cycles PENDING dont la période de début est après ou égale à la date d'effet
+        if (bc.status == BILLING_CYCLE_STATUS_PENDING && !bc.periodStart!!.isBefore(
+            effectiveDateTime.truncatedTo(
+              ChronoUnit.DAYS
+            )
+          )
+        ) {
+          bc.status = BILLING_CYCLE_STATUS_CANCELED
+          // Optionnel: Mettre amountDue à 0 pour les cycles annulés avant paiement
+          // bc.amountDue = BigDecimal.ZERO
+          bc.updatedDate = LocalDateTime.now()
+          billingCycleRepository.save(bc)
+          Logger.getLogger("SubscriptionUpdate")
+            .info("BillingCycle ${bc.id} for Subscription $subscriptionId CANCELED.")
+        }
+        // Gérer les cycles PARTIAL_PAID ou PENDING qui chevauchent la date d'effet (plus complexe, nécessite une politique métier)
+        // Par exemple, si un cycle est PENDING et que effectiveDateTime tombe au milieu :
+        // - Vous pourriez le laisser tel quel et s'attendre à ce qu'il ne soit pas payé.
+        // - Vous pourriez le recalculer au prorata (si la politique le permet).
+        // - Vous pourriez l'annuler.
+        // Pour l'instant, on se concentre sur l'annulation des cycles futurs non payés.
+      }
+    }
+    // Gérer les factures (Invoices) associées si nécessaire (ex: annuler une facture PENDING si tous ses cycles sont annulés)
+
+    return savedSubscription
+  }
+
+  /**
+   * Expire une souscription.
+   * Généralement appelé par une tâche planifiée ou si la date de fin est atteinte.
+   */
+  @Transactional
+  fun expireSubscription(subscriptionId: Long): Map<String, Any?> {
+    val subscription = subscriptionRepository.findById(subscriptionId)
+      .orElseThrow { IllegalArgumentException("Subscription not found with ID $subscriptionId for expiration") }
+
+    // La date d'effet est la date de fin de la souscription, ou maintenant si la date de fin est passée.
+    val effectiveDate = subscription.endDate?.takeIf { it.isBefore(LocalDateTime.now()) } ?: LocalDateTime.now()
+
+    val updatedSubscription = processSubscriptionStatusChange(
+      subscriptionId = subscriptionId,
+      newStatus = SUBSCRIPTION_STATUS_EXPIRED,
+      effectiveDateTime = effectiveDate
+    )
+    return mapOf(
+      "message" to "Subscription $subscriptionId has been expired.",
+      "subscriptionId" to updatedSubscription.id,
+      "newStatus" to updatedSubscription.status
+    )
+  }
+
+  /**
+   * Annule une souscription.
+   * Peut être immédiat ou à la fin du cycle de facturation en cours.
+   * Pour cet exemple, nous faisons une annulation immédiate.
+   */
+  @Transactional
+  fun cancelSubscription(subscriptionId: Long /*, cancelEffectiveDate: LocalDateTime? = null */): Map<String, Any?> {
+    // Par défaut, l'annulation est immédiate.
+    // Une logique plus avancée pourrait permettre de choisir une date d'effet
+    // (ex: fin du cycle payé actuel).
+    val effectiveDate = LocalDateTime.now()
+
+    val updatedSubscription = processSubscriptionStatusChange(
+      subscriptionId = subscriptionId,
+      newStatus = SUBSCRIPTION_STATUS_CANCELED,
+      effectiveDateTime = effectiveDate
+    )
+    return mapOf(
+      "message" to "Subscription $subscriptionId has been canceled.",
+      "subscriptionId" to updatedSubscription.id,
+      "newStatus" to updatedSubscription.status
+    )
+  }
+
 }
+

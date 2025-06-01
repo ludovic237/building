@@ -46,6 +46,12 @@ INSERT INTO `service_options` (`id`, `service_id`, `name`, `price`, `max_quantit
 	(7, 27, 'Carpet Cleaning', 15.00, 1, 1, NULL, '2025-05-29 01:45:40', NULL),
 	(8, 27, 'Deep Cleaning', 20.00, 1, 1, NULL, '2025-05-29 01:45:40', NULL);
 
+-- Listage des données de la table building.invoices : ~1 rows (environ)
+INSERT INTO `invoices` (`id`, `user_id`, `modify_id`, `type`, `number`, `month`, `year`, `amount`, `payment_date`, `created_date`, `updated_date`, `status`, `tenant_id`) VALUES
+                                                                                                                                                                            (10, 1, 1, 'subscription', 'INV-2025-05-00015', 5, 2025, 12000.00, '2025-05-29 00:55:06', '2025-05-28 23:59:18', '2025-05-29 00:55:06', 'PARTIAL PAID', 14),
+                                                                                                                                                                            (11, 1, 1, 'subscription', 'INV-2025-05-00016', NULL, NULL, 600.00, NULL, '2025-05-29 01:01:55', '2025-05-29 01:01:55', 'PENDING', NULL),
+                                                                                                                                                                            (12, 1, 1, 'subscription', 'INV-2025-05-00017', NULL, NULL, 30.00, NULL, '2025-05-29 01:35:04', '2025-05-29 01:35:04', 'PENDING', NULL),
+                                                                                                                                                                            (13, 1, 1, 'subscription', 'INV-2025-05-00018', NULL, NULL, 360.00, NULL, '2025-05-29 01:47:25', '2025-05-29 01:47:25', 'PENDING', NULL);
 
 -- Listage des données de la table building.subscriptions : ~1 rows (environ)
 INSERT INTO `subscriptions` (`id`, `tenant_id`, `update_by`, `invoice_id`, `service_id`, `total_price`, `start_date`, `end_date`, `subscript_number`, `created_date`, `updated_date`, `status`, `modify_by`) VALUES
@@ -119,9 +125,3 @@ INSERT INTO `payment_lines` (`id`, `payment_id`, `billing_cycle_id`, `created_da
 INSERT INTO `invoice_counter` (`id`, `year`, `counter`) VALUES
   (1, 2025, 18);
 
--- Listage des données de la table building.invoices : ~1 rows (environ)
-INSERT INTO `invoices` (`id`, `user_id`, `modify_id`, `type`, `number`, `month`, `year`, `amount`, `payment_date`, `created_date`, `updated_date`, `status`, `tenant_id`) VALUES
-                                                                                                                                                                            (10, 1, 1, 'subscription', 'INV-2025-05-00015', 5, 2025, 12000.00, '2025-05-29 00:55:06', '2025-05-28 23:59:18', '2025-05-29 00:55:06', 'PARTIAL PAID', 14),
-                                                                                                                                                                            (11, 1, 1, 'subscription', 'INV-2025-05-00016', NULL, NULL, 600.00, NULL, '2025-05-29 01:01:55', '2025-05-29 01:01:55', 'PENDING', NULL),
-                                                                                                                                                                            (12, 1, 1, 'subscription', 'INV-2025-05-00017', NULL, NULL, 30.00, NULL, '2025-05-29 01:35:04', '2025-05-29 01:35:04', 'PENDING', NULL),
-                                                                                                                                                                            (13, 1, 1, 'subscription', 'INV-2025-05-00018', NULL, NULL, 360.00, NULL, '2025-05-29 01:47:25', '2025-05-29 01:47:25', 'PENDING', NULL);

@@ -23,10 +23,13 @@ class ServiceOption {
   @Column(name = "name", nullable = false)
   var name: String? = null
 
+  @Column(name = "pricing_model")
+  var pricingModel: String? = null
+
   @Column(name = "price", nullable = false, precision = 10, scale = 2)
   var price: BigDecimal? = null
 
-  @Column(name = "max_quantity", nullable = false, precision = 10, scale = 2)
+  @Column(name = "max_quantity", precision = 10, scale = 2)
   var maxQuantity: Int? = null
 
   @ColumnDefault("1")

@@ -11,9 +11,9 @@
   <div mat-dialog-actions align="end" class="mat-toolbar ">
     <div fxLayout="row" fxLayoutAlign="space-between center" class="w-100 p-3">
       <button mat-raised-button color="warn" type="button" mat-dialog-close>Close</button>
-<button mat-raised-button color="accent"
-        (click)="validateService()"
-        [disabled]="!form.get('serviceId')?.value ||
+      <button mat-raised-button color="accent"
+              (click)="validateService()"
+              [disabled]="!form.get('serviceId')?.value ||
                     (isPeriodicType &&
                     (!form.get('numberOfSubscriptions')?.value ||
                      !form.get('startDate')?.value))">
@@ -29,7 +29,8 @@
       <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
         <mat-form-field appearance="outline" class="w-100">
           <mat-label>Tenant</mat-label>
-          <mat-select formControlName="tenantId" (selectionChange)="onTenantChange($event.value)" required>
+          <mat-select [disabled]="isReadonlyTenant" formControlName="tenantId"
+                      (selectionChange)="onTenantChange($event.value)" required>
             <mat-option [value]="">-</mat-option>
             <mat-option *ngFor="let locataire of locataires; trackBy: trackById" [value]="locataire.id">
               {{ locataire.userName }}
@@ -41,7 +42,8 @@
       <div fxFlex="100" fxFlex.gt-sm="50" class="px-2">
         <mat-form-field appearance="outline" class="w-100">
           <mat-label>Service</mat-label>
-          <mat-select formControlName="serviceId" (selectionChange)="onServiceChange($event.value)" required>
+          <mat-select [disabled]="isReadonlyService" formControlName="serviceId"
+                      (selectionChange)="onServiceChange($event.value)" required>
             <mat-option [value]="">-</mat-option>
             <mat-option *ngFor="let service of services; trackBy: trackById" [value]="service.id">
               {{ service.name }}
@@ -52,12 +54,34 @@
       </div>
     </div>
 
+    @if (data != null) {
+      <div>
+        <button mat-raised-button color="primary"
+                [disabled]="currentStatus === 'active'"
+                (click)="changeStatus('active')">Active
+        </button>
+
+        <button mat-raised-button color="accent"
+                [disabled]="currentStatus === 'cancel'"
+                (click)="changeStatus('cancel')">Cancel
+        </button>
+
+        <button mat-raised-button color="warn"
+                [disabled]="currentStatus === 'expired'"
+                (click)="changeStatus('expired')">Expired
+        </button>
+
+      </div>
+    }
+
+
     <!-- Conditional Inputs -->
     <div *ngIf="isPeriodicType" fxLayout="row wrap" class="mt-3">
       <div fxFlex="100" fxFlex.gt-sm="33" class="px-2">
         <mat-form-field appearance="outline" class="w-100">
           <mat-label>Number of Subscriptions</mat-label>
-          <input value="1" matInput type="number" formControlName="numberOfSubscriptions" (input)="calculateEndDate()" min="1" />
+          <input value="1" matInput type="number" formControlName="numberOfSubscriptions" (input)="calculateEndDate()"
+                 min="1"/>
           <mat-error *ngIf="!isServiceValidated && form.controls.numberOfSubscriptions.errors?.required">
             Number of subscriptions is required.
           </mat-error>
@@ -213,7 +237,8 @@
               <ng-container matColumnDef="actions">
                 <mat-header-cell *matHeaderCellDef style="flex: 0 0 100px;"> Actions</mat-header-cell>
                 <mat-cell *matCellDef="let service; let i = index" style="flex: 0 0 100px;">
-                  <button mat-icon-button color="warn" (click)="removeServiceAndRefresh(i)">
+                  <button disabled="{{service.disable}}" mat-icon-button color="warn"
+                          (click)="removeServiceAndRefresh(i)">
                     <mat-icon>delete</mat-icon>
                   </button>
                 </mat-cell>

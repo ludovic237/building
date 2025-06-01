@@ -102,7 +102,7 @@ class SubscriptionServiceTests {
     )
 
     val tenant = Tenant().apply { id = 1; user = User() }
-    val service = Services().apply { id = 1; billingMode = "monthly" }
+    val service = Services().apply { id = 1; billingMode = SERVICE_BILLING_MODEL_MONTHLY }
     val serviceOption = ServiceOption().apply { id = 1; price = BigDecimal(10) }
     val invoice = Invoice().apply { id = 1 }
 
